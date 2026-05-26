@@ -11,6 +11,9 @@ config_version=5
 [application]
 
 config/name="RPG-603game"
+<<<<<<< HEAD
 run/main_scene="res://scenes/main.tscn"
+=======
+>>>>>>> 061de6144d7c4614338f5dc0b5bf804e39381671
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
