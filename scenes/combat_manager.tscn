@@ -1,0 +1,92 @@
+[gd_scene load_steps=6 format=3 uid="uid://b1ittsnvasmtc"]
+
+[ext_resource type="Script" path="res://scenes/combat_manager.gd" id="1_5occi"]
+[ext_resource type="Texture2D" uid="uid://bstglw5o034tv" path="res://Asset Bundle/sprites/Dungeon-door.png" id="1_tmn22"]
+[ext_resource type="PackedScene" uid="uid://c5t2v5oqen1w6" path="res://scenes/player-battler.tscn" id="2_w7pjl"]
+[ext_resource type="PackedScene" uid="uid://c48a3agxgvn2l" path="res://scenes/monster-battler.tscn" id="3_monster"]
+[ext_resource type="Script" path="res://scenes/combat_ui.gd" id="4_dttib"]
+
+[node name="CombatManager" type="Node2D"]
+script = ExtResource("1_5occi")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(577.25, 332)
+scale = Vector2(3.12364, 3.19231)
+texture = ExtResource("1_tmn22")
+
+[node name="PlayerTeam" type="Node2D" parent="."]
+
+[node name="Player-Battler" parent="PlayerTeam" instance=ExtResource("2_w7pjl")]
+position = Vector2(278, 349)
+
+[node name="EnemyTeam" type="Node2D" parent="."]
+
+[node name="Monster-Battler" parent="EnemyTeam" instance=ExtResource("3_monster")]
+position = Vector2(833, 363)
+
+[node name="CombatUI" type="CanvasLayer" parent="."]
+script = ExtResource("4_dttib")
+
+[node name="SkillBar" type="HBoxContainer" parent="CombatUI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 186.0
+offset_top = -65.0
+offset_right = 434.0
+offset_bottom = -25.0
+grow_vertical = 0
+
+[node name="btn_skill1" type="Button" parent="CombatUI/SkillBar"]
+layout_mode = 2
+text = "1"
+
+[node name="btn_skill2" type="Button" parent="CombatUI/SkillBar"]
+layout_mode = 2
+text = "2"
+
+[node name="btn_skill3" type="Button" parent="CombatUI/SkillBar"]
+layout_mode = 2
+text = "3"
+
+[node name="btn_skill4" type="Button" parent="CombatUI/SkillBar"]
+layout_mode = 2
+text = "4"
+
+[node name="ActionBar" type="HBoxContainer" parent="CombatUI"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -84.0
+offset_top = -40.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="btn_item" type="Button" parent="CombatUI/ActionBar"]
+layout_mode = 2
+text = "道具
+"
+
+[node name="btn_escape" type="Button" parent="CombatUI/ActionBar"]
+layout_mode = 2
+text = "逃跑"
+
+[node name="ItemBar" type="VBoxContainer" parent="CombatUI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -1072.0
+offset_top = 466.0
+offset_right = -1032.0
+offset_bottom = 555.0
+grow_horizontal = 0
+
+[node name="btn_heal" type="Button" parent="CombatUI/ItemBar"]
+layout_mode = 2
+text = "1"
+
+[node name="btn_mana" type="Button" parent="CombatUI/ItemBar"]
+layout_mode = 2
+text = "2"
