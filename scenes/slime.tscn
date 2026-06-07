@@ -407,21 +407,22 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_npi1o"]
-radius = 17.4642
+radius = 15.0
 
-[node name="slime" type="CharacterBody2D"]
+[node name="slime" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("6_l13kp")
+speed = 65.0
+chase_range = 180.0
+attack_range = 35.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(282, 174)
+position = Vector2(3, 1)
 sprite_frames = SubResource("SpriteFrames_pqe08")
 animation = &"slime_attack"
 autoplay = "slime_hurt"
-frame = 18
-frame_progress = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(279, 175)
+position = Vector2(1, 0)
 shape = SubResource("CircleShape2D_npi1o")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

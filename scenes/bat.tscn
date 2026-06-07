@@ -291,26 +291,24 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_cv6p6"]
-radius = 29.0172
+radius = 16.0312
 
-[node name="bat" type="CharacterBody2D"]
+[node name="bat" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_vl7ma")
 monster_name = "bat"
-max_hp = 20
-speed = 160.0
-damage = 4
-chase_range = 280.0
-attack_range = 35.0
-exp_drop = 8
+speed = 95.0
+chase_range = 220.0
+attack_range = 32.0
+attack_cd = 0.7
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(221, 158)
+position = Vector2(-4, -4)
 sprite_frames = SubResource("SpriteFrames_gews5")
 animation = &"bat_walk"
 autoplay = "bat_death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(225, 165)
+position = Vector2(0, 4)
 shape = SubResource("CircleShape2D_cv6p6")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

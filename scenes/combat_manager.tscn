@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://b1ittsnvasmtc"]
+
+[ext_resource type="Texture2D" uid="uid://34qrsxioanxt" path="res://Asset Bundle/sprites/Dungeon_24x24.png" id="1_orhxp"]
+[ext_resource type="PackedScene" uid="uid://c5t2v5oqen1w6" path="res://scenes/player-battler.tscn" id="2_w7pjl"]
+
+[node name="CombatManager" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(592, 356)
+scale = Vector2(5.3, 5.625)
+texture = ExtResource("1_orhxp")
+
+[node name="PlayerTeam" type="Node2D" parent="."]
+
+[node name="Player-Battler" parent="PlayerTeam" instance=ExtResource("2_w7pjl")]
+position = Vector2(241, 322)
+
+[node name="EnemyTeam" type="Node2D" parent="."]
+
+[node name="CombatUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 240.0
+offset_top = 249.0
+offset_right = 345.0
+offset_bottom = 276.0
