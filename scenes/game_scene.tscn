@@ -1,11 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://612y556heblm"]
+[gd_scene load_steps=3 format=3 uid="uid://612y556heblm"]
 
-[ext_resource type="Script" path="res://scenes/BattleManager.gd" id="1_7878l"]
 [ext_resource type="PackedScene" uid="uid://cmllep788adha" path="res://scenes/player.tscn" id="1_htcah"]
 [ext_resource type="PackedScene" uid="uid://ia535d6t1fas" path="res://scenes/bat.tscn" id="3_quca5"]
 
 [node name="Node2D" type="Node2D"]
-script = ExtResource("1_7878l")
 
 [node name="Player" parent="." instance=ExtResource("1_htcah")]
 position = Vector2(442, 315)

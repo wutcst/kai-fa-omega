@@ -414,12 +414,13 @@ script = ExtResource("6_l13kp")
 speed = 65.0
 chase_range = 180.0
 attack_range = 35.0
+enemy_scene_path = "res://scenes/slime.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(3, 1)
 sprite_frames = SubResource("SpriteFrames_pqe08")
-animation = &"slime_attack"
-autoplay = "slime_hurt"
+animation = &"slime_walk"
+autoplay = "slime_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 0)

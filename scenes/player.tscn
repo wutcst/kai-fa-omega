@@ -610,7 +610,7 @@ script = ExtResource("1_qnjym")
 position = Vector2(-2, -1)
 sprite_frames = SubResource("SpriteFrames_hcat4")
 animation = &"swordsman_hurt"
-autoplay = "ranger_death"
+autoplay = "ranger_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-5, -1)

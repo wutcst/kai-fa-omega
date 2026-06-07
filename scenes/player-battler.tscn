@@ -1,4 +1,4 @@
-[gd_scene load_steps=90 format=3 uid="uid://c5t2v5oqen1w6"]
+[gd_scene load_steps=91 format=3 uid="uid://c5t2v5oqen1w6"]
 
 [ext_resource type="Script" path="res://scripts/player_battler.gd" id="1_rsxdx"]
 [ext_resource type="Texture2D" uid="uid://dexm81713fj0u" path="res://Asset Bundle/sprites/Archer/Brown/Attack/archer_attack-Sheet.png" id="2_ckkj2"]
@@ -599,6 +599,9 @@ animations = [{
 "speed": 5.0
 }]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_mc3rb"]
+radius = 35.1283
+
 [node name="Player-Battler" type="CharacterBody2D" groups=["player"]]
 position = Vector2(365, 246)
 script = ExtResource("1_rsxdx")
@@ -609,5 +612,9 @@ scale = Vector2(2.72917, 3.64844)
 sprite_frames = SubResource("SpriteFrames_hcat4")
 animation = &"ranger_idle"
 autoplay = "ranger_idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(2, 26)
+shape = SubResource("CircleShape2D_mc3rb")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_animation_finished"]

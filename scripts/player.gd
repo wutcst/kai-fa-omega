@@ -1,10 +1,8 @@
 extends CharacterBody2D
 
-# ====================== 节点引用 ======================
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
-# ====================== 基础属性 ======================
 @export var max_hp: int = 100
 @export var current_hp: int = 100
 @export var max_mp: int = 50
@@ -15,26 +13,25 @@ extends CharacterBody2D
 @export var base_speed: int = 180
 var current_speed: int = 180
 
-# ====================== 等级经验 ======================
 @export var level: int = 1
 @export var current_exp: int = 0
 @export var exp_to_next_level: int = 50
 @export var level_up_growth: float = 1.2
 
-# ====================== 职业（现在用全局的定义） ======================
 var current_job: GameData.Job = GameData.Job.SWORDSMAN
 var is_dead: bool = false
 var in_battle: bool = false
 
-# ====================== 初始化 ======================
 func _ready():
+	load_data_from_global()
 	update_job_stats()
 	play_job_animation("idle")
+	connect_signals()
+
+func connect_signals():
 	if not animated_sprite.animation_finished.is_connected(_on_animated_sprite_animation_finished):
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
 
-
-# ====================== 全局数据互通 ======================
 func save_data_to_global():
 	GameData.max_hp = max_hp
 	GameData.current_hp = current_hp
@@ -47,7 +44,7 @@ func save_data_to_global():
 	GameData.level = level
 	GameData.current_exp = current_exp
 	GameData.exp_to_next_level = exp_to_next_level
-	GameData.current_job = current_job  # 现在类型一致，不会报错了
+	GameData.current_job = current_job
 
 func load_data_from_global():
 	max_hp = GameData.max_hp
@@ -61,10 +58,8 @@ func load_data_from_global():
 	level = GameData.level
 	current_exp = GameData.current_exp
 	exp_to_next_level = GameData.exp_to_next_level
-	current_job = GameData.current_job  # 读回来也没问题
+	current_job = GameData.current_job
 
-
-# ====================== 战斗中静止 ======================
 func _physics_process(delta: float) -> void:
 	if in_battle || is_dead:
 		velocity = Vector2.ZERO
@@ -81,7 +76,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		play_job_animation("idle")
 
-# ====================== 职业切换 ======================
+	if Input.is_action_just_pressed("ui_swordsman"): switch_job(GameData.Job.SWORDSMAN)
+	if Input.is_action_just_pressed("ui_ranger"): switch_job(GameData.Job.RANGER)
+	if Input.is_action_just_pressed("ui_shield"): switch_job(GameData.Job.SHIELD_KNIGHT)
+
 func switch_job(new_job: GameData.Job) -> void:
 	if is_dead || current_job == new_job || in_battle:
 		return
@@ -111,8 +109,8 @@ func update_job_stats() -> void:
 			current_speed = 120
 	current_hp = max_hp
 	current_mp = max_mp
+	save_data_to_global()
 
-# ====================== 动画 ======================
 func play_job_animation(action_name: String) -> void:
 	var anim_name = get_job_prefix() + "_" + action_name
 	if animated_sprite.sprite_frames.has_animation(anim_name):
@@ -132,13 +130,8 @@ func get_job_name() -> String:
 		GameData.Job.SHIELD_KNIGHT: return "盾骑士"
 		_: return "剑士"
 
-# ====================== 动画结束回调 ======================
 func _on_animated_sprite_animation_finished(anim):
+	if is_dead:
+		return
 	if anim.ends_with("_attack") || anim.ends_with("_hurt"):
 		play_job_animation("idle")
-
-# ====================== 测试按键 ======================
-func _process(delta):
-	if Input.is_action_just_pressed("ui_swordsman"): switch_job(GameData.Job.SWORDSMAN)
-	if Input.is_action_just_pressed("ui_ranger"): switch_job(GameData.Job.RANGER)
-	if Input.is_action_just_pressed("ui_shield"): switch_job(GameData.Job.SHIELD_KNIGHT)

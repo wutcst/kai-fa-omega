@@ -1,6 +1,6 @@
-[gd_scene load_steps=47 format=3 uid="uid://ia535d6t1fas"]
+[gd_scene load_steps=47 format=3 uid="uid://c48a3agxgvn2l"]
 
-[ext_resource type="Script" path="res://scripts/monster.gd" id="1_vl7ma"]
+[ext_resource type="Script" path="res://scripts/monster_battler.gd" id="1_vl7ma"]
 [ext_resource type="Texture2D" uid="uid://bexugfw3062aa" path="res://Asset Bundle/sprites/Bat/attack.png" id="2_7348o"]
 [ext_resource type="Texture2D" uid="uid://cfxnds3nv3p0h" path="res://Asset Bundle/sprites/Bat/fly-to-fall.png" id="3_m44dn"]
 [ext_resource type="Texture2D" uid="uid://63b1txfhkmp" path="res://Asset Bundle/sprites/Bat/fall.png" id="4_rdxgn"]
@@ -293,23 +293,17 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_cv6p6"]
 radius = 16.0312
 
-[node name="bat" type="CharacterBody2D" groups=["enemy"]]
+[node name="Monster-Battler" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_vl7ma")
 monster_name = "bat"
-speed = 95.0
-chase_range = 220.0
-attack_range = 32.0
-attack_cd = 0.7
-enemy_scene_path = "res://scenes/bat.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(-4, -4)
+scale = Vector2(1.5, 1.5)
 sprite_frames = SubResource("SpriteFrames_gews5")
-animation = &"bat_attack"
+animation = &"bat_walk"
 autoplay = "bat_walk"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 4)
 shape = SubResource("CircleShape2D_cv6p6")
-
-[connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

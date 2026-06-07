@@ -1,50 +1,41 @@
 extends CharacterBody2D
 
-# ==============================
-# 节点引用
-# ==============================
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
-# ==============================
-# 怪物配置
-# ==============================
 @export var monster_name: String = "slime"
 @export var max_hp: int = 80
+@export var attack: int = 15
+@export var defense: int = 3
 @export var speed: float = 70.0
 @export var chase_range: float = 200.0
 @export var attack_range: float = 40.0
 @export var attack_cd: float = 1.0
+@export var enemy_scene_path: String = ""
 
-# ==============================
-# 内部状态
-# ==============================
 var current_hp: int
 var is_dead: bool = false
 var player: Node2D = null
 var attack_timer: float = 0.0
 var is_attacking: bool = false
-
 var in_battle: bool = false
 
-# 信号：进入战斗、怪物死亡（给管理器用）
 signal enter_battle(monster)
 signal monster_died(monster)
 
-# ==============================
-# 初始化
-# ==============================
 func _ready():
 	current_hp = max_hp
 	play_anim("idle")
+	connect_signals()
+
+func connect_signals():
+	if not animated_sprite.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
+		animated_sprite.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
 func _draw():
 	draw_circle(Vector2.ZERO, chase_range, Color(1, 0, 0, 0.3))
 	draw_circle(Vector2.ZERO, attack_range, Color(0, 1, 0, 0.3))
 
-# ==============================
-# 地图AI（战斗时完全冻结）
-# ==============================
 func _physics_process(delta: float) -> void:
 	if is_dead || in_battle:
 		velocity = Vector2.ZERO
@@ -85,7 +76,6 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
-# 触发战斗（只发信号，不判胜负）
 func perform_attack():
 	if is_dead || is_attacking || in_battle:
 		return
@@ -95,25 +85,20 @@ func perform_attack():
 	play_anim("attack")
 	emit_signal("enter_battle", self)
 
-# 受伤（战斗管理器调用）
 func take_damage(dmg: int):
 	if is_dead: return
 	current_hp -= dmg
 	if current_hp <= 0:
 		current_hp = 0
 		is_dead = true
-		emit_signal("monster_died", self)  # 通知管理器
+		emit_signal("monster_died", self)
 
-# 死亡动画+消失（战斗管理器调用）
 func die():
 	if is_dead == false: return
 	play_anim("death")
 	collision_shape.set_deferred("disabled", true)
 	velocity = Vector2.ZERO
-	await animated_sprite.animation_finished
-	queue_free()
 
-# 退出战斗、恢复AI（战斗管理器调用）
 func exit_battle():
 	if is_dead: return
 	in_battle = false
@@ -121,9 +106,6 @@ func exit_battle():
 	attack_timer = 0
 	play_anim("idle")
 
-# ==============================
-# 动画
-# ==============================
 func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
@@ -135,7 +117,8 @@ func play_anim(anim: String):
 		animated_sprite.play(monster_name + "_walk")
 
 func _on_animated_sprite_2d_animation_finished(anim_name: String):
-	if is_dead: return
+	if is_dead:
+		return
 	if anim_name.ends_with("_attack"):
 		is_attacking = false
 		attack_timer = 0

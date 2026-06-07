@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://b1ittsnvasmtc"]
+[gd_scene load_steps=4 format=3 uid="uid://b1ittsnvasmtc"]
 
 [ext_resource type="Texture2D" uid="uid://34qrsxioanxt" path="res://Asset Bundle/sprites/Dungeon_24x24.png" id="1_orhxp"]
 [ext_resource type="PackedScene" uid="uid://c5t2v5oqen1w6" path="res://scenes/player-battler.tscn" id="2_w7pjl"]
+[ext_resource type="PackedScene" uid="uid://c48a3agxgvn2l" path="res://scenes/monster-battler.tscn" id="3_monster"]
 
 [node name="CombatManager" type="Node2D"]
 
@@ -16,6 +17,9 @@ texture = ExtResource("1_orhxp")
 position = Vector2(241, 322)
 
 [node name="EnemyTeam" type="Node2D" parent="."]
+
+[node name="Monster-Battler" parent="EnemyTeam" instance=ExtResource("3_monster")]
+position = Vector2(800, 322)
 
 [node name="CombatUI" type="Control" parent="."]
 layout_mode = 3
