@@ -18,7 +18,9 @@ var is_dead: bool = false
 var is_attacking: bool = false
 var in_battle: bool = false
 
+@warning_ignore("unused_signal")
 signal enter_battle(monster)
+@warning_ignore("unused_signal")
 signal monster_died(monster)
 
 func _ready():
@@ -90,7 +92,9 @@ func get_current_hp() -> int:
 	return current_hp
 
 func set_current_hp(value: int):
+	var old = current_hp
 	current_hp = max(0, min(value, max_hp))
+	print("→ monster_battler.set_current_hp(): 旧HP=", old, " → 新HP=", current_hp)
 	if hp_fill:
 		var ratio = float(current_hp) / float(max_hp)
 		hp_fill.size.x = hp_bar.size.x * ratio
@@ -105,17 +109,22 @@ func get_defense() -> int:
 
 func take_damage(dmg: int):
 	if is_dead: return
+	var old_hp = current_hp
 	current_hp -= dmg
 	set_current_hp(current_hp)
-	play_anim("hurt")
+	print(monster_name, " 受到伤害: ", dmg, " | 旧HP:", old_hp, " → 新HP:", current_hp)
 	
 	if current_hp <= 0:
 		is_dead = true
+		emit_signal("monster_died", self)
 		die()
+	else:
+		play_anim("hurt")
 
 func die():
 	play_anim("death")
-	collision_shape.set_deferred("disabled", true)
+	if is_instance_valid(collision_shape):
+		collision_shape.set_deferred("disabled", true)
 	velocity = Vector2.ZERO
 
 func exit_battle():

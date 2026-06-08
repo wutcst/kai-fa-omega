@@ -8,10 +8,11 @@ var dir: Vector2 = Vector2.RIGHT
 
 func _ready():
 	body_entered.connect(_hit)
-	visibility_notifier.screen_exited.connect(queue_free)
+	if visibility_notifier:
+		visibility_notifier.screen_exited.connect(queue_free)
 
-func _physics_process(delta):
-	position += dir * speed * delta
+func _physics_process(_delta):
+	position += dir * speed * _delta
 	rotation = dir.angle()
 
 func _hit(body):
