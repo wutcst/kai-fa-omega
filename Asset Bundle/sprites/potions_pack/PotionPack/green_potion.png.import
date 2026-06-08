@@ -2,20 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-<<<<<<< HEAD
-uid="uid://dyf0i4mgi505m"
-=======
-uid="uid://bcbrw1hp4iw4a"
->>>>>>> zlfui
-path="res://.godot/imported/Knight_shield_attack8.png-c2898602ff1cfa08a602c1f4c2ddbf4d.ctex"
+uid="uid://bvvj1uf2do0dj"
+path="res://.godot/imported/green_potion.png-9f9e03453c60486c33a8680a9956a91b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Asset Bundle/sprites/Knight/Shield Knight/Attack/PNG sequence/Knight_shield_attack8.png"
-dest_files=["res://.godot/imported/Knight_shield_attack8.png-c2898602ff1cfa08a602c1f4c2ddbf4d.ctex"]
+source_file="res://Asset Bundle/sprites/potions_pack/PotionPack/green_potion.png"
+dest_files=["res://.godot/imported/green_potion.png-9f9e03453c60486c33a8680a9956a91b.ctex"]
 
 [params]
 

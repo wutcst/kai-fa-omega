@@ -20,6 +20,7 @@ var attack_timer: float = 0.0
 var is_attacking: bool = false
 var in_battle: bool = false
 
+<<<<<<< HEAD
 signal enter_battle(monster)
 signal monster_died(monster)
 
@@ -28,6 +29,34 @@ func _ready():
 	play_anim("idle")
 	connect_signals()
 
+=======
+@warning_ignore("unused_signal")
+signal enter_battle(monster)
+@warning_ignore("unused_signal")
+signal monster_died(monster)
+
+var spawn_position: Vector2
+
+func _ready():
+	current_hp = max_hp
+	spawn_position = global_position
+	
+	# 检查是否已被击败（地图重载后自动清除）
+	for pos in GameData.defeated_monster_positions:
+		if pos is Vector2:
+			if spawn_position.distance_to(pos) < chase_range:
+				print("→ 怪物已被击败，自动清除：", monster_name, " at ", spawn_position)
+				queue_free()
+				return
+	
+	play_anim("idle")
+	connect_signals()
+
+func safe_move_and_slide():
+	if is_inside_tree() and is_instance_valid(collision_shape) and not collision_shape.disabled:
+		move_and_slide()
+
+>>>>>>> zlfui
 func connect_signals():
 	if not animated_sprite.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
 		animated_sprite.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
@@ -36,16 +65,30 @@ func _draw():
 	draw_circle(Vector2.ZERO, chase_range, Color(1, 0, 0, 0.3))
 	draw_circle(Vector2.ZERO, attack_range, Color(0, 1, 0, 0.3))
 
+<<<<<<< HEAD
 func _physics_process(delta: float) -> void:
+=======
+func _physics_process(_delta: float) -> void:
+	if not is_inside_tree():
+		return
+>>>>>>> zlfui
 	if is_dead || in_battle:
 		velocity = Vector2.ZERO
 		is_attacking = false
 		attack_timer = 0
+<<<<<<< HEAD
 		move_and_slide()
 		return
 
 	if attack_timer > 0:
 		attack_timer -= delta
+=======
+		safe_move_and_slide()
+		return
+
+	if attack_timer > 0:
+		attack_timer -= _delta
+>>>>>>> zlfui
 		if attack_timer <= 0:
 			is_attacking = false
 
@@ -56,7 +99,11 @@ func _physics_process(delta: float) -> void:
 		else:
 			velocity = Vector2.ZERO
 			play_anim("idle")
+<<<<<<< HEAD
 			move_and_slide()
+=======
+			safe_move_and_slide()
+>>>>>>> zlfui
 			return
 
 	var dis = global_position.distance_to(player.global_position)
@@ -74,7 +121,11 @@ func _physics_process(delta: float) -> void:
 		if attack_timer <= 0 and not is_attacking:
 			perform_attack()
 
+<<<<<<< HEAD
 	move_and_slide()
+=======
+	safe_move_and_slide()
+>>>>>>> zlfui
 
 func perform_attack():
 	if is_dead || is_attacking || in_battle:

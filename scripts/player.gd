@@ -28,6 +28,13 @@ func _ready():
 	play_job_animation("idle")
 	connect_signals()
 
+<<<<<<< HEAD
+=======
+func safe_move_and_slide():
+	if is_inside_tree() and is_instance_valid(collision_shape) and not collision_shape.disabled:
+		move_and_slide()
+
+>>>>>>> zlfui
 func connect_signals():
 	if not animated_sprite.animation_finished.is_connected(_on_animated_sprite_animation_finished):
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
@@ -60,7 +67,13 @@ func load_data_from_global():
 	exp_to_next_level = GameData.exp_to_next_level
 	current_job = GameData.current_job
 
+<<<<<<< HEAD
 func _physics_process(delta: float) -> void:
+=======
+func _physics_process(_delta: float) -> void:
+	if not is_inside_tree():
+		return
+>>>>>>> zlfui
 	if in_battle || is_dead:
 		velocity = Vector2.ZERO
 		animated_sprite.stop()
@@ -68,7 +81,11 @@ func _physics_process(delta: float) -> void:
 
 	var input_dir = Input.get_vector("left", "right", "up", "down")
 	velocity = input_dir * current_speed
+<<<<<<< HEAD
 	move_and_slide()
+=======
+	safe_move_and_slide()
+>>>>>>> zlfui
 
 	if input_dir.length() > 0:
 		play_job_animation("walk")
