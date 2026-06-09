@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dk6jfh78b80a8"
+path="res://.godot/imported/mainbackground.mp3-4fa3d4adb6b30f233244cd01cbedcb37.mp3str"
+
+[deps]
+
+source_file="res://Asset Bundle/sprites/music/mainbackground.mp3"
+dest_files=["res://.godot/imported/mainbackground.mp3-4fa3d4adb6b30f233244cd01cbedcb37.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
