@@ -33,29 +33,33 @@ func _ready():
 	play_job_animation("idle")
 	print("玩家初始化完成 | 当前职业：", get_job_name())
 
+func safe_move_and_slide():
+	if is_inside_tree() and is_instance_valid(collision_shape) and not collision_shape.disabled:
+		move_and_slide()
+
 # ====================== 【核心：物理帧更新（移动逻辑）】 ======================
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
+	if not is_inside_tree():
+		return
 	# 死亡后禁止移动
 	if is_dead:
 		return
 	
 	# 1. 输入处理：获取方向键输入
-	var input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	var input_dir = Input.get_vector("left", "right", "up", "down")
 	
 	# 2. 计算移动速度
 	velocity = input_dir * current_speed
 	
 	# 3. 执行移动
-	move_and_slide()
+	safe_move_and_slide()
 	
 	# 4. 动画自动联动：移动时切行走动画，否则切待机
 	if input_dir.length() > 0:
-		# 只有当前是待机状态，才切换到行走动画，避免打断攻击/受伤动画
 		if animated_sprite.animation.ends_with("_idle"):
-			play_job_animation("work")
+			play_job_animation("walk")
 	else:
-		# 停止移动时，切回待机
-		if animated_sprite.animation.ends_with("_work"):
+		if animated_sprite.animation.ends_with("_walk"):
 			play_job_animation("idle")
 
 # ====================== 【职业切换核心函数】 ======================
@@ -124,7 +128,7 @@ func play_job_animation(action_name: String) -> void:
 func get_job_prefix() -> String:
 	match current_job:
 		Job.SWORDSMAN: return "swordsman"
-		Job.RANGER: return "archer"
+		Job.RANGER: return "ranger"
 		Job.SHIELD_KNIGHT: return "shield_knight"
 		_: return "swordsman" # 默认兜底：返回剑士前缀，避免报错
 
@@ -177,7 +181,7 @@ func heal_mp(amount: int) -> void:
 	current_mp = min(current_mp + amount, max_mp)
 
 # ====================== 【测试按键】 ======================
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# 职业切换
 	if Input.is_action_just_pressed("ui_accept"):
 		switch_job(Job.SWORDSMAN)

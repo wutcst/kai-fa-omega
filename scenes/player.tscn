@@ -1,7 +1,7 @@
 [gd_scene load_steps=91 format=3 uid="uid://cmllep788adha"]
 
 [ext_resource type="Texture2D" uid="uid://dexm81713fj0u" path="res://Asset Bundle/sprites/Archer/Brown/Attack/archer_attack-Sheet.png" id="1_3ravx"]
-[ext_resource type="Script" path="res://scenes/player.gd" id="1_qnjym"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_qnjym"]
 [ext_resource type="Texture2D" uid="uid://ce1tnmqdmuo80" path="res://Asset Bundle/sprites/Archer/Brown/Death/archer_death-Sheet.png" id="2_j71vv"]
 [ext_resource type="Texture2D" uid="uid://cyavvsphgs1ce" path="res://Asset Bundle/sprites/Archer/Brown/Hurt/archer_hurt-Sheet.png" id="3_w0v5r"]
 [ext_resource type="Texture2D" uid="uid://trrfu3lkbc0p" path="res://Asset Bundle/sprites/Archer/Brown/Idle/archer_idle-Sheet.png" id="4_aqs6e"]
@@ -600,24 +600,21 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_xoaoh"]
-radius = 6.5192
+radius = 5.5
 
-[node name="Player" type="CharacterBody2D"]
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+position = Vector2(365, 246)
 script = ExtResource("1_qnjym")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-2, -1)
 sprite_frames = SubResource("SpriteFrames_hcat4")
-animation = &"ranger_attack"
-autoplay = "ranger_death"
+animation = &"swordsman_hurt"
+autoplay = "ranger_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-3, 0)
+position = Vector2(-5, -1)
 scale = Vector2(2, 2)
 shape = SubResource("CircleShape2D_xoaoh")
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-
-[node name="Node2D" type="Node2D" parent="."]
-position = Vector2(-5, 9)
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_animation_finished"]
