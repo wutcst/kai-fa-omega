@@ -45,4 +45,8 @@ func _on_use_heal_potion():
 
 func _on_use_mana_potion():
 	print("→ 玩家使用了【蓝瓶】，恢复MP")
+<<<<<<< HEAD
 	BattleManager.use_mana_potion()
+=======
+	BattleManager.use_mana_potion()
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c

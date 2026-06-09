@@ -23,6 +23,7 @@ var current_exp: int = 0
 var exp_to_next_level: int = 50
 var level_up_growth: float = 1.2
 
+<<<<<<< HEAD
 # 暴击率（百分比）
 var crit: int = 5
 
@@ -42,3 +43,10 @@ var inventory_items: Array = [
 
 # 已击败的怪物位置列表（用于场景重载后清除怪物）
 var defeated_monster_positions: Array = []
+=======
+# 这里直接用 GameData.Job 类型
+var current_job: GameData.Job = GameData.Job.SWORDSMAN
+
+# 已击败的怪物位置列表（用于场景重载后清除怪物）
+var defeated_monster_positions: Array = []
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c

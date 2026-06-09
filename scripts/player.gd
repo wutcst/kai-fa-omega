@@ -10,7 +10,10 @@ extends CharacterBody2D
 
 @export var attack: int = 10
 @export var defense: int = 5
+<<<<<<< HEAD
 @export var crit: int = 5
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 @export var base_speed: int = 180
 var current_speed: int = 180
 
@@ -23,9 +26,12 @@ var current_job: GameData.Job = GameData.Job.SWORDSMAN
 var is_dead: bool = false
 var in_battle: bool = false
 
+<<<<<<< HEAD
 var inventory_panel: CanvasLayer = null
 var inventory_open: bool = false
 
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 func _ready():
 	load_data_from_global()
 	update_job_stats()
@@ -47,7 +53,10 @@ func save_data_to_global():
 	GameData.current_mp = current_mp
 	GameData.attack = attack
 	GameData.defense = defense
+<<<<<<< HEAD
 	GameData.crit = crit
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 	GameData.base_speed = base_speed
 	GameData.current_speed = current_speed
 	GameData.level = level
@@ -62,7 +71,10 @@ func load_data_from_global():
 	current_mp = GameData.current_mp
 	attack = GameData.attack
 	defense = GameData.defense
+<<<<<<< HEAD
 	crit = GameData.crit
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 	base_speed = GameData.base_speed
 	current_speed = GameData.current_speed
 	level = GameData.level
@@ -78,6 +90,7 @@ func _physics_process(_delta: float) -> void:
 		animated_sprite.stop()
 		return
 
+<<<<<<< HEAD
 	# Q键切换物品栏
 	if Input.is_action_just_pressed("ui_inventory"):
 		toggle_inventory()
@@ -89,6 +102,8 @@ func _physics_process(_delta: float) -> void:
 			play_job_animation("idle")
 		return
 
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 	var input_dir = Input.get_vector("left", "right", "up", "down")
 	velocity = input_dir * current_speed
 	safe_move_and_slide()
@@ -117,21 +132,30 @@ func update_job_stats() -> void:
 			max_mp = 40 + level * 6
 			attack = 15 + level * 3
 			defense = 8 + level * 2
+<<<<<<< HEAD
 			crit = 10 + level * 1
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 			current_speed = 180
 		GameData.Job.RANGER:
 			max_hp = 90 + level * 10
 			max_mp = 60 + level * 8
 			attack = 12 + level * 2
 			defense = 4 + level * 1
+<<<<<<< HEAD
 			crit = 20 + level * 2
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 			current_speed = 280
 		GameData.Job.SHIELD_KNIGHT:
 			max_hp = 180 + level * 25
 			max_mp = 30 + level * 4
 			attack = 8 + level * 2
 			defense = 15 + level * 3
+<<<<<<< HEAD
 			crit = 5 + level * 1
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
 			current_speed = 120
 	current_hp = max_hp
 	current_mp = max_mp
@@ -161,6 +185,7 @@ func _on_animated_sprite_animation_finished(anim):
 		return
 	if anim.ends_with("_attack") || anim.ends_with("_hurt"):
 		play_job_animation("idle")
+<<<<<<< HEAD
 
 func toggle_inventory():
 	if inventory_open:
@@ -185,3 +210,5 @@ func close_inventory():
 	inventory_open = false
 	if is_instance_valid(inventory_panel):
 		inventory_panel.hide_panel()
+=======
+>>>>>>> 0b2bfa1a62c3e00c6bd4d14bcde8261b0e4bb72c
