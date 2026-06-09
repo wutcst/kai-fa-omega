@@ -13,10 +13,6 @@ var is_turn: bool = false
 var is_dead: bool = false
 var in_attack: bool = false
 var current_attack_target: Node2D = null
-<<<<<<< HEAD
-var attack_callback_id: int = -1
-=======
->>>>>>> zlfui
 
 func get_max_hp() -> int:
 	return GameData.max_hp
@@ -25,13 +21,9 @@ func get_current_hp() -> int:
 	return GameData.current_hp
 
 func set_current_hp(value: int):
-<<<<<<< HEAD
-	GameData.current_hp = max(0, min(value, get_max_hp()))
-=======
 	var old = GameData.current_hp
 	GameData.current_hp = max(0, min(value, get_max_hp()))
 	print("→ player_battler.set_current_hp(): 旧HP=", old, " → 新HP=", GameData.current_hp)
->>>>>>> zlfui
 	if hp_fill:
 		var ratio = float(GameData.current_hp) / float(get_max_hp())
 		hp_fill.size.x = hp_bar.size.x * ratio
@@ -45,13 +37,9 @@ func get_current_mp() -> int:
 	return GameData.current_mp
 
 func set_current_mp(value: int):
-<<<<<<< HEAD
-	GameData.current_mp = max(0, min(value, get_max_mp()))
-=======
 	var old = GameData.current_mp
 	GameData.current_mp = max(0, min(value, get_max_mp()))
 	print("→ player_battler.set_current_mp(): 旧MP=", old, " → 新MP=", GameData.current_mp)
->>>>>>> zlfui
 	if mp_fill:
 		var ratio = float(GameData.current_mp) / float(get_max_mp())
 		mp_fill.size.x = mp_bar.size.x * ratio
@@ -70,16 +58,7 @@ func get_current_job() -> GameData.Job:
 func _ready():
 	create_bars()
 	play_job_animation("idle")
-<<<<<<< HEAD
-
-func _process(delta):
-	if is_turn and not in_attack and not is_dead:
-		if Input.is_action_just_pressed("ui_accept"):
-			if Engine.has_singleton("BattleManager") and BattleManager.current_enemy:
-				attack_enemy(BattleManager.current_enemy)
-=======
 	print("→ player_battler._ready(): 已连接动画完成信号")
->>>>>>> zlfui
 
 func create_bars():
 	hud = Control.new()
@@ -141,26 +120,6 @@ func create_bars():
 	set_current_mp(get_current_mp())
 
 func attack_enemy(target: Node2D):
-<<<<<<< HEAD
-	if not is_turn or in_attack or is_dead: return
-	in_attack = true
-	is_turn = false
-
-	current_attack_target = target
-	play_job_animation("attack")
-
-	if Engine.has_singleton("BattleManager"):
-		BattleManager.battle_state = BattleManager.BattleState.PLAYER_ACTION
-
-	if attack_callback_id == -1:
-		attack_callback_id = animated_sprite.animation_finished.connect(_on_attack_anim_done)
-
-func _on_attack_anim_done():
-	if attack_callback_id != -1:
-		animated_sprite.animation_finished.disconnect(_on_attack_anim_done)
-		attack_callback_id = -1
-
-=======
 	if in_attack or is_dead: return
 	in_attack = true
 
@@ -177,26 +136,10 @@ func _on_attack_anim_done():
 	await get_tree().create_timer(duration).timeout
 	
 	var hurt_duration = 0.0
->>>>>>> zlfui
 	if current_attack_target and is_instance_valid(current_attack_target):
 		var defense_val = current_attack_target.get("defense")
 		var defense = defense_val if defense_val is int else 0
 		var damage = max(1, get_attack() - defense)
-<<<<<<< HEAD
-		current_attack_target.take_damage(damage)
-		current_attack_target = null
-
-	in_attack = false
-	play_job_animation("idle")
-	
-	if Engine.has_singleton("BattleManager"):
-		BattleManager._after_player_attack()
-
-func take_damage(damage: int):
-	if is_dead: return
-	set_current_hp(get_current_hp() - damage)
-	play_job_animation("hurt")
-=======
 		print("→ player_battler.attack_enemy()：造成伤害：", damage)
 		current_attack_target.take_damage(damage)
 		
@@ -224,16 +167,12 @@ func take_damage(damage: int):
 	var old_hp = get_current_hp()
 	set_current_hp(old_hp - damage)
 	print("→ player_battler.take_damage()：受到伤害：", damage, " | 旧HP:", old_hp, " → 新HP:", get_current_hp())
->>>>>>> zlfui
 	
 	if get_current_hp() <= 0:
 		is_dead = true
 		play_job_animation("death")
-<<<<<<< HEAD
-=======
 	else:
 		play_job_animation("hurt")
->>>>>>> zlfui
 
 func play_job_animation(action_name: String):
 	if is_dead and action_name != "death":

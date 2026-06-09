@@ -1,17 +1,3 @@
-<<<<<<< HEAD
-[gd_scene load_steps=4 format=3 uid="uid://b1ittsnvasmtc"]
-
-[ext_resource type="Texture2D" uid="uid://34qrsxioanxt" path="res://Asset Bundle/sprites/Dungeon_24x24.png" id="1_orhxp"]
-[ext_resource type="PackedScene" uid="uid://c5t2v5oqen1w6" path="res://scenes/player-battler.tscn" id="2_w7pjl"]
-[ext_resource type="PackedScene" uid="uid://c48a3agxgvn2l" path="res://scenes/monster-battler.tscn" id="3_monster"]
-
-[node name="CombatManager" type="Node2D"]
-
-[node name="Background" type="Sprite2D" parent="."]
-position = Vector2(592, 356)
-scale = Vector2(5.3, 5.625)
-texture = ExtResource("1_orhxp")
-=======
 [gd_scene load_steps=6 format=3 uid="uid://b1ittsnvasmtc"]
 
 [ext_resource type="Script" path="res://scenes/combat_manager.gd" id="1_5occi"]
@@ -27,31 +13,15 @@ script = ExtResource("1_5occi")
 position = Vector2(577.25, 332)
 scale = Vector2(3.12364, 3.19231)
 texture = ExtResource("1_tmn22")
->>>>>>> zlfui
 
 [node name="PlayerTeam" type="Node2D" parent="."]
 
 [node name="Player-Battler" parent="PlayerTeam" instance=ExtResource("2_w7pjl")]
-<<<<<<< HEAD
-position = Vector2(241, 322)
-=======
 position = Vector2(278, 349)
->>>>>>> zlfui
 
 [node name="EnemyTeam" type="Node2D" parent="."]
 
 [node name="Monster-Battler" parent="EnemyTeam" instance=ExtResource("3_monster")]
-<<<<<<< HEAD
-position = Vector2(800, 322)
-
-[node name="CombatUI" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 240.0
-offset_top = 249.0
-offset_right = 345.0
-offset_bottom = 276.0
-=======
 position = Vector2(833, 363)
 
 [node name="CombatUI" type="CanvasLayer" parent="."]
@@ -96,8 +66,7 @@ grow_vertical = 0
 
 [node name="btn_item" type="Button" parent="CombatUI/ActionBar"]
 layout_mode = 2
-text = "道具
-"
+text = "道具"
 
 [node name="btn_escape" type="Button" parent="CombatUI/ActionBar"]
 layout_mode = 2
@@ -120,4 +89,3 @@ text = "1"
 [node name="btn_mana" type="Button" parent="CombatUI/ItemBar"]
 layout_mode = 2
 text = "2"
->>>>>>> zlfui

@@ -21,10 +21,7 @@ var enemy_position: Vector2 = Vector2.ZERO
 var enemy_data: Dictionary = {}
 var enemy_sprite_scale: Vector2 = Vector2.ONE
 var player_sprite_scale: Vector2 = Vector2.ONE
-<<<<<<< HEAD
-=======
 var combat_scene: Node2D = null
->>>>>>> zlfui
 
 func _ready():
 	_connect_to_enemies()
@@ -57,11 +54,7 @@ func _on_enter_battle(attacking_monster):
 	
 	var scene_path = attacking_monster.get("enemy_scene_path")
 	enemy_scene = scene_path if scene_path is String else ""
-<<<<<<< HEAD
-	enemy_position = attacking_monster.global_position
-=======
 	enemy_position = attacking_monster.get("spawn_position") if attacking_monster.get("spawn_position") else attacking_monster.global_position
->>>>>>> zlfui
 	
 	if attacking_monster.has_node("AnimatedSprite2D"):
 		var enemy_sprite = attacking_monster.get_node("AnimatedSprite2D")
@@ -79,11 +72,8 @@ func _on_enter_battle(attacking_monster):
 	get_tree().change_scene_to_file("res://scenes/combat_manager.tscn")
 
 func _on_scene_change():
-<<<<<<< HEAD
-=======
 	combat_scene = get_tree().current_scene
 
->>>>>>> zlfui
 	for enemy_node in get_tree().get_nodes_in_group("enemy"):
 		if enemy_node.has_signal("enter_battle"):
 			if not enemy_node.enter_battle.is_connected(_on_enter_battle):
@@ -151,25 +141,19 @@ func _start_player_turn():
 	battle_state = BattleState.PLAYER_TURN
 	if player_battler:
 		player_battler.is_turn = true
-<<<<<<< HEAD
-=======
 	if combat_scene:
 		var ui = combat_scene.get_node_or_null("CombatUI")
 		if ui:
 			ui.set_buttons_enabled(true)
->>>>>>> zlfui
 	print("玩家回合开始")
 
 func _end_player_turn():
 	if player_battler:
 		player_battler.is_turn = false
-<<<<<<< HEAD
-=======
 	if combat_scene:
 		var ui = combat_scene.get_node_or_null("CombatUI")
 		if ui:
 			ui.set_buttons_enabled(false)
->>>>>>> zlfui
 	battle_state = BattleState.ENEMY_TURN
 	_start_enemy_turn()
 
@@ -178,11 +162,7 @@ func _start_enemy_turn():
 	if enemies.size() > 0:
 		for enemy in enemies:
 			if not enemy.is_dead:
-<<<<<<< HEAD
-				call_deferred("_execute_enemy_attack", enemy)
-=======
 				_execute_enemy_attack(enemy)
->>>>>>> zlfui
 				break
 	else:
 		_end_battle(true)
@@ -193,14 +173,6 @@ func _execute_enemy_attack(enemy):
 	
 	battle_state = BattleState.ENEMY_ACTION
 	
-<<<<<<< HEAD
-	if player_battler and not player_battler.is_dead:
-		var defense = player_battler.get_defense() if player_battler.has_method("get_defense") else 0
-		var damage = max(1, enemy.attack - defense)
-		player_battler.take_damage(damage)
-		
-		call_deferred("_check_battle_after_enemy_attack")
-=======
 	print("→ 怪物开始攻击动画...")
 	
 	if enemy.has_method("play_anim"):
@@ -242,7 +214,6 @@ func _execute_enemy_attack(enemy):
 		enemy.play_anim("idle")
 	
 	call_deferred("_check_battle_after_enemy_attack")
->>>>>>> zlfui
 
 func _check_battle_after_enemy_attack():
 	if player_battler and player_battler.is_dead:
@@ -264,14 +235,11 @@ func _end_battle(player_won: bool):
 	if player_won:
 		print("战斗胜利！")
 		_reward_player()
-<<<<<<< HEAD
-=======
 		
 		# 记录击败怪物的地图位置，让地图重载后自动清除
 		if enemy_position != Vector2.ZERO:
 			GameData.defeated_monster_positions.append(enemy_position)
 			print("→ 记录击败怪物位置：", enemy_position)
->>>>>>> zlfui
 	else:
 		print("战斗失败！")
 	
@@ -302,22 +270,16 @@ func _after_player_attack():
 	if battle_state != BattleState.PLAYER_ACTION:
 		return
 	
-<<<<<<< HEAD
-=======
 	# 如果怪物没死，让它回 idle
 	if current_enemy and is_instance_valid(current_enemy) and not current_enemy.is_dead:
 		current_enemy.play_anim("idle")
 		print("→ 怪物受伤后回到 idle")
 	
->>>>>>> zlfui
 	if current_enemy and current_enemy.is_dead:
 		current_enemy.die()
 	
 	_end_player_turn()
 
-<<<<<<< HEAD
-func _process(delta):
-=======
 func use_skill(skill_index: int):
 	if battle_state != BattleState.PLAYER_TURN:
 		return
@@ -504,7 +466,6 @@ func try_escape():
 		_end_player_turn()
 
 func _process(_delta):
->>>>>>> zlfui
 	if battle_state != BattleState.STARTING:
 		return
 	if not get_tree().current_scene:

@@ -25,9 +25,6 @@ var level_up_growth: float = 1.2
 
 # 这里直接用 GameData.Job 类型
 var current_job: GameData.Job = GameData.Job.SWORDSMAN
-<<<<<<< HEAD
-=======
 
 # 已击败的怪物位置列表（用于场景重载后清除怪物）
 var defeated_monster_positions: Array = []
->>>>>>> zlfui
