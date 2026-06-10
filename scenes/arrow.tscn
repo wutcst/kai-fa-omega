@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://yn2ss86k6jpe"]
+[gd_scene load_steps=4 format=3 uid="uid://bx1bsq1vx07qr"]
 
 [ext_resource type="Script" path="res://scripts/arrow.gd" id="1_87kfo"]
 [ext_resource type="Texture2D" uid="uid://mfoeqf6vqkls" path="res://Asset Bundle/sprites/Archer/Brown/Attack/arrow.png" id="2_t3uom"]

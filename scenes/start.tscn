@@ -1,8 +1,8 @@
 [gd_scene load_steps=8 format=3 uid="uid://be84bnlr0ps13"]
 
-[ext_resource type="Script" path="res://scenes/start.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/start.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://cv4ryc67tyrn6" path="res://Asset Bundle/sprites/source/开始.png" id="2_bg"]
-[ext_resource type="AudioStream" uid="uid://dk6jfh78b80a8" path="res://Asset Bundle/sprites/music/mainbackground.mp3" id="3_music"]
+[ext_resource type="AudioStream" uid="uid://dk6jfh78b80a8" path="res://Asset Bundle/music/mainbackground.mp3" id="3_music"]
 [ext_resource type="PackedScene" uid="uid://cmllep788adha" path="res://scenes/player.tscn" id="4_x6wsb"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
@@ -40,10 +40,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -1008.0
-offset_top = -566.0
-offset_right = -517.0
-offset_bottom = -293.0
+offset_left = -1001.0
+offset_top = -572.0
+offset_right = -510.0
+offset_bottom = -299.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_bg")

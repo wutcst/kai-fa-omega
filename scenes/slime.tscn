@@ -411,6 +411,9 @@ radius = 15.0
 
 [node name="slime" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("6_l13kp")
+max_hp = 100
+attack = 8
+defense = 5
 speed = 65.0
 chase_range = 180.0
 attack_range = 35.0

@@ -658,9 +658,8 @@ script = ExtResource("1_rsxdx")
 position = Vector2(-1, 23)
 scale = Vector2(2.72917, 3.64844)
 sprite_frames = SubResource("SpriteFrames_hcat4")
-animation = &"swordsman_hit"
+animation = &"shield_knight_walk"
 autoplay = "ranger_idle"
-frame_progress = 0.867501
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(2, 26)

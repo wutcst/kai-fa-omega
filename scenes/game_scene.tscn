@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://612y556heblm"]
+[gd_scene load_steps=4 format=3 uid="uid://612y556heblm"]
 
 [ext_resource type="PackedScene" uid="uid://cmllep788adha" path="res://scenes/player.tscn" id="1_htcah"]
+[ext_resource type="PackedScene" uid="uid://cmf0qwvh3lsl" path="res://scenes/slime.tscn" id="3_5rbba"]
 [ext_resource type="PackedScene" uid="uid://ia535d6t1fas" path="res://scenes/bat.tscn" id="3_quca5"]
 
 [node name="Node2D" type="Node2D"]
@@ -11,8 +12,5 @@ position = Vector2(333, 280)
 [node name="bat" parent="." instance=ExtResource("3_quca5")]
 position = Vector2(1005, 261)
 
-[node name="bat2" parent="." instance=ExtResource("3_quca5")]
-position = Vector2(538, 88)
-
-[node name="bat3" parent="." instance=ExtResource("3_quca5")]
-position = Vector2(713, 573)
+[node name="slime" parent="." instance=ExtResource("3_5rbba")]
+position = Vector2(563, 157)

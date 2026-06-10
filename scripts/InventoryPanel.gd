@@ -250,10 +250,10 @@ func build_attributes_section():
 		row.add_child(val)
 		attr_grid.add_child(row)
 
-	# 职业行
+	# 角色行
 	var job_row = HBoxContainer.new()
 	var job_lbl = Label.new()
-	job_lbl.text = "职业"
+	job_lbl.text = "角色"
 	job_lbl.custom_minimum_size = Vector2(80, 0)
 	job_lbl.add_theme_font_size_override("font_size", 15)
 	job_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
@@ -261,7 +261,7 @@ func build_attributes_section():
 
 	var job_val = Label.new()
 	job_val.name = "JobValue"
-	job_val.text = get_job_display_name()
+	job_val.text = "冒险者"
 	job_val.add_theme_font_size_override("font_size", 15)
 	job_val.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
 	job_row.add_child(job_val)
@@ -440,14 +440,8 @@ func build_items_section():
 
 	right_column.add_child(items_section)
 
-func get_job_display_name() -> String:
-	match GameData.current_job:
-		GameData.Job.SWORDSMAN: return "剑士"
-		GameData.Job.RANGER: return "游侠"
-		GameData.Job.SHIELD_KNIGHT: return "盾骑士"
-		_: return "剑士"
-
-func refresh_ui():
+func _on_window_resized():
+	refresh_ui()
 	for child in get_children():
 		child.queue_free()
 	setup_ui()

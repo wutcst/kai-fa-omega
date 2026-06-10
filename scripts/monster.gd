@@ -11,6 +11,7 @@ extends CharacterBody2D
 @export var chase_range: float = 200.0
 @export var attack_range: float = 40.0
 @export var attack_cd: float = 1.0
+@export var exp_reward: int = 20
 @export var enemy_scene_path: String = ""
 
 var current_hp: int
