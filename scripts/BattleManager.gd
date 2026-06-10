@@ -25,6 +25,27 @@ var combat_scene: Node2D = null
 
 func _ready():
 	_connect_to_enemies()
+	# 每次有节点加入场景树时，检查是不是怪物，是就连接 enter_battle 信号
+	# （解决从 start.tscn 切到 game_scene.tscn 后怪物信号没连上的问题）
+	get_tree().node_added.connect(_on_node_added)
+
+func _on_node_added(node):
+	if not is_instance_valid(node):
+		return
+	# 延迟一帧再连，确保节点完全初始化
+	call_deferred("_try_connect_enemy", node)
+
+func _try_connect_enemy(node):
+	if not is_instance_valid(node):
+		return
+	if not node.is_in_group("enemy"):
+		return
+	if node.has_signal("enter_battle"):
+		if not node.enter_battle.is_connected(_on_enter_battle):
+			node.enter_battle.connect(_on_enter_battle)
+	if node.has_signal("monster_died"):
+		if not node.monster_died.is_connected(_on_monster_died):
+			node.monster_died.connect(_on_monster_died)
 
 func _connect_to_enemies():
 	for enemy in get_tree().get_nodes_in_group("enemy"):
@@ -172,47 +193,38 @@ func _execute_enemy_attack(enemy):
 		return
 	
 	battle_state = BattleState.ENEMY_ACTION
-	
-	print("→ 怪物开始攻击动画...")
-	
+
 	if enemy.has_method("play_anim"):
 		enemy.play_anim("attack")
-	
-	var duration = 0.5
+
+	var duration: float = 0.5
 	if enemy.has_node("AnimatedSprite2D"):
 		var sprite: AnimatedSprite2D = enemy.get_node("AnimatedSprite2D")
 		var anim_name = enemy.monster_name + "_attack"
-		print("→ 怪物攻击动画名：", anim_name, "，是否存在？", sprite.sprite_frames.has_animation(anim_name))
-		duration = get_anim_duration(sprite, anim_name, 0.5)
-	
-	print("→ 等待怪物攻击动画：", duration, "秒")
+		if sprite.sprite_frames.has_animation(anim_name):
+			var fc = sprite.sprite_frames.get_frame_count(anim_name)
+			duration = max(0.5, fc * 0.18)
+
 	await get_tree().create_timer(duration).timeout
-	
-	print("→ 怪物攻击结束，造成伤害")
+
 	if player_battler and not player_battler.is_dead and is_instance_valid(player_battler):
 		var defense = player_battler.get_defense() if player_battler.has_method("get_defense") else 0
 		var damage = max(1, enemy.attack - defense)
-		
-		# 先造成伤害，触发受伤动画
 		player_battler.take_damage(damage)
-		
-		# 现在等玩家受伤动画播放完
-		var hurt_duration = 0.6
-		if player_battler.animated_sprite.sprite_frames.has_animation(player_battler.get_job_prefix() + "_hurt"):
-			var frame_count = player_battler.animated_sprite.sprite_frames.get_frame_count(player_battler.get_job_prefix() + "_hurt")
-			hurt_duration = max(0.6, frame_count * 0.2)
-		print("→ 等待玩家受伤动画：", hurt_duration, "秒")
+
+		var hurt_duration: float = 0.5
+		var hurt_anim = player_battler.get_job_prefix() + "_hurt"
+		if player_battler.animated_sprite.sprite_frames.has_animation(hurt_anim):
+			var fc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
+			hurt_duration = max(0.5, fc * 0.2)
 		await get_tree().create_timer(hurt_duration).timeout
-		
-		# 显式让玩家回到 idle
+
 		if not player_battler.is_dead:
 			player_battler.play_job_animation("idle")
-			print("→ 玩家回到 idle")
-	
-	print("→ 怪物回到 idle")
+
 	if enemy.has_method("play_anim") and not enemy.is_dead:
 		enemy.play_anim("idle")
-	
+
 	call_deferred("_check_battle_after_enemy_attack")
 
 func _check_battle_after_enemy_attack():
@@ -262,9 +274,11 @@ func _exit_battle():
 	current_enemy = null
 	enemies.clear()
 	
-	print("战斗结束，返回地图")
-	if previous_scene != "":
-		get_tree().change_scene_to_file(previous_scene)
+	print("战斗结束，返回主界面")
+	# 直接切回主场景（game_scene.tscn 是项目启动场景）
+	var tree = get_tree()
+	if tree:
+		tree.change_scene_to_file("res://scenes/game_scene.tscn")
 
 func _after_player_attack():
 	if battle_state != BattleState.PLAYER_ACTION:
@@ -309,112 +323,29 @@ func use_skill(skill_index: int):
 
 func _skill_power_attack():
 	if not player_battler or not current_enemy:
-		print("→ _skill_power_attack()：没有玩家或敌人")
 		return
-
-	print("→ 【强力攻击】开始，玩家攻击力：", player_battler.get_attack())
-
-	player_battler.in_attack = true
-	player_battler.is_turn = false
-	player_battler.play_job_animation("attack")
-
-	var anim_name = player_battler.get_job_prefix() + "_attack"
-	var duration = get_anim_duration(player_battler.animated_sprite, anim_name, 0.4)
-	await get_tree().create_timer(duration).timeout
-
-	var hurt_duration = 0.0
-	if current_enemy and is_instance_valid(current_enemy):
-		var defense_val = current_enemy.get("defense")
-		var defense = defense_val if defense_val is int else 0
-		var damage = max(1, int(player_battler.get_attack() * 1.5) - defense)
-		print("→ 【强力攻击】造成伤害：", damage, "（敌人防御：", defense, "）")
-		current_enemy.take_damage(damage)
-		
-		if current_enemy.has_node("AnimatedSprite2D") and not current_enemy.is_dead:
-			var sprite: AnimatedSprite2D = current_enemy.get_node("AnimatedSprite2D")
-			var hurt_anim_name = current_enemy.monster_name + "_hurt"
-			if sprite.sprite_frames.has_animation(hurt_anim_name):
-				hurt_duration = sprite.sprite_frames.get_frame_count(hurt_anim_name) * 0.15
-			else:
-				hurt_duration = 0.3
-	
-	if hurt_duration > 0:
-		await get_tree().create_timer(hurt_duration).timeout
-	
-	if current_enemy and is_instance_valid(current_enemy) and not current_enemy.is_dead:
-		current_enemy.play_anim("idle")
-
-	player_battler.in_attack = false
-	player_battler.play_job_animation("idle")
-	_after_player_attack()
-
+	player_battler.heavy_attack_enemy(current_enemy)
 
 func get_anim_duration(sprite: AnimatedSprite2D, anim_name: String, fallback: float) -> float:
 	if sprite.sprite_frames.has_animation(anim_name):
 		var frame_count = sprite.sprite_frames.get_frame_count(anim_name)
-		# Godot 4 用每个动画的 speed 而不是全局的
-		var anim_speed = 6.0 # 默认合理速度
 		if frame_count > 0:
-			# 安全的假设：每帧0.15秒（大概6fps是合理的像素风动画速度）
-			var estimate_per_frame = 0.15
-			return frame_count * estimate_per_frame
+			return frame_count * 0.15
 	return fallback
-
 
 func _skill_heal():
 	if not player_battler:
-		print("→ _skill_heal()：没有玩家")
 		return
-
 	var old_hp = player_battler.get_current_hp()
 	var heal_amount = 30
 	player_battler.set_current_hp(old_hp + heal_amount)
-	var new_hp = player_battler.get_current_hp()
-	print("→ 【治疗术】恢复了 ", new_hp - old_hp, " 点HP | 旧HP:", old_hp, " → 新HP:", new_hp)
-
 	await get_tree().create_timer(0.5).timeout
 	_end_player_turn()
 
 func _skill_ultimate():
 	if not player_battler or not current_enemy:
-		print("→ _skill_ultimate()：没有玩家或敌人")
 		return
-
-	print("→ 【必杀技】开始，玩家攻击力：", player_battler.get_attack())
-
-	player_battler.in_attack = true
-	player_battler.is_turn = false
-	player_battler.play_job_animation("attack")
-
-	var anim_name = player_battler.get_job_prefix() + "_attack"
-	var duration = get_anim_duration(player_battler.animated_sprite, anim_name, 0.4)
-	await get_tree().create_timer(duration).timeout
-
-	var hurt_duration = 0.0
-	if current_enemy and is_instance_valid(current_enemy):
-		var defense_val = current_enemy.get("defense")
-		var defense = defense_val if defense_val is int else 0
-		var damage = max(1, int(player_battler.get_attack() * 2.5) - defense)
-		print("→ 【必杀技】造成伤害：", damage, "（敌人防御：", defense, "）")
-		current_enemy.take_damage(damage)
-		
-		if current_enemy.has_node("AnimatedSprite2D") and not current_enemy.is_dead:
-			var sprite: AnimatedSprite2D = current_enemy.get_node("AnimatedSprite2D")
-			var hurt_anim_name = current_enemy.monster_name + "_hurt"
-			if sprite.sprite_frames.has_animation(hurt_anim_name):
-				hurt_duration = sprite.sprite_frames.get_frame_count(hurt_anim_name) * 0.15
-			else:
-				hurt_duration = 0.3
-	
-	if hurt_duration > 0:
-		await get_tree().create_timer(hurt_duration).timeout
-	
-	if current_enemy and is_instance_valid(current_enemy) and not current_enemy.is_dead:
-		current_enemy.play_anim("idle")
-
-	player_battler.in_attack = false
-	player_battler.play_job_animation("idle")
-	_after_player_attack()
+	player_battler.ultimate_attack_enemy(current_enemy)
 
 func use_heal_potion():
 	if battle_state != BattleState.PLAYER_TURN:

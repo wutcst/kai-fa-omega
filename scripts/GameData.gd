@@ -30,14 +30,14 @@ var crit: int = 5
 var current_job: GameData.Job = GameData.Job.SWORDSMAN
 
 # 装备栏数据
-var weapon: Dictionary = {"name": "铁剑", "icon": "", "attack_bonus": 3, "description": "一把普通的铁剑"}
-var armor: Dictionary = {"name": "皮甲", "icon": "", "defense_bonus": 2, "description": "轻便的皮甲"}
-var accessory: Dictionary = {"name": "无", "icon": "", "hp_bonus": 0, "description": "饰品槽位"}
+var weapon: Dictionary = {"name": "铁剑", "icon": "res://Asset Bundle/sprites/SwordPack/SwordPack-IronSword.png", "attack_bonus": 3, "description": "一把普通的铁剑"}
+var armor: Dictionary = {"name": "皮甲", "icon": "res://Asset Bundle/sprites/chainmail/wuxia_chainmail_ancient_bronze_32x32.png", "defense_bonus": 2, "description": "轻便的皮甲"}
+var accessory: Dictionary = {"name": "无", "icon": "res://Asset Bundle/sprites/ring/1.png", "hp_bonus": 0, "description": "饰品槽位"}
 
 # 道具栏数据 [{name, quantity, icon, description}, ...]
 var inventory_items: Array = [
-	{"name": "血瓶", "quantity": 3, "icon": "", "description": "恢复30点生命值"},
-	{"name": "蓝瓶", "quantity": 2, "icon": "", "description": "恢复20点魔法值"},
+	{"name": "血瓶", "quantity": 3, "icon": "res://Asset Bundle/sprites/PotionPack/red_potion.png", "description": "恢复30点生命值"},
+	{"name": "蓝瓶", "quantity": 2, "icon": "res://Asset Bundle/sprites/PotionPack/blue_potion.png", "description": "恢复20点魔法值"},
 ]
 
 # 已击败的怪物位置列表（用于场景重载后清除怪物）
