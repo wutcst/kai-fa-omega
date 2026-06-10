@@ -69,6 +69,9 @@ func _on_enter_battle(attacking_monster):
 		if player.has_method("save_data_to_global"):
 			player.save_data_to_global()
 		
+		GameData.player_return_position = player.global_position
+		GameData.returning_from_battle = true
+		
 		if player.has_node("AnimatedSprite2D"):
 			var player_sprite = player.get_node("AnimatedSprite2D")
 			player_sprite_scale = player_sprite.scale
@@ -86,6 +89,7 @@ func _on_enter_battle(attacking_monster):
 		"max_hp": attacking_monster.get("max_hp") if attacking_monster.get("max_hp") else 80,
 		"attack": attacking_monster.get("attack") if attacking_monster.get("attack") else 15,
 		"defense": attacking_monster.get("defense") if attacking_monster.get("defense") else 3,
+		"exp_reward": attacking_monster.get("exp_reward") if attacking_monster.get("exp_reward") else 20,
 	}
 	
 	previous_scene = get_tree().current_scene.scene_file_path if get_tree().current_scene else ""
@@ -203,7 +207,8 @@ func _execute_enemy_attack(enemy):
 		var anim_name = enemy.monster_name + "_attack"
 		if sprite.sprite_frames.has_animation(anim_name):
 			var fc = sprite.sprite_frames.get_frame_count(anim_name)
-			duration = max(0.5, fc * 0.18)
+			var spd = max(1.0, sprite.sprite_frames.get_animation_speed(anim_name))
+			duration = fc / spd
 
 	await get_tree().create_timer(duration).timeout
 
@@ -212,15 +217,16 @@ func _execute_enemy_attack(enemy):
 		var damage = max(1, enemy.attack - defense)
 		player_battler.take_damage(damage)
 
-		var hurt_duration: float = 0.5
-		var hurt_anim = player_battler.get_job_prefix() + "_hurt"
+		var hurt_duration: float = 0.3
+		var hurt_anim = "swordsman" + "_hurt"
 		if player_battler.animated_sprite.sprite_frames.has_animation(hurt_anim):
-			var fc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
-			hurt_duration = max(0.5, fc * 0.2)
+			var hfc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
+			var hspd = max(1.0, player_battler.animated_sprite.sprite_frames.get_animation_speed(hurt_anim))
+			hurt_duration = hfc / hspd
 		await get_tree().create_timer(hurt_duration).timeout
 
 		if not player_battler.is_dead:
-			player_battler.play_job_animation("idle")
+			player_battler.play_anim("idle")
 
 	if enemy.has_method("play_anim") and not enemy.is_dead:
 		enemy.play_anim("idle")
@@ -258,11 +264,34 @@ func _end_battle(player_won: bool):
 	call_deferred("_exit_battle")
 
 func _reward_player():
-	GameData.current_exp += 30
-	if GameData.current_exp >= GameData.exp_to_next_level:
+	var exp_gain = enemy_data.get("exp_reward", 30)
+	if exp_gain is not int:
+		exp_gain = 30
+	GameData.current_exp += exp_gain
+	print("→ 获得经验：", exp_gain)
+	
+	while GameData.current_exp >= GameData.exp_to_next_level:
+		GameData.current_exp -= GameData.exp_to_next_level
 		GameData.level += 1
 		GameData.exp_to_next_level = int(GameData.exp_to_next_level * GameData.level_up_growth)
+		
+		GameData.max_hp += 12
+		GameData.max_mp += 8
+		GameData.attack += 2
+		GameData.defense += 1
+		
+		GameData.current_hp = GameData.max_hp
+		GameData.current_mp = GameData.max_mp
+
 		print("升级！当前等级: ", GameData.level)
+	
+	print("→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level)
+	
+	if combat_scene:
+		var ui = combat_scene.get_node_or_null("CombatUI")
+		if ui:
+			ui.update_exp_bar()
+			ui.refresh_skill_locks()
 
 func _exit_battle():
 	battle_state = BattleState.NONE
@@ -301,6 +330,25 @@ func use_skill(skill_index: int):
 	if not player_battler or player_battler.is_dead or not current_enemy:
 		return
 
+	var skill_idx: int = skill_index - 1
+	if not GameData.is_skill_unlocked(skill_idx):
+		print("→ 技能未解锁！需要 Lv.", GameData.get_skill_req_level(skill_idx))
+		return
+
+	match skill_index:
+		2:
+			if not player_battler.has_enough_mp(player_battler.MP_COST_HEAVY):
+				print("→ MP不足！重斩需要", player_battler.MP_COST_HEAVY, "点MP，当前MP：", player_battler.get_current_mp())
+				return
+		3:
+			if not player_battler.has_enough_mp(player_battler.MP_COST_ARMOR_PIERCE):
+				print("→ MP不足！破甲斩需要", player_battler.MP_COST_ARMOR_PIERCE, "点MP，当前MP：", player_battler.get_current_mp())
+				return
+		4:
+			if not player_battler.has_enough_mp(player_battler.MP_COST_ULTIMATE):
+				print("→ MP不足！怒斩苍穹需要", player_battler.MP_COST_ULTIMATE, "点MP，当前MP：", player_battler.get_current_mp())
+				return
+
 	battle_state = BattleState.PLAYER_ACTION
 	if combat_scene:
 		var ui = combat_scene.get_node_or_null("CombatUI")
@@ -309,16 +357,19 @@ func use_skill(skill_index: int):
 
 	match skill_index:
 		1:
-			print("使用技能1：普通攻击")
+			print("使用技能1：斩击")
 			player_battler.attack_enemy(current_enemy)
 		2:
-			print("使用技能2：强力攻击")
+			player_battler.consume_mp(player_battler.MP_COST_HEAVY)
+			print("使用技能2：重斩（消耗", player_battler.MP_COST_HEAVY, "MP）")
 			_skill_power_attack()
 		3:
-			print("使用技能3：治疗")
-			_skill_heal()
+			player_battler.consume_mp(player_battler.MP_COST_ARMOR_PIERCE)
+			print("使用技能3：破甲斩（消耗", player_battler.MP_COST_ARMOR_PIERCE, "MP）")
+			_skill_armor_pierce()
 		4:
-			print("使用技能4：必杀技")
+			player_battler.consume_mp(player_battler.MP_COST_ULTIMATE)
+			print("使用技能4：怒斩苍穹（消耗", player_battler.MP_COST_ULTIMATE, "MP）")
 			_skill_ultimate()
 
 func _skill_power_attack():
@@ -326,21 +377,10 @@ func _skill_power_attack():
 		return
 	player_battler.heavy_attack_enemy(current_enemy)
 
-func get_anim_duration(sprite: AnimatedSprite2D, anim_name: String, fallback: float) -> float:
-	if sprite.sprite_frames.has_animation(anim_name):
-		var frame_count = sprite.sprite_frames.get_frame_count(anim_name)
-		if frame_count > 0:
-			return frame_count * 0.15
-	return fallback
-
-func _skill_heal():
-	if not player_battler:
+func _skill_armor_pierce():
+	if not player_battler or not current_enemy:
 		return
-	var old_hp = player_battler.get_current_hp()
-	var heal_amount = 30
-	player_battler.set_current_hp(old_hp + heal_amount)
-	await get_tree().create_timer(0.5).timeout
-	_end_player_turn()
+	player_battler.armor_pierce_attack_enemy(current_enemy)
 
 func _skill_ultimate():
 	if not player_battler or not current_enemy:

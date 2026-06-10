@@ -1,0 +1,147 @@
+[gd_scene load_steps=20 format=3 uid="uid://d3cm7o4fnxde0"]
+
+[ext_resource type="Texture2D" uid="uid://cx2lg4nxoo87y" path="res://Asset Bundle/sprites/Dragon/reddragonfly.png" id="1_naa0p"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0m1hb"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(615, 322, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7oxbf"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(410, 322, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qr4ng"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(205, 322, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kcf4b"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(0, 322, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qs6s3"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(0, 0, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nuojj"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(205, 0, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fppmc"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(410, 0, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tahi0"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(615, 0, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2pcuo"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(0, 161, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_dq4on"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(205, 161, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6mn3p"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(410, 161, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a130n"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(615, 161, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ojfwe"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(0, 483, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_d40dw"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(205, 483, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_i0wao"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(410, 483, 205, 161)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vjt73"]
+atlas = ExtResource("1_naa0p")
+region = Rect2(615, 483, 205, 161)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_5df1m"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0m1hb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7oxbf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qr4ng")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kcf4b")
+}],
+"loop": false,
+"name": &"dragon_death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qs6s3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nuojj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fppmc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tahi0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2pcuo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_dq4on")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6mn3p")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a130n")
+}],
+"loop": true,
+"name": &"dragon_fly",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ojfwe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_d40dw")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_i0wao")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vjt73")
+}],
+"loop": false,
+"name": &"dragon_hurt",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6t4qd"]
+size = Vector2(94, 53)
+
+[node name="dragon" type="CharacterBody2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_5df1m")
+animation = &"dragon_death"
+autoplay = "dragon_death"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(8, 6.5)
+shape = SubResource("RectangleShape2D_6t4qd")

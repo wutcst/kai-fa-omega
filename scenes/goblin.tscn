@@ -1,0 +1,159 @@
+[gd_scene load_steps=21 format=3 uid="uid://dank6uyw6q7q8"]
+
+[ext_resource type="Script" path="res://scripts/monster.gd" id="1_1xi86"]
+[ext_resource type="Texture2D" uid="uid://dvggtmuqko8ck" path="res://Asset Bundle/sprites/Goblin/goblinsword.png" id="2_u5ovi"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7vrua"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(448, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bydvn"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(512, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aemlm"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(576, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_psh0b"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(640, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_upxde"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(0, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_siyfa"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(64, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_y213f"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(128, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_c0jkq"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(192, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aog2w"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(256, 256, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ml232"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(0, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hp3rs"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(64, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vn713"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(128, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mcim8"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(192, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4bxgg"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(256, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7wchk"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(320, 64, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ifxso"]
+atlas = ExtResource("2_u5ovi")
+region = Rect2(384, 64, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2e02g"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7vrua")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bydvn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aemlm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_psh0b")
+}],
+"loop": false,
+"name": &"goblin_attack",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_upxde")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_siyfa")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_y213f")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_c0jkq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aog2w")
+}],
+"loop": false,
+"name": &"goblin_death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ml232")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hp3rs")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vn713")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mcim8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4bxgg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7wchk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ifxso")
+}],
+"loop": true,
+"name": &"goblin_walk",
+"speed": 7.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_t4g87"]
+radius = 19.0
+
+[node name="goblin" type="CharacterBody2D" groups=["enemy"]]
+script = ExtResource("1_1xi86")
+monster_name = "goblin"
+max_hp = 110
+attack = 20
+defense = 4
+speed = 85.0
+attack_range = 32.0
+attack_cd = 0.8
+exp_reward = 45
+enemy_scene_path = "res://scenes/goblin.tscn"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(2.5, 0)
+scale = Vector2(1.07813, 1)
+sprite_frames = SubResource("SpriteFrames_2e02g")
+animation = &"goblin_walk"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(9, 1)
+shape = SubResource("CircleShape2D_t4g87")

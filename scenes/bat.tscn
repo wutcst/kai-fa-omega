@@ -296,10 +296,14 @@ radius = 16.0312
 [node name="bat" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_vl7ma")
 monster_name = "bat"
+max_hp = 90
+attack = 18
+defense = 6
 speed = 95.0
 chase_range = 220.0
 attack_range = 32.0
 attack_cd = 0.7
+exp_reward = 35
 enemy_scene_path = "res://scenes/bat.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

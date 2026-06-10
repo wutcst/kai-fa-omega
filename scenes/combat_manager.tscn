@@ -1,10 +1,10 @@
 [gd_scene load_steps=6 format=3 uid="uid://b1ittsnvasmtc"]
 
-[ext_resource type="Script" path="res://scenes/combat_manager.gd" id="1_5occi"]
+[ext_resource type="Script" path="res://scripts/combat_manager.gd" id="1_5occi"]
 [ext_resource type="Texture2D" uid="uid://bstglw5o034tv" path="res://Asset Bundle/sprites/Dungeon-door.png" id="1_tmn22"]
 [ext_resource type="PackedScene" uid="uid://c5t2v5oqen1w6" path="res://scenes/player-battler.tscn" id="2_w7pjl"]
 [ext_resource type="PackedScene" uid="uid://c48a3agxgvn2l" path="res://scenes/monster-battler.tscn" id="3_monster"]
-[ext_resource type="Script" path="res://scenes/combat_ui.gd" id="4_dttib"]
+[ext_resource type="Script" path="res://scripts/combat_ui.gd" id="4_dttib"]
 
 [node name="CombatManager" type="Node2D"]
 script = ExtResource("1_5occi")
