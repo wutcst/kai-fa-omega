@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const ICON_SIZE: int = 32
+
 var panel_bg: ColorRect
 var main_container: VBoxContainer
 var title_label: Label
@@ -14,6 +16,37 @@ var is_visible: bool = false
 func _ready():
 	setup_ui()
 	hide_panel()
+
+# == 创建带边框的图标（TextureRect） ==
+func create_icon_texture(icon_path: String, size: int = ICON_SIZE) -> Control:
+	var icon_container = Panel.new()
+	icon_container.custom_minimum_size = Vector2(size + 4, size + 4)
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.15, 0.12, 0.2, 0.9)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.5, 0.45, 0.3, 0.7)
+	style.set_corner_radius_all(4)
+	icon_container.add_theme_stylebox_override("panel", style)
+
+	var texture_rect = TextureRect.new()
+	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	texture_rect.custom_minimum_size = Vector2(size, size)
+	texture_rect.set_anchors_preset(Control.PRESET_CENTER)
+
+	if icon_path and icon_path != "":
+		var tex = load(icon_path)
+		if tex is Texture2D:
+			texture_rect.texture = tex
+		else:
+			texture_rect.color = Color(0.3, 0.25, 0.4, 1)
+	else:
+		texture_rect.color = Color(0.3, 0.25, 0.4, 1)
+
+	icon_container.add_child(texture_rect)
+	return icon_container
 
 func setup_ui():
 	# 半透明遮罩背景
@@ -270,9 +303,13 @@ func build_equipment_section():
 		slot_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 		slot_container.add_child(slot_label)
 
+		# 装备图标
+		var equip_icon = create_icon_texture(slot.data.get("icon", ""), 28)
+		slot_container.add_child(equip_icon)
+
 		# 装备名称（带背景框）
 		var equip_panel = Panel.new()
-		equip_panel.custom_minimum_size = Vector2(200, 30)
+		equip_panel.custom_minimum_size = Vector2(170, 30)
 		var equip_style = StyleBoxFlat.new()
 		equip_style.bg_color = Color(0.18, 0.15, 0.22, 0.9)
 		equip_style.set_corner_radius_all(4)
@@ -365,14 +402,13 @@ func build_items_section():
 		var item_row = HBoxContainer.new()
 		item_row.add_theme_constant_override("separation", 8)
 
-		var item_icon = ColorRect.new()
-		item_icon.custom_minimum_size = Vector2(32, 32)
-		item_icon.color = Color(0.25, 0.2, 0.35)
+		# 道具贴图图标
+		var item_icon = create_icon_texture(item.get("icon", ""), 28)
 		item_row.add_child(item_icon)
 
 		var item_name = Label.new()
 		item_name.text = item.get("name", "???")
-		item_name.custom_minimum_size = Vector2(130, 0)
+		item_name.custom_minimum_size = Vector2(100, 0)
 		item_name.add_theme_font_size_override("font_size", 14)
 		item_name.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 		item_row.add_child(item_name)

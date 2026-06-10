@@ -136,12 +136,12 @@ func play_anim(anim: String):
 	elif anim == "idle" and anim_list.has(monster_name + "_walk"):
 		animated_sprite.play(monster_name + "_walk")
 
-func _on_animated_sprite_2d_animation_finished(anim_name: String):
+func _on_animated_sprite_2d_animation_finished(_anim_name: String = ""):
 	if is_dead:
 		return
-	if anim_name.ends_with("_attack"):
+	if animated_sprite.animation.ends_with("_attack"):
 		is_attacking = false
 		attack_timer = 0
 		play_anim("idle")
-	if anim_name.ends_with("_hurt"):
+	if animated_sprite.animation.ends_with("_hurt"):
 		play_anim("idle")

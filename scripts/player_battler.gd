@@ -1,4 +1,5 @@
 extends CharacterBody2D
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 var hud: Control
@@ -13,6 +14,9 @@ var is_turn: bool = false
 var is_dead: bool = false
 var in_attack: bool = false
 var current_attack_target: Node2D = null
+var _original_position: Vector2 = Vector2.ZERO   # 玩家在战斗场景的初始站位
+const _APPROACH_SPEED: float = 500.0              # 走向怪物的速度（像素/秒）
+const _STAND_OFF_DIST: float = 80.0               # 与怪物保持的距离（不重合）
 
 func get_max_hp() -> int:
 	return GameData.max_hp
@@ -21,9 +25,7 @@ func get_current_hp() -> int:
 	return GameData.current_hp
 
 func set_current_hp(value: int):
-	var old = GameData.current_hp
 	GameData.current_hp = max(0, min(value, get_max_hp()))
-	print("→ player_battler.set_current_hp(): 旧HP=", old, " → 新HP=", GameData.current_hp)
 	if hp_fill:
 		var ratio = float(GameData.current_hp) / float(get_max_hp())
 		hp_fill.size.x = hp_bar.size.x * ratio
@@ -37,9 +39,7 @@ func get_current_mp() -> int:
 	return GameData.current_mp
 
 func set_current_mp(value: int):
-	var old = GameData.current_mp
 	GameData.current_mp = max(0, min(value, get_max_mp()))
-	print("→ player_battler.set_current_mp(): 旧MP=", old, " → 新MP=", GameData.current_mp)
 	if mp_fill:
 		var ratio = float(GameData.current_mp) / float(get_max_mp())
 		mp_fill.size.x = mp_bar.size.x * ratio
@@ -56,9 +56,11 @@ func get_current_job() -> GameData.Job:
 	return GameData.current_job
 
 func _ready():
+	# 用 global_position 记录初始站位（玩家和怪物在不同父节点，局部坐标不可直接相减
+	_original_position = global_position
 	create_bars()
+	_create_attack_variants()
 	play_job_animation("idle")
-	print("→ player_battler._ready(): 已连接动画完成信号")
 
 func create_bars():
 	hud = Control.new()
@@ -72,14 +74,14 @@ func create_bars():
 	hp_bar.position = Vector2(0, 0)
 	hp_bar.color = Color(0.1, 0.1, 0.1)
 	hud.add_child(hp_bar)
-	
+
 	hp_fill = ColorRect.new()
 	hp_fill.name = "HPFill"
 	hp_fill.size = Vector2(120, 14)
 	hp_fill.position = Vector2(0, 0)
 	hp_fill.color = Color(0.9, 0.15, 0.15)
 	hud.add_child(hp_fill)
-	
+
 	hp_label = Label.new()
 	hp_label.name = "HPLabel"
 	hp_label.position = Vector2(0, -2)
@@ -93,22 +95,22 @@ func create_bars():
 
 	mp_bar = ColorRect.new()
 	mp_bar.name = "MPBarBg"
-	mp_bar.size = Vector2(90, 10)
-	mp_bar.position = Vector2(15, 18)
+	mp_bar.size = Vector2(120, 12)
+	mp_bar.position = Vector2(0, 18)
 	mp_bar.color = Color(0.1, 0.1, 0.1)
 	hud.add_child(mp_bar)
-	
+
 	mp_fill = ColorRect.new()
 	mp_fill.name = "MPFill"
-	mp_fill.size = Vector2(90, 10)
-	mp_fill.position = Vector2(15, 18)
+	mp_fill.size = Vector2(120, 12)
+	mp_fill.position = Vector2(0, 18)
 	mp_fill.color = Color(0.2, 0.5, 0.9)
 	hud.add_child(mp_fill)
-	
+
 	mp_label = Label.new()
 	mp_label.name = "MPLabel"
-	mp_label.position = Vector2(15, 16)
-	mp_label.size = Vector2(90, 10)
+	mp_label.position = Vector2(0, 16)
+	mp_label.size = Vector2(120, 12)
 	mp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mp_label.add_theme_font_size_override("font_size", 8)
@@ -119,55 +121,208 @@ func create_bars():
 	set_current_hp(get_current_hp())
 	set_current_mp(get_current_mp())
 
+# ============================================================
+# 动态创建 swordsman_heavyhit 动画
+# 普通攻击 = swordsman_hit 前 1/3 帧
+# 强力攻击 = swordsman_hit 全部帧
+# 必杀技 = swordsman_attack 全部帧
+# ============================================================
+func _create_attack_variants():
+	var sf = animated_sprite.sprite_frames
+	var prefix = get_job_prefix()
+	var src = prefix + "_hit"
+	if not sf.has_animation(src):
+		return
+
+	var total_hit = sf.get_frame_count(src)
+
+	# 先把原始 swordsman_hit 的帧数据全提取出来，防止后续裁剪导致丢失
+	var original_textures: Array = []
+	var original_durations: Array = []
+	for i in range(total_hit):
+		original_textures.append(sf.get_frame_texture(src, i))
+		original_durations.append(sf.get_frame_duration(src, i))
+
+	# swordsman_hit：裁剪为前 1/3 帧，快速斩击
+	var hit_name = prefix + "_hit"
+	var count = max(1, int(ceil(total_hit / 3.0)))
+	sf.remove_animation(hit_name)
+	sf.add_animation(hit_name)
+	sf.set_animation_speed(hit_name, 14.0)
+	sf.set_animation_loop(hit_name, false)
+	for i in range(min(count, original_textures.size())):
+		sf.add_frame(hit_name, original_textures[i], original_durations[i])
+
+	# swordsman_heavyhit：使用 swordsman_hit 的全部帧，中等速度蓄力斩
+	var heavy_name = prefix + "_heavyhit"
+	if not sf.has_animation(heavy_name):
+		sf.add_animation(heavy_name)
+		sf.set_animation_speed(heavy_name, 8.0)
+		sf.set_animation_loop(heavy_name, false)
+		for i in range(original_textures.size()):
+			sf.add_frame(heavy_name, original_textures[i], original_durations[i])
+
+# ============================================================
+# 三种攻击 — 纯动画，无特效
+# ============================================================
 func attack_enemy(target: Node2D):
 	if in_attack or is_dead: return
-	in_attack = true
+	await _execute_attack(target, "hit")
 
+func heavy_attack_enemy(target: Node2D):
+	if in_attack or is_dead: return
+	await _execute_attack(target, "heavyhit")
+
+func ultimate_attack_enemy(target: Node2D):
+	if in_attack or is_dead: return
+	await _execute_attack(target, "attack")
+
+func _execute_attack(target: Node2D, action: String):
+	in_attack = true
 	current_attack_target = target
-	play_job_animation("attack")
-	
-	var anim_name = get_job_prefix() + "_attack"
-	var duration = 0.4
-	if animated_sprite.sprite_frames.has_animation(anim_name):
-		var frame_count = animated_sprite.sprite_frames.get_frame_count(anim_name)
-		duration = frame_count * 0.15
-		print("→ attack 动画时长：", duration)
-	
-	await get_tree().create_timer(duration).timeout
-	
-	var hurt_duration = 0.0
-	if current_attack_target and is_instance_valid(current_attack_target):
+
+	# ------------------------------------------------------------
+	# 阶段 1：走到怪物面前（不重合）
+	# ------------------------------------------------------------
+	if not is_instance_valid(target):
+		in_attack = false
+		return
+
+	var tree = get_tree()
+	if not tree:
+		in_attack = false
+		return
+
+	var home_pos: Vector2 = _original_position   # global
+	var enemy_glob: Vector2 = target.global_position
+	# 计算玩家朝怪物的方向（只取水平方向，传统回合制只水平移动）
+	var dir_to_enemy: Vector2 = Vector2(enemy_glob.x - global_position.x, 0)
+	if dir_to_enemy.length() < 0.1:
+		dir_to_enemy = Vector2.RIGHT
+	var dir_norm: Vector2 = dir_to_enemy.normalized()
+	# 目标位置：在怪物前方 _STAND_OFF_DIST 像素处，y 保持原值
+	var target_glob: Vector2 = Vector2(
+		enemy_glob.x - dir_norm.x * _STAND_OFF_DIST,
+		global_position.y
+	)
+
+	# 播放 walk 动画
+	var walk_anim = get_job_prefix() + "_walk"
+	var has_walk = animated_sprite.sprite_frames.has_animation(walk_anim)
+	if has_walk:
+		animated_sprite.play(walk_anim)
+	else:
+		play_job_animation("idle")
+
+	# 逐帧移动到 target_glob（global 坐标）
+	await _move_to_global(target_glob)
+
+	if not is_instance_valid(self) or not get_tree():
+		in_attack = false
+		current_attack_target = null
+		return
+
+	# ------------------------------------------------------------
+	# 阶段 2：播放攻击动画
+	# ------------------------------------------------------------
+	play_job_animation(action)
+
+	var attack_anim = get_job_prefix() + "_" + action
+	tree = get_tree()
+	if tree and animated_sprite.sprite_frames.has_animation(attack_anim):
+		var fc = animated_sprite.sprite_frames.get_frame_count(attack_anim)
+		var spd = animated_sprite.sprite_frames.get_animation_speed(attack_anim)
+		await tree.create_timer(fc / max(1.0, spd)).timeout
+	elif tree:
+		await tree.create_timer(0.4).timeout
+	else:
+		in_attack = false
+		current_attack_target = null
+		return
+
+	# ------------------------------------------------------------
+	# 阶段 3：造成伤害
+	# ------------------------------------------------------------
+	var enemy_died = false
+	if is_instance_valid(current_attack_target):
 		var defense_val = current_attack_target.get("defense")
-		var defense = defense_val if defense_val is int else 0
-		var damage = max(1, get_attack() - defense)
-		print("→ player_battler.attack_enemy()：造成伤害：", damage)
+		var defense: int = defense_val if defense_val is int else 0
+		var multiplier: float = 1.0
+		if action == "heavyhit":
+			multiplier = 1.5
+		elif action == "attack":
+			multiplier = 2.5
+		var damage: int = max(1, int(get_attack() * multiplier) - defense)
 		current_attack_target.take_damage(damage)
-		
-		# 算怪物受伤动画时长
+
+		if not is_instance_valid(current_attack_target) or current_attack_target.is_dead:
+			enemy_died = true
+
+	# 等怪物 hurt 动画
+	if not enemy_died and is_instance_valid(current_attack_target):
 		if current_attack_target.has_node("AnimatedSprite2D") and not current_attack_target.is_dead:
 			var sprite: AnimatedSprite2D = current_attack_target.get_node("AnimatedSprite2D")
-			var hurt_anim_name = current_attack_target.monster_name + "_hurt"
-			if sprite.sprite_frames.has_animation(hurt_anim_name):
-				hurt_duration = max(0.6, sprite.sprite_frames.get_frame_count(hurt_anim_name) * 0.2)
-			else:
-				hurt_duration = 0.6
-		
+			var hurt_name = current_attack_target.monster_name + "_hurt"
+			if sprite and sprite.sprite_frames.has_animation(hurt_name):
+				var hfc = sprite.sprite_frames.get_frame_count(hurt_name)
+				var hspd = sprite.sprite_frames.get_animation_speed(hurt_name)
+				tree = get_tree()
+				if tree:
+					await tree.create_timer(hfc / max(1.0, hspd)).timeout
+
+	# ------------------------------------------------------------
+	# 阶段 4：走回初始位置（敌人没死才走回去
+	# ------------------------------------------------------------
+	if not is_instance_valid(self) or not get_tree():
+		in_attack = false
 		current_attack_target = null
-	
-	if hurt_duration > 0:
-		print("→ 等待怪物受伤动画：", hurt_duration)
-		await get_tree().create_timer(hurt_duration).timeout
-	
+		return
+
+	if not enemy_died:
+		if has_walk:
+			animated_sprite.play(walk_anim)
+		await _move_to_global(home_pos)
+		if not is_instance_valid(self) or not get_tree():
+			in_attack = false
+			current_attack_target = null
+			return
+
+	current_attack_target = null
 	in_attack = false
+
+	if enemy_died:
+		return
+
 	play_job_animation("idle")
 	BattleManager._after_player_attack()
 
+
+# 把玩家水平移动到目标 global 位置（匀速
+# 使用 get_process_delta_time()（Node 的方法），不依赖 SceneTree 的错误 API
+func _move_to_global(target_glob: Vector2):
+	var tree = get_tree()
+	if not tree:
+		return
+	var start_glob: Vector2 = global_position
+	var dx_total: float = target_glob.x - start_glob.x
+	if abs(dx_total) < 1.0:
+		global_position = Vector2(target_glob.x, start_glob.y)
+		return
+	# 需要多少秒走完
+	var duration: float = abs(dx_total) / _APPROACH_SPEED
+	var elapsed: float = 0.0
+	while elapsed < duration and is_instance_valid(self) and get_tree():
+		elapsed += get_process_delta_time()
+		var k: float = clamp(elapsed / duration, 0.0, 1.0)
+		global_position = Vector2(start_glob.x + dx_total * k, start_glob.y)
+		await tree.process_frame
+	# 保险：对齐到目标
+	if is_instance_valid(self):
+		global_position = Vector2(target_glob.x, start_glob.y)
+
 func take_damage(damage: int):
 	if is_dead: return
-	var old_hp = get_current_hp()
-	set_current_hp(old_hp - damage)
-	print("→ player_battler.take_damage()：受到伤害：", damage, " | 旧HP:", old_hp, " → 新HP:", get_current_hp())
-	
+	set_current_hp(get_current_hp() - damage)
 	if get_current_hp() <= 0:
 		is_dead = true
 		play_job_animation("death")

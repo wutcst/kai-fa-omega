@@ -27,11 +27,6 @@ func _ready():
 	current_hp = max_hp
 	create_bars()
 	play_anim("idle")
-	connect_signals()
-
-func connect_signals():
-	if not animated_sprite.animation_finished.is_connected(_on_animation_finished):
-		animated_sprite.animation_finished.connect(_on_animation_finished)
 
 func setup_from_monster(monster_node):
 	monster_name = monster_node.get("monster_name") if monster_node.get("monster_name") else monster_name
@@ -39,17 +34,17 @@ func setup_from_monster(monster_node):
 	attack = monster_node.get("attack") if monster_node.get("attack") else attack
 	defense = monster_node.get("defense") if monster_node.get("defense") else defense
 	current_hp = max_hp
-	
+
 	if hp_fill:
 		hp_fill.size.x = hp_bar.size.x
 	if hp_label:
 		hp_label.text = str(current_hp) + "/" + str(max_hp)
-	
+
 	if monster_node.has_node("AnimatedSprite2D"):
 		var source_sprite = monster_node.get_node("AnimatedSprite2D")
 		if source_sprite and source_sprite.sprite_frames:
 			animated_sprite.sprite_frames = source_sprite.sprite_frames.duplicate()
-	
+
 	play_anim("idle")
 
 func create_bars():
@@ -64,14 +59,14 @@ func create_bars():
 	hp_bar.position = Vector2(0, 0)
 	hp_bar.color = Color(0.1, 0.1, 0.1)
 	hud.add_child(hp_bar)
-	
+
 	hp_fill = ColorRect.new()
 	hp_fill.name = "HPFill"
 	hp_fill.size = Vector2(100, 14)
 	hp_fill.position = Vector2(0, 0)
 	hp_fill.color = Color(0.9, 0.15, 0.15)
 	hud.add_child(hp_fill)
-	
+
 	hp_label = Label.new()
 	hp_label.name = "HPLabel"
 	hp_label.position = Vector2(0, -2)
@@ -79,7 +74,6 @@ func create_bars():
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	hp_label.add_theme_font_size_override("font_size", 10)
-	hp_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	hp_label.text = str(current_hp) + "/" + str(max_hp)
 	hud.add_child(hp_label)
 
@@ -92,9 +86,7 @@ func get_current_hp() -> int:
 	return current_hp
 
 func set_current_hp(value: int):
-	var old = current_hp
 	current_hp = max(0, min(value, max_hp))
-	print("→ monster_battler.set_current_hp(): 旧HP=", old, " → 新HP=", current_hp)
 	if hp_fill:
 		var ratio = float(current_hp) / float(max_hp)
 		hp_fill.size.x = hp_bar.size.x * ratio
@@ -109,11 +101,9 @@ func get_defense() -> int:
 
 func take_damage(dmg: int):
 	if is_dead: return
-	var old_hp = current_hp
 	current_hp -= dmg
 	set_current_hp(current_hp)
-	print(monster_name, " 受到伤害: ", dmg, " | 旧HP:", old_hp, " → 新HP:", current_hp)
-	
+
 	if current_hp <= 0:
 		is_dead = true
 		emit_signal("monster_died", self)
@@ -126,6 +116,11 @@ func die():
 	if is_instance_valid(collision_shape):
 		collision_shape.set_deferred("disabled", true)
 	velocity = Vector2.ZERO
+	# 不做异步淡出 — 避免与场景切换并发导致 get_tree() 为 null
+	queue_free()
+
+func _fade_out():
+	pass
 
 func exit_battle():
 	in_battle = false
@@ -139,14 +134,14 @@ func play_anim(anim: String):
 	elif anim == "idle" and animated_sprite.sprite_frames.has_animation(monster_name + "_walk"):
 		animated_sprite.play(monster_name + "_walk")
 
-func _on_animation_finished(anim_name: String):
+func _on_animation_finished(_anim_name: String = ""):
 	if is_dead:
-		if anim_name.ends_with("_death"):
-			queue_free()
 		return
-	
-	if anim_name.ends_with("_attack"):
+	if animated_sprite.animation.find("_attack") != -1:
 		is_attacking = false
 		play_anim("idle")
-	if anim_name.ends_with("_hurt"):
+	elif animated_sprite.animation.find("_hurt") != -1:
 		play_anim("idle")
+
+func _on_animated_sprite_2d_animation_finished(_anim_name: String = ""):
+	_on_animation_finished(_anim_name)
