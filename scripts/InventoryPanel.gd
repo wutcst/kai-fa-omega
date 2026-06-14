@@ -11,6 +11,7 @@ var right_column: VBoxContainer
 var close_hint: Label
 
 var is_visible: bool = false
+var player_ref: Node = null
 
 func _ready():
 	setup_ui()
@@ -103,11 +104,11 @@ func setup_ui():
 
 	var panel = Panel.new()
 	panel.name = "MainPanel"
-	panel.custom_minimum_size = Vector2(850, 600)
-	panel.size = Vector2(850, 600)
+	panel.custom_minimum_size = Vector2(1050, 680)
+	panel.size = Vector2(1050, 680)
 	panel.position = Vector2(
-		(get_viewport().get_visible_rect().size.x - 850) / 2,
-		(get_viewport().get_visible_rect().size.y - 600) / 2
+		(get_viewport().get_visible_rect().size.x - 1050) / 2,
+		(get_viewport().get_visible_rect().size.y - 680) / 2
 	)
 
 	var panel_style = StyleBoxFlat.new()
@@ -478,12 +479,12 @@ func build_exclusive_backpack_section():
 		for i in range(GameData.exclusive_backpack.size()):
 			var item = GameData.exclusive_backpack[i]
 			var item_type = item.get("type", "")
-			var can_equip = _can_equip(item_type)
+			var can_interact = _can_equip(item_type) or item_type == "food"
 
 			var item_row = HBoxContainer.new()
 			item_row.add_theme_constant_override("separation", 8)
 
-			var item_icon = create_clickable_icon(item.get("icon", ""), i, can_equip, 28)
+			var item_icon = create_clickable_icon(item.get("icon", ""), i, can_interact, 28)
 			item_row.add_child(item_icon)
 
 			var item_name = Label.new()
@@ -507,7 +508,7 @@ func build_exclusive_backpack_section():
 			bonus_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 			item_row.add_child(bonus_label)
 
-			if not can_equip:
+			if item_type != "food" and not _can_equip(item_type):
 				var not_avail_label = Label.new()
 				not_avail_label.text = "（已占用）"
 				not_avail_label.add_theme_font_size_override("font_size", 10)
@@ -523,9 +524,13 @@ func _get_type_display_name(type: String) -> String:
 		"weapon": return "武器"
 		"armor": return "护甲"
 		"accessory": return "饰品"
+		"food": return "食物"
 		_: return type
 
 func _get_item_bonus_text(item: Dictionary) -> String:
+	var t = item.get("type", "")
+	if t == "food":
+		return item.get("description", "点击使用")
 	var atk = item.get("attack_bonus", 0)
 	var def_ = item.get("defense_bonus", 0)
 	var hp = item.get("hp_bonus", 0)
@@ -563,6 +568,16 @@ func _on_backpack_icon_clicked(event: InputEvent, item_index: int):
 	var item = GameData.exclusive_backpack[item_index]
 	var item_type = item.get("type", "")
 
+	# 食物：点击即使用
+	if item_type == "food":
+		var ok = GameData.use_food(item)
+		if ok:
+			GameData.exclusive_backpack.remove_at(item_index)
+			_sync_game_data_to_players()
+		refresh_ui()
+		return
+
+	# 装备：原有的穿戴逻辑
 	if not _can_equip(item_type):
 		return
 
@@ -669,3 +684,16 @@ func hide_panel():
 func _on_window_resized():
 	if is_visible:
 		refresh_ui()
+
+func _sync_game_data_to_players():
+	if not is_instance_valid(player_ref):
+		return
+	player_ref.max_hp = GameData.max_hp
+	player_ref.current_hp = GameData.current_hp
+	player_ref.max_mp = GameData.max_mp
+	player_ref.current_mp = GameData.current_mp
+	player_ref.attack = GameData.attack
+	player_ref.defense = GameData.defense
+	player_ref.crit = GameData.crit
+	player_ref.base_speed = GameData.base_speed
+	player_ref.current_speed = GameData.current_speed

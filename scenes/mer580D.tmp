@@ -1,0 +1,33 @@
+[gd_scene load_steps=6 format=3 uid="uid://cbromwma2op1n"]
+
+[ext_resource type="Script" path="res://scripts/merchant.gd" id="2_merchant_script"]
+[ext_resource type="Texture2D" uid="uid://c6govy886hy6x" path="res://Asset Bundle/sprites/merchant/archer.png" id="2_xfy7x"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rd1gt"]
+atlas = ExtResource("2_xfy7x")
+region = Rect2(0, 0, 48, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_merchant"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rd1gt")
+}],
+"loop": true,
+"name": &"new_animation",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_merchant"]
+size = Vector2(50, 60)
+
+[node name="merchant" type="CharacterBody2D" groups=["merchant"]]
+script = ExtResource("2_merchant_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_merchant")
+animation = &"new_animation"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(4, 10)
+shape = SubResource("RectangleShape2D_merchant")

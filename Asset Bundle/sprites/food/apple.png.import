@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c6govy886hy6x"
-path="res://.godot/imported/archer.png-855547e4d5081009aac5ef5468e05e47.ctex"
+uid="uid://tvodeoplkbeh"
+path="res://.godot/imported/apple.png-a6a2e3480e712395a67faa56d4cffef3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Asset Bundle/sprites/Archer/Brown/archer.png"
-dest_files=["res://.godot/imported/archer.png-855547e4d5081009aac5ef5468e05e47.ctex"]
+source_file="res://Asset Bundle/sprites/food/apple.png"
+dest_files=["res://.godot/imported/apple.png-a6a2e3480e712395a67faa56d4cffef3.ctex"]
 
 [params]
 

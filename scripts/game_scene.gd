@@ -1,11 +1,22 @@
 extends Node2D
 
+# ============================================================
+# 通用场景脚本：gamescene / ground1 / ground2 / ground3 共用
+# 在 scene 文件中配置 next_scene_path 即可让"下一关"按钮跳转到不同场景
+# ============================================================
+
+@export var next_scene_path: String = ""          # 为空则不显示跳转按钮（比如 gamescene 主场景）
+@export var scene_title: String = ""              # 场景标题（可选）
+
 var _btn_level_up: Button = null
 var _level_up_hint_label: Label = null
 var _level_up_info_label: Label = null
+var _btn_next_scene: Button = null
 
 func _ready():
 	_create_level_up_button()
+	if next_scene_path != "":
+		_create_next_scene_button()
 	_update_level_up_info()
 
 # 创建右上角自动升级按钮
@@ -77,7 +88,70 @@ func _create_level_up_button():
 
 	_btn_level_up.pressed.connect(_on_level_up_pressed)
 
-# 点击升级按钮：直接升一级
+# 创建左上角"下一关"按钮
+func _create_next_scene_button():
+	var canvas = get_node_or_null("LevelUpCanvas")
+	if canvas == null:
+		canvas = CanvasLayer.new()
+		canvas.name = "LevelUpCanvas"
+		add_child(canvas)
+
+	var container = VBoxContainer.new()
+	container.name = "NextSceneContainer"
+	container.add_theme_constant_override("separation", 4)
+	canvas.add_child(container)
+	container.position = Vector2(20, 20)
+
+	var btn_width = 170
+
+	# 标题标签（显示场景名）
+	if scene_title != "":
+		var title = Label.new()
+		title.name = "SceneTitle"
+		title.text = scene_title
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		title.custom_minimum_size = Vector2(btn_width, 0)
+		title.add_theme_font_size_override("font_size", 14)
+		title.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
+		container.add_child(title)
+
+	# 跳转按钮
+	_btn_next_scene = Button.new()
+	_btn_next_scene.name = "BtnNextScene"
+	_btn_next_scene.text = "→ 前往下一关"
+	_btn_next_scene.custom_minimum_size = Vector2(btn_width, 44)
+	_btn_next_scene.add_theme_font_size_override("font_size", 16)
+
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = Color(0.15, 0.5, 0.78)
+	style_normal.set_corner_radius_all(8)
+	style_normal.border_width_left = 2
+	style_normal.border_width_right = 2
+	style_normal.border_width_top = 2
+	style_normal.border_width_bottom = 2
+	style_normal.border_color = Color(0.5, 0.85, 1.0)
+
+	var style_hover = style_normal.duplicate()
+	style_hover.bg_color = Color(0.25, 0.65, 0.95)
+
+	var style_pressed = style_normal.duplicate()
+	style_pressed.bg_color = Color(0.1, 0.35, 0.6)
+
+	_btn_next_scene.add_theme_stylebox_override("normal", style_normal)
+	_btn_next_scene.add_theme_stylebox_override("hover", style_hover)
+	_btn_next_scene.add_theme_stylebox_override("pressed", style_pressed)
+	_btn_next_scene.add_theme_color_override("font_color", Color(1, 1, 1))
+
+	container.add_child(_btn_next_scene)
+
+	_btn_next_scene.pressed.connect(_on_next_scene_pressed)
+
+func _on_next_scene_pressed():
+	if next_scene_path == "":
+		return
+	print("→ 跳转到下一关：", next_scene_path)
+	get_tree().change_scene_to_file(next_scene_path)
+
 func _on_level_up_pressed():
 	GameData.level_up()
 	# 同步玩家节点本地属性，防止进入战斗时 save_data_to_global 覆盖升级后的数据

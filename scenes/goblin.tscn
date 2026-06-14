@@ -152,7 +152,7 @@ enemy_scene_path = "res://scenes/goblin.tscn"
 position = Vector2(2.5, 0)
 scale = Vector2(1.07813, 1)
 sprite_frames = SubResource("SpriteFrames_2e02g")
-animation = &"goblin_walk"
+animation = &"goblin_death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(9, 1)
