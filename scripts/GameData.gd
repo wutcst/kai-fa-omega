@@ -22,7 +22,7 @@ var level_up_growth: float = 1.2
 var crit: int = 5
 
 # 货币（金币）
-var gold: int = 0
+var gold: int = 50
 
 # ============================================================
 # 图片资源路径
@@ -142,10 +142,54 @@ var accessory: Dictionary = EQUIPMENT_SETS[0]["accessory"].duplicate(true)
 
 # ============================================================
 # 背包栏（未装备的装备 + 道具）
-#   exclusive_backpack：装备类
+#   exclusive_backpack：装备类 + 食物类
 #   inventory_items  ：道具类（血瓶/蓝瓶）
 # ============================================================
 var exclusive_backpack: Array = []
+
+# 食物道具配置表（商人购买后加入专属背包栏，点击使用）
+# effect 字段：hp=回血 / mp=回蓝 / atk=永久加攻 / def=永久加防 / speed=永久加速 / crit=永久加暴击
+# price 字段：每个食物的独立价格
+const FOOD_TABLE: Array = [
+	{"name": "苹果",   "icon": "res://Asset Bundle/sprites/food/apple.png",      "effect": "hp",    "value": 30, "price": 12, "description": "恢复30点生命值"},
+	{"name": "西瓜",   "icon": "res://Asset Bundle/sprites/food/watermelon.png", "effect": "hp",    "value": 60, "price": 25, "description": "恢复60点生命值"},
+	{"name": "草莓",   "icon": "res://Asset Bundle/sprites/food/strawberry.png", "effect": "mp",    "value": 20, "price": 8,  "description": "恢复20点魔法值"},
+	{"name": "樱桃",   "icon": "res://Asset Bundle/sprites/food/cherry.png",     "effect": "mp",    "value": 35, "price": 15, "description": "恢复35点魔法值"},
+	{"name": "胡萝卜", "icon": "res://Asset Bundle/sprites/food/carrot.png",     "effect": "atk",   "value": 1,  "price": 40, "description": "永久攻击力+1"},
+	{"name": "汉堡",   "icon": "res://Asset Bundle/sprites/food/burger.png",     "effect": "def",   "value": 1,  "price": 40, "description": "永久防御力+1"},
+	{"name": "薯条",   "icon": "res://Asset Bundle/sprites/food/fries.png",      "effect": "speed", "value": 5,  "price": 35, "description": "永久基础速度+5"},
+	{"name": "披萨",   "icon": "res://Asset Bundle/sprites/food/pizza.png",      "effect": "crit",  "value": 1,  "price": 30, "description": "永久暴击率+1%"},
+	{"name": "火腿",   "icon": "res://Asset Bundle/sprites/food/ham.png",        "effect": "atk",   "value": 2,  "price": 75, "description": "永久攻击力+2"},
+	{"name": "煎蛋",   "icon": "res://Asset Bundle/sprites/food/egg.png",        "effect": "hp",    "value": 40, "price": 18, "description": "恢复40点生命值"},
+	{"name": "寿司",   "icon": "res://Asset Bundle/sprites/food/sushi.png",      "effect": "def",   "value": 2,  "price": 75, "description": "永久防御力+2"},
+]
+const FOOD_TYPE: String = "food"
+
+# 使用食物：返回是否成功
+func use_food(item: Dictionary) -> bool:
+	if item.get("type", "") != FOOD_TYPE:
+		return false
+	var effect = item.get("effect", "")
+	var value = item.get("value", 0)
+	match effect:
+		"hp":
+			current_hp = min(current_hp + value, max_hp)
+		"mp":
+			current_mp = min(current_mp + value, max_mp)
+		"atk":
+			attack += value
+		"def":
+			defense += value
+		"speed":
+			base_speed += value
+			current_speed = base_speed
+		"crit":
+			crit += value
+		_:
+			return false
+	return true
+
+# 道具栏数据
 var inventory_items: Array = [
 	{"name": "血瓶", "quantity": 3, "icon": POTION_HEAL, "heal": 50,
 	 "type": "potion", "description": "恢复50点生命值"},

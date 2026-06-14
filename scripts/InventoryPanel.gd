@@ -11,6 +11,7 @@ const SLOT_PADDING: int = 4
 
 # 是否显示中
 var is_visible: bool = false
+var player_ref: Node = null
 
 signal inventory_closed
 
@@ -101,13 +102,13 @@ func setup_ui():
 	mask.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(mask)
 
-	# 主面板（用 PanelContainer 确保子元素自动排列）
+# 主面板（用 PanelContainer 确保子元素自动排列）
 	var panel_outer = PanelContainer.new()
 	panel_outer.name = "MainPanel"
-	panel_outer.custom_minimum_size = Vector2(900, 620)
+	panel_outer.custom_minimum_size = Vector2(1050, 680)
 	panel_outer.position = Vector2(
-		(get_viewport().get_visible_rect().size.x - 900) / 2,
-		(get_viewport().get_visible_rect().size.y - 620) / 2
+		(get_viewport().get_visible_rect().size.x - 1050) / 2,
+		(get_viewport().get_visible_rect().size.y - 680) / 2
 	)
 	var panel_style = StyleBoxFlat.new()
 	panel_style.bg_color = Color(0.10, 0.08, 0.16, 0.96)
@@ -384,7 +385,7 @@ func _build_backpack_section(parent: VBoxContainer):
 	var section = _make_section_panel(parent, "━━━━━ 专属背包栏（装备）━━━━━", true)
 	section.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	var hint = _make_label("（点击图标直接装备，会替换当前装备）",
+	var hint = _make_label("（点击图标直接装备或使用，会替换当前装备）",
 							-1, 11, Color(0.55, 0.55, 0.6))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	section.add_child(hint)
@@ -404,14 +405,17 @@ func _build_backpack_section(parent: VBoxContainer):
 		var row = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
 
-		# 类型检测 - 允许直接装备
+		# 类型检测 - 支持装备和食物
 		var item_type: String = item.get("type", "")
 
 		# 可点击图标
 		var icon_path: String = item.get("icon", "")
 		var click_cb = func(event: InputEvent, idx: int, itype: String):
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-				equip_from_backpack(idx)
+				if itype == "food":
+					_on_backpack_icon_clicked(event, idx)
+				else:
+					equip_from_backpack(idx)
 		var icon_box = _make_clickable_icon(icon_path, click_cb.bind(i, item_type),
 											 true, 28)
 		row.add_child(icon_box)
@@ -426,13 +430,7 @@ func _build_backpack_section(parent: VBoxContainer):
 		row.add_child(type_lbl)
 
 		# 加成
-		var atk = item.get("attack_bonus", 0)
-		var defv = item.get("defense_bonus", 0)
-		var hpv = item.get("hp_bonus", 0)
-		var bonus_str: String = ""
-		if atk > 0: bonus_str = "+%d 攻击" % atk
-		elif defv > 0: bonus_str = "+%d 防御" % defv
-		elif hpv > 0: bonus_str = "+%d 生命" % hpv
+		var bonus_str: String = _get_item_bonus_text(item)
 		var bonus_lbl = _make_label(bonus_str, -1, 13, Color(0.55, 0.95, 0.55))
 		bonus_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(bonus_lbl)
@@ -520,11 +518,26 @@ func _type_display(t: String) -> String:
 		"weapon": return "武器"
 		"armor": return "护甲"
 		"accessory": return "饰品"
-	return t
+		"food": return "食物"
+		_: return t
 
 func can_equip_type(t: String) -> bool:
-	# 现在总是可以装备（直接替换当前装备）
 	return t in ["weapon", "armor", "accessory"]
+
+func _get_item_bonus_text(item: Dictionary) -> String:
+	var t = item.get("type", "")
+	if t == "food":
+		return item.get("description", "点击使用")
+	var atk = item.get("attack_bonus", 0)
+	var def_ = item.get("defense_bonus", 0)
+	var hp = item.get("hp_bonus", 0)
+	if atk > 0:
+		return "+" + str(atk) + " 攻击"
+	if def_ > 0:
+		return "+" + str(def_) + " 防御"
+	if hp > 0:
+		return "+" + str(hp) + " 生命"
+	return ""
 
 # ============================================================
 # 操作：卸下装备 / 从背包装备
@@ -550,6 +563,144 @@ func _on_unequip_clicked(slot_type: String):
 			return
 	old_item["type"] = slot_type
 	GameData.exclusive_backpack.append(old_item)
+	refresh_ui()
+
+# == 点击专属背包栏图标使用食物/装备 ==
+func _on_backpack_icon_clicked(event: InputEvent, item_index: int):
+	if not (event is InputEventMouseButton):
+		return
+	var mb = event as InputEventMouseButton
+	if not mb.pressed:
+		return
+	if mb.button_index != MOUSE_BUTTON_LEFT:
+		return
+
+	if item_index < 0 or item_index >= GameData.exclusive_backpack.size():
+		return
+	var item = GameData.exclusive_backpack[item_index]
+	var item_type = item.get("type", "")
+
+	# 食物：弹出确认窗口
+	if item_type == "food":
+		_show_food_confirm_popup(item, item_index)
+		return
+
+	# 装备：使用原有的穿戴逻辑
+	equip_from_backpack(item_index)
+
+# == 食物使用确认弹窗 ==
+func _show_food_confirm_popup(food_item: Dictionary, item_index: int):
+	# 遮罩层
+	var overlay = ColorRect.new()
+	overlay.name = "FoodConfirmOverlay"
+	overlay.color = Color(0, 0, 0, 0.6)
+	overlay.size = get_viewport().get_visible_rect().size
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+
+	# 确认面板
+	var popup = PanelContainer.new()
+	popup.name = "FoodConfirmPopup"
+	popup.custom_minimum_size = Vector2(360, 200)
+	popup.position = Vector2(
+		(get_viewport().get_visible_rect().size.x - 360) / 2,
+		(get_viewport().get_visible_rect().size.y - 200) / 2
+	)
+	var popup_style = StyleBoxFlat.new()
+	popup_style.bg_color = Color(0.08, 0.06, 0.12, 0.97)
+	popup_style.set_corner_radius_all(12)
+	popup_style.border_width_left = 2
+	popup_style.border_width_right = 2
+	popup_style.border_width_top = 2
+	popup_style.border_width_bottom = 2
+	popup_style.border_color = Color(0.9, 0.7, 0.3, 0.8)
+	popup_style.content_margin_left = 16
+	popup_style.content_margin_right = 16
+	popup_style.content_margin_top = 14
+	popup_style.content_margin_bottom = 14
+	popup.add_theme_stylebox_override("panel", popup_style)
+	overlay.add_child(popup)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	popup.add_child(vbox)
+
+	# 标题行（图标 + 名字）
+	var title_row = HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 10)
+
+	var icon_box = _make_icon_box(food_item.get("icon", ""), 36,
+								   Color(0.9, 0.7, 0.3, 0.9),
+								   Color(0.12, 0.08, 0.16, 0.9))
+	title_row.add_child(icon_box)
+
+	var name_lbl = Label.new()
+	name_lbl.text = food_item.get("name", "食物")
+	name_lbl.add_theme_font_size_override("font_size", 20)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_row.add_child(name_lbl)
+
+	vbox.add_child(title_row)
+
+	# 效果描述
+	var effect_lbl = Label.new()
+	effect_lbl.text = "效果： " + food_item.get("description", "点击使用")
+	effect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	effect_lbl.add_theme_font_size_override("font_size", 14)
+	effect_lbl.add_theme_color_override("font_color", Color(0.7, 0.9, 0.7))
+	vbox.add_child(effect_lbl)
+
+	# 提示文字
+	var tip_lbl = Label.new()
+	tip_lbl.text = "确定要使用这个食物吗？"
+	tip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tip_lbl.add_theme_font_size_override("font_size", 12)
+	tip_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	vbox.add_child(tip_lbl)
+
+	# 按钮行
+	var btn_row = HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 20)
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(btn_row)
+
+	# 确认按钮
+	var confirm_btn = Button.new()
+	confirm_btn.text = "确认使用"
+	confirm_btn.custom_minimum_size = Vector2(120, 36)
+	confirm_btn.add_theme_font_size_override("font_size", 14)
+	confirm_btn.pressed.connect(func():
+		overlay.queue_free()
+		_do_use_food(food_item, item_index)
+	)
+	btn_row.add_child(confirm_btn)
+
+	# 取消按钮
+	var cancel_btn = Button.new()
+	cancel_btn.text = "取消"
+	cancel_btn.custom_minimum_size = Vector2(120, 36)
+	cancel_btn.add_theme_font_size_override("font_size", 14)
+	cancel_btn.pressed.connect(func():
+		overlay.queue_free()
+	)
+	btn_row.add_child(cancel_btn)
+
+	# 按 Z 或 ESC 取消
+	overlay.gui_input.connect(func(event: InputEvent):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_Z or event.keycode == KEY_ESCAPE:
+				overlay.queue_free()
+	)
+
+# == 实际执行食物使用 ==
+func _do_use_food(food_item: Dictionary, item_index: int):
+	if item_index < 0 or item_index >= GameData.exclusive_backpack.size():
+		return
+	var ok = GameData.use_food(food_item)
+	if ok:
+		GameData.exclusive_backpack.remove_at(item_index)
+		_sync_game_data_to_players()
 	refresh_ui()
 
 func equip_from_backpack(idx: int):
@@ -607,3 +758,16 @@ func hide_panel():
 func _on_window_resized():
 	if is_visible:
 		refresh_ui()
+
+func _sync_game_data_to_players():
+	if not is_instance_valid(player_ref):
+		return
+	player_ref.max_hp = GameData.max_hp
+	player_ref.current_hp = GameData.current_hp
+	player_ref.max_mp = GameData.max_mp
+	player_ref.current_mp = GameData.current_mp
+	player_ref.attack = GameData.attack
+	player_ref.defense = GameData.defense
+	player_ref.crit = GameData.crit
+	player_ref.base_speed = GameData.base_speed
+	player_ref.current_speed = GameData.current_speed

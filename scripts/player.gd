@@ -28,6 +28,7 @@ var inventory_open: bool = false
 const ANIM_PREFIX: String = "swordsman"
 
 func _ready():
+	add_to_group("player")
 	load_data_from_global()
 	play_anim("idle")
 	connect_signals()
@@ -143,6 +144,7 @@ func open_inventory():
 			inventory_panel = CanvasLayer.new()
 			inventory_panel.name = "InventoryPanel"
 			inventory_panel.set_script(panel_script)
+			inventory_panel.set("player_ref", self)
 			get_tree().current_scene.add_child(inventory_panel)
 			await get_tree().process_frame
 	inventory_open = true

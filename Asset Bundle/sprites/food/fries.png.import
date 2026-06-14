@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bx4kxsl0tims5"
-path="res://.godot/imported/woman_w_fruit_hat-NESW.png-d75b6356812cbe0a5ee14a4a65867109.ctex"
+uid="uid://b5qah4uwn45fd"
+path="res://.godot/imported/fries.png-6609a70907bd82f39db77910a2204739.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Asset Bundle/sprites/merchant/woman_w_fruit_hat-NESW.png"
-dest_files=["res://.godot/imported/woman_w_fruit_hat-NESW.png-d75b6356812cbe0a5ee14a4a65867109.ctex"]
+source_file="res://Asset Bundle/sprites/food/fries.png"
+dest_files=["res://.godot/imported/fries.png-6609a70907bd82f39db77910a2204739.ctex"]
 
 [params]
 
