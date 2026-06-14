@@ -9880,7 +9880,6 @@ tile_map_data = PackedByteArray("AAD+//7/BQAAAAAAAAD+////BQAAAAEAAAD+/wAABQAAAAI
 tile_set = SubResource("TileSet_la0qa")
 
 [node name="SpawnPoint" type="Marker2D" parent="." unique_id=86013859]
-visible = false
 position = Vector2(851, 147)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1317683521]
