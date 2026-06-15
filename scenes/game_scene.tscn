@@ -9,6 +9,7 @@
 script = ExtResource("0_game_scene_script")
 next_scene_path = "res://scenes/ground1.tscn"
 scene_title = "🏠 主场景"
+bgm_path = "res://Asset Bundle/musicmain/BGM-26.6.7-明亮-温馨-欢快-_爱给网_aigei_com.mp3"
 
 [node name="Player" parent="." instance=ExtResource("1_htcah")]
 position = Vector2(141, 209)

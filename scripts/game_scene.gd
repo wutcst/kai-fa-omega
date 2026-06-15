@@ -7,17 +7,20 @@ extends Node2D
 
 @export var next_scene_path: String = ""          # 为空则不显示跳转按钮（比如 gamescene 主场景）
 @export var scene_title: String = ""              # 场景标题（可选）
+@export var bgm_path: String = ""                 # 背景音乐文件路径
 
 var _btn_level_up: Button = null
 var _level_up_hint_label: Label = null
 var _level_up_info_label: Label = null
 var _btn_next_scene: Button = null
+var _bgm_player: AudioStreamPlayer = null
 
 func _ready():
 	_create_level_up_button()
 	if next_scene_path != "":
 		_create_next_scene_button()
 	_update_level_up_info()
+	_play_bgm()
 
 # 创建右上角自动升级按钮
 func _create_level_up_button():
@@ -175,3 +178,16 @@ func _show_level_up_flash():
 	tween.set_parallel(true)
 	tween.tween_property(_btn_level_up, "scale", Vector2(1.15, 1.15), 0.1)
 	tween.chain().tween_property(_btn_level_up, "scale", Vector2(1.0, 1.0), 0.15)
+
+func _play_bgm():
+	if bgm_path == "":
+		return
+	_bgm_player = AudioStreamPlayer.new()
+	_bgm_player.name = "BGMMusic"
+	_bgm_player.bus = "Master"
+	add_child(_bgm_player)
+	var stream = load(bgm_path)
+	if stream and stream is AudioStream:
+		_bgm_player.stream = stream
+		stream.loop = true
+		_bgm_player.play()
