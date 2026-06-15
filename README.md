@@ -114,17 +114,17 @@ RPG-603game/
 │   ├── skull.tscn             # 骷髅兵
 │   └── Dragon.tscn            # 恶龙
 └── scripts/
-    ├── GameData.gd            # 全局单例（玩家数据、经验、装备、技能解锁）
-    ├── BattleManager.gd       # 战斗管理器（战斗流程、AI、结算）
-    ├── player.gd              # 地图玩家控制
-    ├── player_battler.gd      # 战斗玩家控制（攻击、移动、动画）
-    ├── monster.gd             # 地图怪物 AI
-    ├── monster_battler.gd     # 战斗怪物逻辑
-    ├── combat_ui.gd           # 战斗 UI（血条、蓝条、经验条、技能按钮）
-    ├── combat_manager.gd      # 战斗场景事件分发
-    ├── InventoryPanel.gd      # 物品栏/人物信息面板
-    ├── EquipmentData.gd       # 装备数据定义
-    └── sword_collision.gd     # 武器碰撞辅助
+	├── GameData.gd            # 全局单例（玩家数据、经验、装备、技能解锁）
+	├── BattleManager.gd       # 战斗管理器（战斗流程、AI、结算）
+	├── player.gd              # 地图玩家控制
+	├── player_battler.gd      # 战斗玩家控制（攻击、移动、动画）
+	├── monster.gd             # 地图怪物 AI
+	├── monster_battler.gd     # 战斗怪物逻辑
+	├── combat_ui.gd           # 战斗 UI（血条、蓝条、经验条、技能按钮）
+	├── combat_manager.gd      # 战斗场景事件分发
+	├── InventoryPanel.gd      # 物品栏/人物信息面板
+	├── EquipmentData.gd       # 装备数据定义
+	└── sword_collision.gd     # 武器碰撞辅助
 ```
 
 ---

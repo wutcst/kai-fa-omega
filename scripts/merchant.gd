@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-# 商人节点：不移动，玩家碰撞后打开交易界面
+# 商人节点：不移动，玩家按 E 键交互打开交易界面
 # 需要挂载到 merchant.tscn 的 CharacterBody2D 根节点
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
@@ -8,29 +8,55 @@ extends CharacterBody2D
 
 var merchant_panel: CanvasLayer = null
 var panel_open: bool = false
-var can_trigger: bool = true  # 防止反复触发
-const TRIGGER_DISTANCE: float = 55.0  # 触发距离（像素）
+var player_nearby: bool = false
+var hint_label: Label = null
 
 func _ready():
 	add_to_group("merchant")
 	play_anim("idle")
+	_setup_interaction_area()
+	_setup_hint_label()
 
-func _physics_process(_delta: float):
-	if not can_trigger:
-		return
+func _setup_interaction_area():
+	var area = Area2D.new()
+	var collision = CollisionShape2D.new()
+	var circle = CircleShape2D.new()
+	circle.radius = 65.0
+	collision.shape = circle
+	area.add_child(collision)
+	add_child(area)
+	area.body_entered.connect(_on_body_entered)
+	area.body_exited.connect(_on_body_exited)
+
+func _setup_hint_label():
+	hint_label = Label.new()
+	hint_label.text = "按 E 交易"
+	hint_label.add_theme_font_size_override("font_size", 12)
+	hint_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint_label.position = Vector2(-30, -40)
+	hint_label.custom_minimum_size = Vector2(60, 20)
+	hint_label.visible = false
+	add_child(hint_label)
+
+func _on_body_entered(body):
+	if body.is_in_group("player"):
+		player_nearby = true
+		if hint_label:
+			hint_label.visible = true
+
+func _on_body_exited(body):
+	if body.is_in_group("player"):
+		player_nearby = false
+		if hint_label:
+			hint_label.visible = false
+
+func _process(_delta):
 	if panel_open:
 		return
-	# 按Z键时禁止触发商人界面（Z只用于关闭）
-	if Input.is_key_pressed(KEY_Z):
-		return
-	# 通过距离检测玩家是否接近商人
-	var players = get_tree().get_nodes_in_group("player")
-	for p in players:
-		if global_position.distance_to(p.global_position) < TRIGGER_DISTANCE:
-			open_merchant_panel()
-			return
+	if player_nearby and Input.is_key_pressed(KEY_E):
+		open_merchant_panel()
 
-# 打开商人界面
 func open_merchant_panel():
 	if merchant_panel == null:
 		var panel_script = load("res://scripts/MerchantPanel.gd")
@@ -40,20 +66,28 @@ func open_merchant_panel():
 			merchant_panel.set_script(panel_script)
 			get_tree().current_scene.add_child(merchant_panel)
 	panel_open = true
-	can_trigger = false
+	if hint_label:
+		hint_label.visible = false
 	if is_instance_valid(merchant_panel):
 		if merchant_panel.has_method("set_close_callback"):
 			merchant_panel.set_close_callback(_on_panel_closed)
 
-# 关闭商人界面（由面板调用回调）
 func _on_panel_closed():
 	panel_open = false
-	# 短暂延迟后再允许触发，防止还在范围内立即又弹开
-	await get_tree().create_timer(0.8).timeout
-	can_trigger = true
+	merchant_panel = null
+	if player_nearby and hint_label:
+		hint_label.visible = true
 
 func play_anim(anim: String):
-	if is_instance_valid(animated_sprite):
-		var full_name = "merchant_" + anim
-		if animated_sprite.sprite_frames.has_animation(full_name):
-			animated_sprite.play(full_name)
+	if not is_instance_valid(animated_sprite):
+		return
+	# 尝试多个候选名，兼容不同的动画命名方式
+	var candidates: Array = [
+		"merchant_" + anim,
+		"merchant",
+		anim,
+	]
+	for name in candidates:
+		if animated_sprite.sprite_frames.has_animation(name):
+			animated_sprite.play(name)
+			return

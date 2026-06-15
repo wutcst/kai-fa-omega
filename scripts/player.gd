@@ -62,9 +62,9 @@ func save_data_to_global():
 
 func load_data_from_global():
 	max_hp = GameData.max_hp
-	current_hp = GameData.current_hp
+	current_hp = min(GameData.current_hp, GameData.max_hp)
 	max_mp = GameData.max_mp
-	current_mp = GameData.current_mp
+	current_mp = min(GameData.current_mp, GameData.max_mp)
 	attack = GameData.attack
 	defense = GameData.defense
 	crit = GameData.crit

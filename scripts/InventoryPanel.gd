@@ -1,531 +1,528 @@
 extends CanvasLayer
 
+# ============================================================
+# 物品栏 / 人物信息面板
+#   - 使用统一的容器布局，避免图标/文字错位
+#   - 装备槽 + 道具栏 + 专属背包栏 都有固定尺寸
+# ============================================================
+
 const ICON_SIZE: int = 32
+const SLOT_PADDING: int = 4
 
-var panel_bg: ColorRect
-var main_container: VBoxContainer
-var title_label: Label
-var content_container: HBoxContainer
-var left_column: VBoxContainer
-var right_column: VBoxContainer
-var close_hint: Label
-
+# 是否显示中
 var is_visible: bool = false
 var player_ref: Node = null
+
+signal inventory_closed
 
 func _ready():
 	setup_ui()
 	hide_panel()
 
-# == 创建带边框的图标（不可点击版本，用于装备栏展示） ==
-func create_icon_texture(icon_path: String, size: int = ICON_SIZE) -> Control:
-	var icon_container = Panel.new()
-	icon_container.custom_minimum_size = Vector2(size + 4, size + 4)
-	icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+# 允许玩家按 Q 键或再次按 ui_inventory 动作关闭
+# 注意：主要关闭逻辑由 player.gd 中的 toggle_inventory 驱动，
+# 这里额外处理一次以防万一（并使用 set_input_as_handled 避免事件穿透）
+func _unhandled_input(event: InputEvent):
+	if not is_visible:
+		return
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_Q or event.keycode == KEY_Q:
+			hide_panel()
+			get_viewport().set_input_as_handled()
+			return
+	if event.is_action_pressed("ui_inventory"):
+		hide_panel()
+		get_viewport().set_input_as_handled()
+
+# ============================================================
+# 创建一个带边框的图标容器（所有图标都用这一套，保证对齐）
+# 使用 PanelContainer 让内部 TextureRect 自动居中，避免错位
+# ============================================================
+func _make_icon_box(icon_path: String, size: int = ICON_SIZE,
+					border_color: Color = Color(0.4, 0.35, 0.25, 0.9),
+					bg_color: Color = Color(0.15, 0.12, 0.2, 0.9)) -> PanelContainer:
+	var box = PanelContainer.new()
+	box.custom_minimum_size = Vector2(size + SLOT_PADDING * 2, size + SLOT_PADDING * 2)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.12, 0.2, 0.9)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.border_color = Color(0.5, 0.45, 0.3, 0.7)
-	style.set_corner_radius_all(4)
-	icon_container.add_theme_stylebox_override("panel", style)
-
-	var texture_rect = TextureRect.new()
-	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	texture_rect.custom_minimum_size = Vector2(size, size)
-	texture_rect.set_anchors_preset(Control.PRESET_CENTER)
-	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-
-	if icon_path and icon_path != "":
-		var tex = load(icon_path)
-		if tex is Texture2D:
-			texture_rect.texture = tex
-		else:
-			texture_rect.color = Color(0.3, 0.25, 0.4, 1)
-	else:
-		texture_rect.color = Color(0.3, 0.25, 0.4, 1)
-
-	icon_container.add_child(texture_rect)
-	return icon_container
-
-# == 创建可点击的图标（用于专属背包栏） ==
-func create_clickable_icon(icon_path: String, item_index: int, equippable: bool, size: int = ICON_SIZE) -> Control:
-	var icon_container = Panel.new()
-	icon_container.custom_minimum_size = Vector2(size + 4, size + 4)
-	icon_container.mouse_filter = Control.MOUSE_FILTER_STOP
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.12, 0.2, 0.9)
+	style.bg_color = bg_color
 	style.border_width_left = 2
 	style.border_width_right = 2
 	style.border_width_top = 2
 	style.border_width_bottom = 2
-	if equippable:
-		style.border_color = Color(0.9, 0.75, 0.3, 0.9)
-		icon_container.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-	else:
-		style.border_color = Color(0.4, 0.4, 0.4, 0.6)
-	style.set_corner_radius_all(6)
-	icon_container.add_theme_stylebox_override("panel", style)
+	style.border_color = border_color
+	style.set_corner_radius_all(4)
+	style.content_margin_left = SLOT_PADDING
+	style.content_margin_right = SLOT_PADDING
+	style.content_margin_top = SLOT_PADDING
+	style.content_margin_bottom = SLOT_PADDING
+	box.add_theme_stylebox_override("panel", style)
 
-	var texture_rect = TextureRect.new()
-	texture_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	texture_rect.custom_minimum_size = Vector2(size, size)
-	texture_rect.set_anchors_preset(Control.PRESET_CENTER)
-	texture_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 贴图：居中，保持比例
+	var tex_rect = TextureRect.new()
+	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tex_rect.custom_minimum_size = Vector2(size, size)
+	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tex_rect.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	tex_rect.grow_vertical = Control.GROW_DIRECTION_BOTH
+	box.add_child(tex_rect)
 
 	if icon_path and icon_path != "":
 		var tex = load(icon_path)
 		if tex is Texture2D:
-			texture_rect.texture = tex
+			tex_rect.texture = tex
 		else:
-			texture_rect.color = Color(0.3, 0.25, 0.4, 1)
+			tex_rect.color = Color(0.3, 0.25, 0.4, 1)
 	else:
-		texture_rect.color = Color(0.3, 0.25, 0.4, 1)
+		tex_rect.color = Color(0.3, 0.25, 0.4, 1)
 
-	if not equippable:
-		texture_rect.modulate = Color(0.5, 0.5, 0.5, 0.6)
+	return box
 
-	icon_container.add_child(texture_rect)
+# ============================================================
+# 可点击图标（用于背包栏里的装备）
+# ============================================================
+func _make_clickable_icon(icon_path: String, click_callback: Callable,
+						  can_equip: bool, size: int = ICON_SIZE) -> PanelContainer:
+	var box = _make_icon_box(icon_path, size,
+								Color(0.9, 0.75, 0.3, 0.9) if can_equip else Color(0.4, 0.4, 0.4, 0.7),
+								Color(0.15, 0.12, 0.2, 0.9))
+	box.mouse_filter = Control.MOUSE_FILTER_STOP  # 允许接收鼠标事件
+	box.gui_input.connect(click_callback)
+	return box
 
-	if equippable:
-		icon_container.gui_input.connect(_on_backpack_icon_clicked.bind(item_index))
-
-	return icon_container
-
+# ============================================================
+# 主 UI 构建
+# ============================================================
 func setup_ui():
-	panel_bg = ColorRect.new()
-	panel_bg.name = "PanelBg"
-	panel_bg.color = Color(0, 0, 0, 0.6)
-	panel_bg.size = get_viewport().get_visible_rect().size
-	panel_bg.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(panel_bg)
+	# 背景遮罩
+	var mask = ColorRect.new()
+	mask.name = "MaskBg"
+	mask.color = Color(0, 0, 0, 0.55)
+	mask.size = get_viewport().get_visible_rect().size
+	mask.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(mask)
 
-	var panel = Panel.new()
-	panel.name = "MainPanel"
-	panel.custom_minimum_size = Vector2(1050, 680)
-	panel.size = Vector2(1050, 680)
-	panel.position = Vector2(
+# 主面板（用 PanelContainer 确保子元素自动排列）
+	var panel_outer = PanelContainer.new()
+	panel_outer.name = "MainPanel"
+	panel_outer.custom_minimum_size = Vector2(1050, 680)
+	panel_outer.position = Vector2(
 		(get_viewport().get_visible_rect().size.x - 1050) / 2,
 		(get_viewport().get_visible_rect().size.y - 680) / 2
 	)
-
 	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.12, 0.1, 0.18, 0.95)
+	panel_style.bg_color = Color(0.10, 0.08, 0.16, 0.96)
 	panel_style.set_corner_radius_all(12)
 	panel_style.border_width_left = 2
 	panel_style.border_width_right = 2
 	panel_style.border_width_top = 2
 	panel_style.border_width_bottom = 2
-	panel_style.border_color = Color(0.6, 0.5, 0.3, 0.8)
-	panel.add_theme_stylebox_override("panel", panel_style)
-	add_child(panel)
+	panel_style.border_color = Color(0.7, 0.55, 0.3, 0.85)
+	panel_style.content_margin_left = 14
+	panel_style.content_margin_right = 14
+	panel_style.content_margin_top = 10
+	panel_style.content_margin_bottom = 12
+	panel_outer.add_theme_stylebox_override("panel", panel_style)
+	add_child(panel_outer)
 
-	main_container = VBoxContainer.new()
-	main_container.name = "MainContainer"
-	main_container.set_anchors_preset(Control.PRESET_FULL_RECT)
-	main_container.add_theme_constant_override("separation", 8)
-	panel.add_child(main_container)
+	# 内部垂直布局
+	var panel = VBoxContainer.new()
+	panel.name = "MainVBox"
+	panel.add_theme_constant_override("separation", 4)
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel_outer.add_child(panel)
 
-	var title_bar = HBoxContainer.new()
+	# 顶部标题栏
+	var title_bar = VBoxContainer.new()
 	title_bar.name = "TitleBar"
+	title_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_bar.add_theme_constant_override("separation", 2)
+	panel.add_child(title_bar)
 
-	title_label = Label.new()
-	title_label.name = "TitleLabel"
+	var title_label = Label.new()
 	title_label.text = "⚔ 物品栏 / 人物信息 ⚔"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title_label.add_theme_font_size_override("font_size", 22)
-	title_label.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35))
 	title_bar.add_child(title_label)
-	main_container.add_child(title_bar)
 
-	var sep1 = HSeparator.new()
-	main_container.add_child(sep1)
+	# 金币 / 等级信息
+	var stats_line = HBoxContainer.new()
+	stats_line.alignment = BoxContainer.ALIGNMENT_CENTER
+	stats_line.add_theme_constant_override("separation", 30)
+	title_bar.add_child(stats_line)
 
-	content_container = HBoxContainer.new()
-	content_container.name = "ContentContainer"
-	content_container.add_theme_constant_override("separation", 16)
-	content_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_container.add_child(content_container)
+	var gold_lbl = Label.new()
+	gold_lbl.text = "金币: %d" % GameData.gold
+	gold_lbl.add_theme_font_size_override("font_size", 16)
+	gold_lbl.add_theme_color_override("font_color", Color(1.0, 0.9, 0.4))
+	stats_line.add_child(gold_lbl)
 
-	left_column = VBoxContainer.new()
-	left_column.name = "LeftColumn"
-	left_column.add_theme_constant_override("separation", 10)
-	left_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left_column.custom_minimum_size = Vector2(450, 0)
-	content_container.add_child(left_column)
+	var lv_lbl = Label.new()
+	lv_lbl.text = "等级: Lv.%d" % GameData.level
+	lv_lbl.add_theme_font_size_override("font_size", 16)
+	lv_lbl.add_theme_color_override("font_color", Color(0.5, 0.9, 1.0))
+	stats_line.add_child(lv_lbl)
 
-	right_column = VBoxContainer.new()
-	right_column.name = "RightColumn"
-	right_column.add_theme_constant_override("separation", 6)
-	right_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_column.custom_minimum_size = Vector2(350, 0)
-	content_container.add_child(right_column)
+	# 分隔线
+	var sep = HSeparator.new()
+	panel.add_child(sep)
 
-	build_attributes_section()
-	build_equipment_section()
-	build_items_section()
-	build_exclusive_backpack_section()
+	# 主内容：左栏（属性 + 装备槽） + 右栏（道具 + 背包）
+	var content = HBoxContainer.new()
+	content.name = "ContentContainer"
+	content.add_theme_constant_override("separation", 12)
+	content.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_child(content)
 
+	# ----------- 左栏 -----------
+	var left_col = VBoxContainer.new()
+	left_col.name = "LeftColumn"
+	left_col.add_theme_constant_override("separation", 8)
+	left_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left_col.custom_minimum_size = Vector2(470, 0)
+	content.add_child(left_col)
+
+	_build_attributes_section(left_col)
+	_build_equipment_section(left_col)
+
+	# ----------- 右栏 -----------
+	var right_col = VBoxContainer.new()
+	right_col.name = "RightColumn"
+	right_col.add_theme_constant_override("separation", 8)
+	right_col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right_col.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right_col.custom_minimum_size = Vector2(400, 0)
+	content.add_child(right_col)
+
+	_build_items_section(right_col)
+	_build_backpack_section(right_col)
+
+	# 底部关闭提示
 	var sep2 = HSeparator.new()
-	main_container.add_child(sep2)
+	panel.add_child(sep2)
 
-	close_hint = Label.new()
-	close_hint.name = "CloseHint"
-	close_hint.text = "按 Q 键关闭"
-	close_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	close_hint.add_theme_font_size_override("font_size", 14)
-	close_hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	main_container.add_child(close_hint)
+	var hint = Label.new()
+	hint.text = "按 Q 键关闭  |  点击右侧背包中的装备图标直接穿戴"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.65, 0.65, 0.7))
+	panel.add_child(hint)
 
+	# 窗口大小变化时刷新面板位置
 	if not get_tree().root.size_changed.is_connected(_on_window_resized):
 		get_tree().root.size_changed.connect(_on_window_resized)
 
-# == 人物属性区域 ==
-func build_attributes_section():
-	var attr_section = VBoxContainer.new()
-	attr_section.name = "AttributesSection"
-	attr_section.add_theme_constant_override("separation", 4)
+# ============================================================
+# 构建：人物属性区
+# ============================================================
+func _build_attributes_section(parent: VBoxContainer):
+	var section = _make_section_panel(parent, "━━━━━ 人物属性 ━━━━━")
 
-	var attr_title = Label.new()
-	attr_title.text = "━━━ 人物属性 ━━━"
-	attr_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	attr_title.add_theme_font_size_override("font_size", 18)
-	attr_title.add_theme_color_override("font_color", Color(0.9, 0.75, 0.25))
-	attr_section.add_child(attr_title)
+	var grid = VBoxContainer.new()
+	grid.add_theme_constant_override("separation", 4)
+	section.add_child(grid)
 
-	var attr_grid = VBoxContainer.new()
-	attr_grid.name = "AttrGrid"
-	attr_grid.add_theme_constant_override("separation", 6)
-
+	# 血量
 	var total_max_hp = GameData.get_total_max_hp()
-	var hp_bar_length = 200
+	_add_bar_row(grid, "血量", GameData.current_hp, total_max_hp,
+				 Color(0.95, 0.25, 0.25), Color(0.2, 0.08, 0.08))
 
-	var hp_row = HBoxContainer.new()
-	var hp_label = Label.new()
-	hp_label.text = "血量"
-	hp_label.custom_minimum_size = Vector2(80, 0)
-	hp_label.add_theme_font_size_override("font_size", 15)
-	hp_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-	hp_row.add_child(hp_label)
+	# 蓝量
+	_add_bar_row(grid, "蓝量", GameData.current_mp, GameData.max_mp,
+				 Color(0.3, 0.65, 0.95), Color(0.08, 0.12, 0.2))
 
-	var hp_value = Label.new()
-	hp_value.name = "HPValue"
-	hp_value.text = "%d / %d" % [GameData.current_hp, total_max_hp]
-	hp_value.add_theme_font_size_override("font_size", 15)
-	hp_value.add_theme_color_override("font_color", Color(0.95, 0.3, 0.3))
-	hp_row.add_child(hp_value)
-
-	var hp_bar_bg = ColorRect.new()
-	hp_bar_bg.name = "HPBarBg"
-	hp_bar_bg.size = Vector2(hp_bar_length, 16)
-	hp_bar_bg.color = Color(0.15, 0.15, 0.15)
-	hp_row.add_child(hp_bar_bg)
-
-	var hp_bar_fill = ColorRect.new()
-	hp_bar_fill.name = "HPBarFill"
-	hp_bar_fill.size = Vector2(hp_bar_length * GameData.current_hp / max(1, total_max_hp), 16)
-	hp_bar_fill.color = Color(0.9, 0.15, 0.15)
-	hp_bar_bg.add_child(hp_bar_fill)
-
-	attr_grid.add_child(hp_row)
-
-	var mp_row = HBoxContainer.new()
-	var mp_label = Label.new()
-	mp_label.text = "蓝量"
-	mp_label.custom_minimum_size = Vector2(80, 0)
-	mp_label.add_theme_font_size_override("font_size", 15)
-	mp_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-	mp_row.add_child(mp_label)
-
-	var mp_value = Label.new()
-	mp_value.name = "MPValue"
-	mp_value.text = "%d / %d" % [GameData.current_mp, GameData.max_mp]
-	mp_value.add_theme_font_size_override("font_size", 15)
-	mp_value.add_theme_color_override("font_color", Color(0.25, 0.55, 0.95))
-	mp_row.add_child(mp_value)
-
-	var mp_bar_bg = ColorRect.new()
-	mp_bar_bg.name = "MPBarBg"
-	mp_bar_bg.size = Vector2(hp_bar_length, 16)
-	mp_bar_bg.color = Color(0.15, 0.15, 0.15)
-	mp_row.add_child(mp_bar_bg)
-
-	var mp_bar_fill = ColorRect.new()
-	mp_bar_fill.name = "MPBarFill"
-	mp_bar_fill.size = Vector2(hp_bar_length * GameData.current_mp / max(1, GameData.max_mp), 16)
-	mp_bar_fill.color = Color(0.2, 0.5, 0.9)
-	mp_bar_bg.add_child(mp_bar_fill)
-
-	attr_grid.add_child(mp_row)
-
-	var other_attrs = [
-		{"label": "攻击", "value": str(GameData.get_total_attack()), "color": Color(0.95, 0.5, 0.2)},
-		{"label": "防御", "value": str(GameData.get_total_defense()), "color": Color(0.3, 0.75, 0.4)},
-		{"label": "速度", "value": str(GameData.current_speed), "color": Color(0.3, 0.8, 0.85)},
-		{"label": "暴击", "value": str(GameData.crit) + "%", "color": Color(0.95, 0.85, 0.2)},
+	# 其他属性
+	var attrs = [
+		{"label": "攻击", "value": str(GameData.get_total_attack()), "color": Color(1.0, 0.55, 0.2)},
+		{"label": "防御", "value": str(GameData.get_total_defense()), "color": Color(0.3, 0.85, 0.45)},
+		{"label": "暴击", "value": str(GameData.crit) + "%", "color": Color(1.0, 0.9, 0.3)},
+		{"label": "角色", "value": "冒险者", "color": Color(0.9, 0.85, 0.4)},
 	]
-
-	for attr in other_attrs:
+	for attr in attrs:
 		var row = HBoxContainer.new()
-		var lbl = Label.new()
-		lbl.text = attr.label
-		lbl.custom_minimum_size = Vector2(80, 0)
-		lbl.add_theme_font_size_override("font_size", 15)
-		lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-		row.add_child(lbl)
-
-		var val = Label.new()
-		val.text = attr.value
-		val.add_theme_font_size_override("font_size", 15)
-		val.add_theme_color_override("font_color", attr.color)
+		row.add_theme_constant_override("separation", 12)
+		var lab = _make_label(attr.label, 120, 16, Color(0.9, 0.9, 0.9))
+		row.add_child(lab)
+		var val = _make_label(attr.value, -1, 16, attr.color)
 		row.add_child(val)
-		attr_grid.add_child(row)
+		grid.add_child(row)
 
-	var job_row = HBoxContainer.new()
-	var job_lbl = Label.new()
-	job_lbl.text = "角色"
-	job_lbl.custom_minimum_size = Vector2(80, 0)
-	job_lbl.add_theme_font_size_override("font_size", 15)
-	job_lbl.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-	job_row.add_child(job_lbl)
+# ============================================================
+# 构建：装备槽（武器 / 护甲 / 饰品）
+# ============================================================
+func _build_equipment_section(parent: VBoxContainer):
+	var section = _make_section_panel(parent, "━━━━━ 装备栏 ━━━━━")
 
-	var job_val = Label.new()
-	job_val.name = "JobValue"
-	job_val.text = "冒险者"
-	job_val.add_theme_font_size_override("font_size", 15)
-	job_val.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
-	job_row.add_child(job_val)
-	attr_grid.add_child(job_row)
+	var grid = VBoxContainer.new()
+	grid.add_theme_constant_override("separation", 6)
+	section.add_child(grid)
 
-	attr_section.add_child(attr_grid)
-	left_column.add_child(attr_section)
-
-# == 装备栏区域（带卸下按钮） ==
-func build_equipment_section():
-	var equip_section = VBoxContainer.new()
-	equip_section.name = "EquipmentSection"
-	equip_section.add_theme_constant_override("separation", 6)
-
-	var equip_title = Label.new()
-	equip_title.text = "━━━ 装备栏 ━━━"
-	equip_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	equip_title.add_theme_font_size_override("font_size", 18)
-	equip_title.add_theme_color_override("font_color", Color(0.9, 0.75, 0.25))
-	equip_section.add_child(equip_title)
-
-	var equip_slots = [
-		{"label": "武器", "data": GameData.weapon, "slot_name": "WeaponSlot", "default_icon": GameData.DEFAULT_WEAPON_ICON, "type": "weapon"},
-		{"label": "护甲", "data": GameData.armor, "slot_name": "ArmorSlot", "default_icon": GameData.DEFAULT_ARMOR_ICON, "type": "armor"},
-		{"label": "饰品", "data": GameData.accessory, "slot_name": "AccessorySlot", "default_icon": GameData.DEFAULT_ACCESSORY_ICON, "type": "accessory"},
+	var slot_defs := [
+		{"label": "武器", "key": "weapon", "bonus_field": "attack_bonus"},
+		{"label": "护甲", "key": "armor", "bonus_field": "defense_bonus"},
+		{"label": "饰品", "key": "accessory", "bonus_field": "hp_bonus"},
 	]
 
-	for slot in equip_slots:
-		var slot_container = HBoxContainer.new()
-		slot_container.name = slot.slot_name
-		slot_container.add_theme_constant_override("separation", 8)
+	for slot_def in slot_defs:
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
 
-		var slot_label = Label.new()
-		slot_label.text = slot.label + ":"
-		slot_label.custom_minimum_size = Vector2(60, 0)
-		slot_label.add_theme_font_size_override("font_size", 15)
-		slot_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-		slot_container.add_child(slot_label)
+		# 标签
+		var lab = _make_label(slot_def.label + ":", 60, 14, Color(0.8, 0.75, 0.55))
+		row.add_child(lab)
 
-		var equip_data = slot.data
-		var icon_path = equip_data.get("icon", "")
-		if icon_path == "":
-			icon_path = slot.default_icon
-		var equip_icon = create_icon_texture(icon_path, 28)
-		slot_container.add_child(equip_icon)
+		# 数据
+		var equip: Dictionary
+		match slot_def.key:
+			"weapon":    equip = GameData.weapon
+			"armor":     equip = GameData.armor
+			"accessory": equip = GameData.accessory
+			_:           equip = {}
+		var icon_path: String = equip.get("icon", "")
+		var name_str: String = equip.get("name", "无")
+		var is_empty: bool = (name_str == "无") or name_str == ""
 
-		var equip_panel = Panel.new()
-		equip_panel.custom_minimum_size = Vector2(140, 30)
-		var equip_style = StyleBoxFlat.new()
-		equip_style.bg_color = Color(0.18, 0.15, 0.22, 0.9)
-		equip_style.set_corner_radius_all(4)
-		equip_style.border_width_left = 1
-		equip_style.border_width_right = 1
-		equip_style.border_width_top = 1
-		equip_style.border_width_bottom = 1
-		equip_style.border_color = Color(0.4, 0.35, 0.25, 0.6)
-		equip_panel.add_theme_stylebox_override("panel", equip_style)
-		slot_container.add_child(equip_panel)
+		# 图标
+		var icon_box = _make_icon_box(icon_path, 28)
+		row.add_child(icon_box)
 
-		var equip_name_label = Label.new()
-		equip_name_label.name = "NameLabel"
-		equip_name_label.text = equip_data.get("name", "无")
-		equip_name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		equip_name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		equip_name_label.set_anchors_preset(Control.PRESET_FULL_RECT)
-		equip_name_label.add_theme_font_size_override("font_size", 14)
-		equip_name_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-		equip_panel.add_child(equip_name_label)
+		# 名字面板
+		var name_panel = Panel.new()
+		name_panel.custom_minimum_size = Vector2(150, 30)
+		var ns = StyleBoxFlat.new()
+		ns.bg_color = Color(0.18, 0.14, 0.24, 0.9)
+		ns.set_corner_radius_all(4)
+		ns.border_width_left = 1
+		ns.border_width_right = 1
+		ns.border_width_top = 1
+		ns.border_width_bottom = 1
+		ns.border_color = Color(0.4, 0.35, 0.25, 0.6)
+		name_panel.add_theme_stylebox_override("panel", ns)
+		row.add_child(name_panel)
 
-		var bonus_text = get_equip_bonus_text(slot.label, equip_data)
-		var bonus_label = Label.new()
-		bonus_label.text = bonus_text
-		bonus_label.add_theme_font_size_override("font_size", 12)
-		bonus_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.5))
-		slot_container.add_child(bonus_label)
+		var name_lbl = Label.new()
+		name_lbl.text = name_str if not is_empty else "（空）"
+		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
+		name_lbl.add_theme_font_size_override("font_size", 14)
+		name_lbl.add_theme_color_override("font_color",
+										  Color(0.95, 0.85, 0.4) if not is_empty else Color(0.4, 0.4, 0.4))
+		name_panel.add_child(name_lbl)
 
-		var is_empty = equip_data.get("name", "") == "无"
+		# 加成文字
+		var bonus_val: int = equip.get(slot_def.bonus_field, 0)
+		var bonus_str: String = ""
+		if not is_empty and bonus_val > 0:
+			match slot_def.bonus_field:
+				"attack_bonus":
+					bonus_str = "+%d 攻击" % bonus_val
+				"defense_bonus":
+					bonus_str = "+%d 防御" % bonus_val
+				"hp_bonus":
+					bonus_str = "+%d 生命" % bonus_val
+
+		var bonus_lbl = _make_label(bonus_str, -1, 13, Color(0.5, 0.95, 0.55))
+		bonus_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(bonus_lbl)
+
+		# 卸下按钮
 		var unequip_btn = Button.new()
 		unequip_btn.text = "卸下"
-		unequip_btn.custom_minimum_size = Vector2(50, 28)
+		unequip_btn.custom_minimum_size = Vector2(60, 30)
 		unequip_btn.add_theme_font_size_override("font_size", 12)
 		unequip_btn.disabled = is_empty
-		var slot_type = slot.type
-		unequip_btn.pressed.connect(_on_unequip_clicked.bind(slot_type))
-		slot_container.add_child(unequip_btn)
+		var key_copy: String = slot_def.key
+		unequip_btn.pressed.connect(_on_unequip_clicked.bind(key_copy))
+		row.add_child(unequip_btn)
 
-		equip_section.add_child(slot_container)
+		grid.add_child(row)
 
-	left_column.add_child(equip_section)
+# ============================================================
+# 构建：道具栏（血瓶 / 蓝瓶）
+# ============================================================
+func _build_items_section(parent: VBoxContainer):
+	var section = _make_section_panel(parent, "━━━━━ 道具栏 ━━━━━")
 
-func get_equip_bonus_text(slot_type: String, data: Dictionary) -> String:
-	match slot_type:
-		"武器":
-			return "+" + str(data.get("attack_bonus", 0)) + " 攻击"
-		"护甲":
-			return "+" + str(data.get("defense_bonus", 0)) + " 防御"
-		"饰品":
-			var hp_bonus = data.get("hp_bonus", 0)
-			if hp_bonus > 0:
-				return "+" + str(hp_bonus) + " 生命"
-			return ""
-		_:
-			return ""
+	if GameData.inventory_items.size() == 0:
+		var empty = _make_label("（暂无道具）", -1, 14, Color(0.5, 0.5, 0.5))
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		section.add_child(empty)
+		return
 
-# == 卸下装备 ==
-func _on_unequip_clicked(slot_type: String):
-	match slot_type:
-		"weapon":
-			if GameData.weapon.get("name", "") != "无":
-				var old_weapon = GameData.weapon.duplicate()
-				old_weapon["type"] = "weapon"
-				GameData.exclusive_backpack.append(old_weapon)
-				GameData.weapon = GameData.EMPTY_SLOT_DATA.duplicate()
-				GameData.weapon["icon"] = GameData.DEFAULT_WEAPON_ICON
-		"armor":
-			if GameData.armor.get("name", "") != "无":
-				var old_armor = GameData.armor.duplicate()
-				old_armor["type"] = "armor"
-				GameData.exclusive_backpack.append(old_armor)
-				GameData.armor = GameData.EMPTY_SLOT_DATA.duplicate()
-				GameData.armor["icon"] = GameData.DEFAULT_ARMOR_ICON
-		"accessory":
-			if GameData.accessory.get("name", "") != "无":
-				var old_accessory = GameData.accessory.duplicate()
-				old_accessory["type"] = "accessory"
-				GameData.unequip_accessory()
-				GameData.exclusive_backpack.append(old_accessory)
-	refresh_ui()
+	for item in GameData.inventory_items:
+		if not item is Dictionary:
+			continue
 
-# == 专属背包栏区域（右栏下部，图标网格） ==
-func build_exclusive_backpack_section():
-	var backpack_section = VBoxContainer.new()
-	backpack_section.name = "ExclusiveBackpackSection"
-	backpack_section.add_theme_constant_override("separation", 4)
-	backpack_section.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
 
-	var backpack_title = Label.new()
-	backpack_title.text = "━━━ 专属背包栏 ━━━"
-	backpack_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	backpack_title.add_theme_font_size_override("font_size", 16)
-	backpack_title.add_theme_color_override("font_color", Color(0.9, 0.75, 0.25))
-	backpack_section.add_child(backpack_title)
+		# 图标
+		var icon_box = _make_icon_box(item.get("icon", ""), 28)
+		row.add_child(icon_box)
 
-	var hint_label = Label.new()
-	hint_label.text = "（点击图标穿戴装备，槽位为空时可穿）"
-	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint_label.add_theme_font_size_override("font_size", 10)
-	hint_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-	backpack_section.add_child(hint_label)
+		# 名字
+		var name_lbl = _make_label(item.get("name", "???"), 100, 14, Color(1.0, 0.9, 0.8))
+		row.add_child(name_lbl)
 
-	var backpack_bg = Panel.new()
-	backpack_bg.custom_minimum_size = Vector2(0, 160)
-	backpack_bg.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	backpack_bg.mouse_filter = Control.MOUSE_FILTER_PASS
-	var bg_style = StyleBoxFlat.new()
-	bg_style.bg_color = Color(0.10, 0.08, 0.14, 0.8)
-	bg_style.set_corner_radius_all(8)
-	bg_style.border_width_left = 1
-	bg_style.border_width_right = 1
-	bg_style.border_width_top = 1
-	bg_style.border_width_bottom = 1
-	bg_style.border_color = Color(0.5, 0.4, 0.2, 0.6)
-	backpack_bg.add_theme_stylebox_override("panel", bg_style)
-	backpack_section.add_child(backpack_bg)
+		# 数量
+		var qty_lbl = _make_label("x%d" % item.get("quantity", 0), 60, 14, Color(0.95, 0.85, 0.45))
+		row.add_child(qty_lbl)
 
-	if GameData.exclusive_backpack.is_empty():
-		var empty_label = Label.new()
-		empty_label.text = "（背包栏为空）"
-		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty_label.add_theme_font_size_override("font_size", 13)
-		empty_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-		empty_label.set_anchors_preset(Control.PRESET_CENTER)
-		backpack_bg.add_child(empty_label)
-	else:
-		var item_grid = VBoxContainer.new()
-		item_grid.name = "BackpackGrid"
-		item_grid.set_anchors_preset(Control.PRESET_FULL_RECT)
-		item_grid.add_theme_constant_override("separation", 4)
-		backpack_bg.add_child(item_grid)
+		# 描述
+		var desc = _make_label(item.get("description", ""), -1, 12, Color(0.65, 0.75, 0.85))
+		desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(desc)
 
-		for i in range(GameData.exclusive_backpack.size()):
-			var item = GameData.exclusive_backpack[i]
-			var item_type = item.get("type", "")
-			var can_interact = _can_equip(item_type) or item_type == "food"
+		section.add_child(row)
 
-			var item_row = HBoxContainer.new()
-			item_row.add_theme_constant_override("separation", 8)
+# ============================================================
+# 构建：专属背包栏（未装备的装备）
+# ============================================================
+func _build_backpack_section(parent: VBoxContainer):
+	var section = _make_section_panel(parent, "━━━━━ 专属背包栏（装备）━━━━━", true)
+	section.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-			var item_icon = create_clickable_icon(item.get("icon", ""), i, can_interact, 28)
-			item_row.add_child(item_icon)
+	var hint = _make_label("（点击图标直接装备或使用，会替换当前装备）",
+							-1, 11, Color(0.55, 0.55, 0.6))
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	section.add_child(hint)
 
-			var item_name = Label.new()
-			item_name.text = item.get("name", "???")
-			item_name.custom_minimum_size = Vector2(70, 0)
-			item_name.add_theme_font_size_override("font_size", 13)
-			item_name.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-			item_row.add_child(item_name)
+	if GameData.exclusive_backpack.size() == 0:
+		var empty = _make_label("（背包栏为空 - 击败怪物获取装备）", -1, 14, Color(0.5, 0.5, 0.5))
+		empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		section.add_child(empty)
+		return
 
-			var type_label = Label.new()
-			type_label.text = "[" + _get_type_display_name(item_type) + "]"
-			type_label.add_theme_font_size_override("font_size", 11)
-			type_label.add_theme_color_override("font_color", Color(0.6, 0.5, 0.3))
-			item_row.add_child(type_label)
+	for i in range(GameData.exclusive_backpack.size()):
+		var item: Dictionary = GameData.exclusive_backpack[i]
+		if not item is Dictionary:
+			continue
 
-			var bonus_text = _get_item_bonus_text(item)
-			var bonus_label = Label.new()
-			bonus_label.text = bonus_text
-			bonus_label.add_theme_font_size_override("font_size", 11)
-			bonus_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.5))
-			bonus_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			item_row.add_child(bonus_label)
+		var row = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
 
-			if item_type != "food" and not _can_equip(item_type):
-				var not_avail_label = Label.new()
-				not_avail_label.text = "（已占用）"
-				not_avail_label.add_theme_font_size_override("font_size", 10)
-				not_avail_label.add_theme_color_override("font_color", Color(0.8, 0.3, 0.3))
-				item_row.add_child(not_avail_label)
+		# 类型检测 - 支持装备和食物
+		var item_type: String = item.get("type", "")
 
-			item_grid.add_child(item_row)
+		# 可点击图标
+		var icon_path: String = item.get("icon", "")
+		var click_cb = func(event: InputEvent, idx: int, itype: String):
+			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+				if itype == "food":
+					_on_backpack_icon_clicked(event, idx)
+				else:
+					equip_from_backpack(idx)
+		var icon_box = _make_clickable_icon(icon_path, click_cb.bind(i, item_type),
+											 true, 28)
+		row.add_child(icon_box)
 
-	right_column.add_child(backpack_section)
+		# 名字
+		var name_lbl = _make_label(item.get("name", "???"), 100, 14, Color(1.0, 0.9, 0.8))
+		row.add_child(name_lbl)
 
-func _get_type_display_name(type: String) -> String:
-	match type:
+		# 类型
+		var type_str: String = "[" + _type_display(item_type) + "]"
+		var type_lbl = _make_label(type_str, 70, 12, Color(0.85, 0.7, 0.45))
+		row.add_child(type_lbl)
+
+		# 加成
+		var bonus_str: String = _get_item_bonus_text(item)
+		var bonus_lbl = _make_label(bonus_str, -1, 13, Color(0.55, 0.95, 0.55))
+		bonus_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(bonus_lbl)
+
+		section.add_child(row)
+
+# ============================================================
+# 辅助：标签
+# ============================================================
+func _make_label(text: String, min_width: int, font_size: int, color: Color) -> Label:
+	var lab = Label.new()
+	lab.text = text
+	if min_width > 0:
+		lab.custom_minimum_size = Vector2(min_width, 0)
+	lab.add_theme_font_size_override("font_size", font_size)
+	lab.add_theme_color_override("font_color", color)
+	return lab
+
+func _make_section_panel(parent: Control, title: String, expand: bool = false) -> VBoxContainer:
+	var outer = PanelContainer.new()
+	var pstyle = StyleBoxFlat.new()
+	pstyle.bg_color = Color(0.10, 0.08, 0.14, 0.9)
+	pstyle.set_corner_radius_all(8)
+	pstyle.border_width_left = 1
+	pstyle.border_width_right = 1
+	pstyle.border_width_top = 1
+	pstyle.border_width_bottom = 1
+	pstyle.border_color = Color(0.4, 0.35, 0.25, 0.6)
+	pstyle.content_margin_left = 12
+	pstyle.content_margin_right = 12
+	pstyle.content_margin_top = 10
+	pstyle.content_margin_bottom = 10
+	outer.add_theme_stylebox_override("panel", pstyle)
+	parent.add_child(outer)
+
+	var vb = VBoxContainer.new()
+	vb.name = "SectionBody"
+	vb.add_theme_constant_override("separation", 6)
+	if expand:
+		vb.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	outer.add_child(vb)
+
+	var title_lbl = Label.new()
+	title_lbl.text = title
+	title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_lbl.add_theme_font_size_override("font_size", 17)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
+	vb.add_child(title_lbl)
+
+	return vb
+
+# 添加一行：标签 + 数值 + 进度条
+func _add_bar_row(parent: VBoxContainer, label: String, cur: int, maxv: int,
+					fg: Color, bg: Color):
+	var row = HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+
+	var lab = _make_label(label, 60, 15, Color(0.9, 0.9, 0.9))
+	row.add_child(lab)
+
+	var val = _make_label("%d / %d" % [cur, maxv], 110, 15, Color(1.0, 1.0, 0.9))
+	row.add_child(val)
+
+	# 进度条用 PanelContainer + ColorRect 自定义实现，避免对齐问题
+	var bar_outer = Panel.new()
+	bar_outer.custom_minimum_size = Vector2(260, 18)
+	var bar_style = StyleBoxFlat.new()
+	bar_style.bg_color = bg
+	bar_style.set_corner_radius_all(3)
+	bar_outer.add_theme_stylebox_override("panel", bar_style)
+	row.add_child(bar_outer)
+
+	# 内部填充条
+	var fill = ColorRect.new()
+	var ratio: float = float(cur) / float(max(1, maxv))
+	fill.color = fg
+	fill.custom_minimum_size = Vector2(int(260 * ratio), 18)
+	fill.size = Vector2(int(260 * ratio), 18)
+	bar_outer.add_child(fill)
+
+	parent.add_child(row)
+
+func _type_display(t: String) -> String:
+	match t:
 		"weapon": return "武器"
 		"armor": return "护甲"
 		"accessory": return "饰品"
 		"food": return "食物"
-		_: return type
+		_: return t
+
+func can_equip_type(t: String) -> bool:
+	return t in ["weapon", "armor", "accessory"]
 
 func _get_item_bonus_text(item: Dictionary) -> String:
 	var t = item.get("type", "")
@@ -542,18 +539,33 @@ func _get_item_bonus_text(item: Dictionary) -> String:
 		return "+" + str(hp) + " 生命"
 	return ""
 
-func _can_equip(type: String) -> bool:
-	match type:
+# ============================================================
+# 操作：卸下装备 / 从背包装备
+# ============================================================
+func _on_unequip_clicked(slot_type: String):
+	var old_item: Dictionary
+	match slot_type:
 		"weapon":
-			return GameData.weapon.get("name", "") == "无"
+			old_item = GameData.weapon.duplicate(true)
+			GameData.weapon = GameData.EMPTY_SLOT_DATA.duplicate(true)
+			GameData.weapon["icon"] = GameData.DEFAULT_WEAPON_ICON
+			GameData.weapon["type"] = "weapon"
 		"armor":
-			return GameData.armor.get("name", "") == "无"
+			old_item = GameData.armor.duplicate(true)
+			GameData.armor = GameData.EMPTY_SLOT_DATA.duplicate(true)
+			GameData.armor["icon"] = GameData.DEFAULT_ARMOR_ICON
+			GameData.armor["type"] = "armor"
 		"accessory":
-			return GameData.accessory.get("name", "") == "无"
+			old_item = GameData.accessory.duplicate(true)
+			GameData.unequip_accessory()
+			GameData.accessory["type"] = "accessory"
 		_:
-			return false
+			return
+	old_item["type"] = slot_type
+	GameData.exclusive_backpack.append(old_item)
+	refresh_ui()
 
-# == 点击专属背包栏图标穿戴装备 ==
+# == 点击专属背包栏图标使用食物/装备 ==
 func _on_backpack_icon_clicked(event: InputEvent, item_index: int):
 	if not (event is InputEventMouseButton):
 		return
@@ -568,108 +580,170 @@ func _on_backpack_icon_clicked(event: InputEvent, item_index: int):
 	var item = GameData.exclusive_backpack[item_index]
 	var item_type = item.get("type", "")
 
-	# 食物：点击即使用
+	# 食物：弹出确认窗口
 	if item_type == "food":
-		var ok = GameData.use_food(item)
-		if ok:
-			GameData.exclusive_backpack.remove_at(item_index)
-			_sync_game_data_to_players()
-		refresh_ui()
+		_show_food_confirm_popup(item, item_index)
 		return
 
-	# 装备：原有的穿戴逻辑
-	if not _can_equip(item_type):
+	# 装备：使用原有的穿戴逻辑
+	equip_from_backpack(item_index)
+
+# == 食物使用确认弹窗 ==
+func _show_food_confirm_popup(food_item: Dictionary, item_index: int):
+	# 遮罩层
+	var overlay = ColorRect.new()
+	overlay.name = "FoodConfirmOverlay"
+	overlay.color = Color(0, 0, 0, 0.6)
+	overlay.size = get_viewport().get_visible_rect().size
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(overlay)
+
+	# 确认面板
+	var popup = PanelContainer.new()
+	popup.name = "FoodConfirmPopup"
+	popup.custom_minimum_size = Vector2(360, 200)
+	popup.position = Vector2(
+		(get_viewport().get_visible_rect().size.x - 360) / 2,
+		(get_viewport().get_visible_rect().size.y - 200) / 2
+	)
+	var popup_style = StyleBoxFlat.new()
+	popup_style.bg_color = Color(0.08, 0.06, 0.12, 0.97)
+	popup_style.set_corner_radius_all(12)
+	popup_style.border_width_left = 2
+	popup_style.border_width_right = 2
+	popup_style.border_width_top = 2
+	popup_style.border_width_bottom = 2
+	popup_style.border_color = Color(0.9, 0.7, 0.3, 0.8)
+	popup_style.content_margin_left = 16
+	popup_style.content_margin_right = 16
+	popup_style.content_margin_top = 14
+	popup_style.content_margin_bottom = 14
+	popup.add_theme_stylebox_override("panel", popup_style)
+	overlay.add_child(popup)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	popup.add_child(vbox)
+
+	# 标题行（图标 + 名字）
+	var title_row = HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 10)
+
+	var icon_box = _make_icon_box(food_item.get("icon", ""), 36,
+								   Color(0.9, 0.7, 0.3, 0.9),
+								   Color(0.12, 0.08, 0.16, 0.9))
+	title_row.add_child(icon_box)
+
+	var name_lbl = Label.new()
+	name_lbl.text = food_item.get("name", "食物")
+	name_lbl.add_theme_font_size_override("font_size", 20)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
+	name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_row.add_child(name_lbl)
+
+	vbox.add_child(title_row)
+
+	# 效果描述
+	var effect_lbl = Label.new()
+	effect_lbl.text = "效果： " + food_item.get("description", "点击使用")
+	effect_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	effect_lbl.add_theme_font_size_override("font_size", 14)
+	effect_lbl.add_theme_color_override("font_color", Color(0.7, 0.9, 0.7))
+	vbox.add_child(effect_lbl)
+
+	# 提示文字
+	var tip_lbl = Label.new()
+	tip_lbl.text = "确定要使用这个食物吗？"
+	tip_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tip_lbl.add_theme_font_size_override("font_size", 12)
+	tip_lbl.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	vbox.add_child(tip_lbl)
+
+	# 按钮行
+	var btn_row = HBoxContainer.new()
+	btn_row.add_theme_constant_override("separation", 20)
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(btn_row)
+
+	# 确认按钮
+	var confirm_btn = Button.new()
+	confirm_btn.text = "确认使用"
+	confirm_btn.custom_minimum_size = Vector2(120, 36)
+	confirm_btn.add_theme_font_size_override("font_size", 14)
+	confirm_btn.pressed.connect(func():
+		overlay.queue_free()
+		_do_use_food(food_item, item_index)
+	)
+	btn_row.add_child(confirm_btn)
+
+	# 取消按钮
+	var cancel_btn = Button.new()
+	cancel_btn.text = "取消"
+	cancel_btn.custom_minimum_size = Vector2(120, 36)
+	cancel_btn.add_theme_font_size_override("font_size", 14)
+	cancel_btn.pressed.connect(func():
+		overlay.queue_free()
+	)
+	btn_row.add_child(cancel_btn)
+
+	# 按 Z 或 ESC 取消
+	overlay.gui_input.connect(func(event: InputEvent):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_Z or event.keycode == KEY_ESCAPE:
+				overlay.queue_free()
+	)
+
+# == 实际执行食物使用 ==
+func _do_use_food(food_item: Dictionary, item_index: int):
+	if item_index < 0 or item_index >= GameData.exclusive_backpack.size():
 		return
-
-	GameData.exclusive_backpack.remove_at(item_index)
-
-	match item_type:
-		"weapon":
-			GameData.weapon = item.duplicate()
-		"armor":
-			GameData.armor = item.duplicate()
-		"accessory":
-			GameData.equip_accessory(item.duplicate())
-
+	var ok = GameData.use_food(food_item)
+	if ok:
+		GameData.exclusive_backpack.remove_at(item_index)
+		_sync_game_data_to_players()
 	refresh_ui()
 
-# == 道具栏区域（右栏上部，缩小版） ==
-func build_items_section():
-	var items_section = VBoxContainer.new()
-	items_section.name = "ItemsSection"
-	items_section.add_theme_constant_override("separation", 4)
+func equip_from_backpack(idx: int):
+	if idx < 0 or idx >= GameData.exclusive_backpack.size():
+		return
+	var item: Dictionary = GameData.exclusive_backpack[idx]
+	var itype: String = item.get("type", "")
+	if not itype in ["weapon", "armor", "accessory"]:
+		return
 
-	var items_title = Label.new()
-	items_title.text = "━━━ 道具栏 ━━━"
-	items_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	items_title.add_theme_font_size_override("font_size", 16)
-	items_title.add_theme_color_override("font_color", Color(0.9, 0.75, 0.25))
-	items_section.add_child(items_title)
+	# 把当前装备（如果有的话）先收回背包，再装备新的
+	var cur: Dictionary
+	var has_cur: bool = false
+	match itype:
+		"weapon":
+			cur = GameData.weapon
+			has_cur = cur.get("name", "") not in ["", "无"]
+			if has_cur:
+				GameData.exclusive_backpack.append(cur.duplicate(true))
+			GameData.weapon = item.duplicate(true)
+		"armor":
+			cur = GameData.armor
+			has_cur = cur.get("name", "") not in ["", "无"]
+			if has_cur:
+				GameData.exclusive_backpack.append(cur.duplicate(true))
+			GameData.armor = item.duplicate(true)
+		"accessory":
+			cur = GameData.accessory
+			has_cur = cur.get("name", "") not in ["", "无"]
+			if has_cur:
+				GameData.exclusive_backpack.append(cur.duplicate(true))
+				GameData.unequip_accessory()
+			GameData.equip_accessory(item.duplicate(true))
 
-	var items_bg = Panel.new()
-	items_bg.custom_minimum_size = Vector2(0, 100)
-	var items_bg_style = StyleBoxFlat.new()
-	items_bg_style.bg_color = Color(0.08, 0.06, 0.12, 0.8)
-	items_bg_style.set_corner_radius_all(8)
-	items_bg_style.border_width_left = 1
-	items_bg_style.border_width_right = 1
-	items_bg_style.border_width_top = 1
-	items_bg_style.border_width_bottom = 1
-	items_bg_style.border_color = Color(0.35, 0.3, 0.2, 0.5)
-	items_bg.add_theme_stylebox_override("panel", items_bg_style)
-	items_section.add_child(items_bg)
+	GameData.exclusive_backpack.remove_at(idx)
+	refresh_ui()
 
-	var items_inner = VBoxContainer.new()
-	items_inner.name = "ItemsInner"
-	items_inner.set_anchors_preset(Control.PRESET_FULL_RECT)
-	items_inner.add_theme_constant_override("separation", 2)
-	items_bg.add_child(items_inner)
-
-	for item in GameData.inventory_items:
-		var item_row = HBoxContainer.new()
-		item_row.add_theme_constant_override("separation", 8)
-
-		var item_icon = create_icon_texture(item.get("icon", ""), 24)
-		item_row.add_child(item_icon)
-
-		var item_name = Label.new()
-		item_name.text = item.get("name", "???")
-		item_name.custom_minimum_size = Vector2(80, 0)
-		item_name.add_theme_font_size_override("font_size", 13)
-		item_name.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
-		item_row.add_child(item_name)
-
-		var item_qty = Label.new()
-		item_qty.text = "x" + str(item.get("quantity", 0))
-		item_qty.add_theme_font_size_override("font_size", 13)
-		item_qty.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-		item_row.add_child(item_qty)
-
-		var item_desc = Label.new()
-		item_desc.text = item.get("description", "")
-		item_desc.add_theme_font_size_override("font_size", 10)
-		item_desc.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-		item_desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		item_row.add_child(item_desc)
-
-		items_inner.add_child(item_row)
-
-	if GameData.inventory_items.is_empty():
-		var empty_label = Label.new()
-		empty_label.text = "（道具栏为空）"
-		empty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		empty_label.add_theme_font_size_override("font_size", 13)
-		empty_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
-		empty_label.set_anchors_preset(Control.PRESET_CENTER)
-		items_bg.add_child(empty_label)
-
-	right_column.add_child(items_section)
-
-# == 刷新UI（重建所有界面） ==
+# ============================================================
+# 刷新 / 显示 / 关闭
+# ============================================================
 func refresh_ui():
 	for child in get_children():
 		child.queue_free()
-	panel_bg = null
 	setup_ui()
 
 func show_panel():

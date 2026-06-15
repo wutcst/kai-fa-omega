@@ -26,9 +26,9 @@ func get_current_hp() -> int:
 	return GameData.current_hp
 
 func set_current_hp(value: int):
-	GameData.current_hp = max(0, min(value, get_max_hp()))
+	GameData.current_hp = max(0, int(min(float(value), float(get_max_hp()))))
 	if hp_fill:
-		var ratio = float(GameData.current_hp) / float(get_max_hp())
+		var ratio = float(GameData.current_hp) / float(max(1, get_max_hp()))
 		hp_fill.size.x = hp_bar.size.x * ratio
 	if hp_label:
 		hp_label.text = str(GameData.current_hp) + "/" + str(get_max_hp())
@@ -40,9 +40,9 @@ func get_current_mp() -> int:
 	return GameData.current_mp
 
 func set_current_mp(value: int):
-	GameData.current_mp = max(0, min(value, get_max_mp()))
+	GameData.current_mp = max(0, int(min(float(value), float(get_max_mp()))))
 	if mp_fill:
-		var ratio = float(GameData.current_mp) / float(get_max_mp())
+		var ratio = float(GameData.current_mp) / float(max(1, get_max_mp()))
 		mp_fill.size.x = mp_bar.size.x * ratio
 	if mp_label:
 		mp_label.text = str(GameData.current_mp) + "/" + str(get_max_mp())

@@ -8,6 +8,7 @@ extends Node2D
 @export var next_scene_path: String = ""          # 为空则不显示跳转按钮（比如 gamescene 主场景）
 @export var scene_title: String = ""              # 场景标题（可选）
 @export var bgm_path: String = ""                 # 背景音乐文件路径
+@export var is_village_scene: bool = false            # 是否是村庄场景（在场景文件中勾选）
 
 var _btn_level_up: Button = null
 var _level_up_hint_label: Label = null
@@ -15,14 +16,157 @@ var _level_up_info_label: Label = null
 var _btn_next_scene: Button = null
 var _bgm_player: AudioStreamPlayer = null
 
+# 当前场景缓存标志，避免重复解析路径
+var _is_village: bool = false
+
 func _ready():
+	# 通过 scene_file_path 或显式标志判断当前场景
+	_is_village = _check_is_village_scene()
+	# 村庄场景自动配置跳转路径
+	if _is_village:
+		if next_scene_path == "":
+			next_scene_path = "res://scenes/ground1.tscn"
+		if scene_title == "":
+			scene_title = "🏘️ 村庄"
+	
+	_setup_scene_nodes()
 	_create_level_up_button()
 	if next_scene_path != "":
 		_create_next_scene_button()
 	_update_level_up_info()
 	_play_bgm()
 
-# 创建右上角自动升级按钮
+# 判断是否是村庄场景：优先使用显式导出变量，否则通过 scene_file_path 兜底
+func _check_is_village_scene() -> bool:
+	if is_village_scene:
+		return true
+	if get_tree() == null:
+		return false
+	var current = get_tree().current_scene
+	if current == null:
+		return false
+	var path: String = current.scene_file_path
+	if path == "":
+		return false
+	# 大小写不敏感比较，避免不同平台路径分隔符问题
+	return "village" in path.to_lower()
+
+func _setup_scene_nodes():
+	var is_village = _is_village
+
+	# 如果没有玩家，自动创建玩家实例
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() == 0:
+		var player_scene = load("res://scenes/player.tscn")
+		if player_scene:
+			var player_instance = player_scene.instantiate()
+			player_instance.name = "Player"
+			# 如果有 SpawnPoint，使用其位置；否则使用默认位置
+			var spawn = get_node_or_null("SpawnPoint")
+			if spawn:
+				player_instance.global_position = spawn.global_position
+			else:
+				player_instance.position = Vector2(300, 300)
+			add_child(player_instance)
+
+			# 将相机挂载到玩家身上，实现视角跟随
+			var camera = get_node_or_null("Camera2D")
+			if camera:
+				camera.reparent(player_instance)
+				camera.position = Vector2.ZERO
+
+	# 重新获取玩家（可能刚创建）
+	players = get_tree().get_nodes_in_group("player")
+
+	# 根据相机 limit 生成空气墙，防止玩家走出地图
+	_create_boundary_walls()
+
+	# 仅在村庄场景中自动创建 NPC
+	if not is_village:
+		return
+
+	# 如果没有商人，自动创建商人实例
+	var merchants = get_tree().get_nodes_in_group("merchant")
+	if merchants.size() == 0:
+		var merchant_scene = load("res://scenes/merchant.tscn")
+		if merchant_scene:
+			var merchant_instance = merchant_scene.instantiate()
+			merchant_instance.name = "merchant"
+			merchant_instance.position = Vector2(500, 300)
+			add_child(merchant_instance)
+
+	# 如果没有旅馆老板，自动创建旅馆老板实例
+	var hotel_owners = get_tree().get_nodes_in_group("hotel_owner")
+	if hotel_owners.size() == 0:
+		var hotel_scene = load("res://scenes/hotel_owner.tscn")
+		if hotel_scene:
+			var hotel_instance = hotel_scene.instantiate()
+			hotel_instance.name = "hotel owner"
+			hotel_instance.position = Vector2(378, 209)
+			add_child(hotel_instance)
+
+# ─── 空气墙：根据相机 limit 生成四边不可见碰撞墙 ───
+func _create_boundary_walls():
+	# 找到相机（可能在根节点或在玩家节点下）
+	var camera = get_node_or_null("Camera2D")
+	if not camera:
+		var players = get_tree().get_nodes_in_group("player")
+		if players.size() > 0:
+			camera = players[0].get_node_or_null("Camera2D")
+	if not camera or not (camera is Camera2D):
+		return
+
+	var c: Camera2D = camera
+	var l: int = c.limit_left
+	var r: int = c.limit_right
+	var t: int = c.limit_top
+	var b: int = c.limit_bottom
+
+	# 如果 limit 没设置（默认超大值），跳过
+	if l <= -1000000 or r >= 1000000 or t <= -1000000 or b >= 1000000:
+		return
+	if r <= l or b <= t:
+		return
+
+	var wall_thickness := 100.0  # 墙的厚度（像素）
+	var inward := 7.0           # 向内收缩量（像素），越大越靠里
+
+	# 左墙：从 limit_left 向内缩 inward
+	_create_wall("BoundaryWall_Left", Vector2(l + inward, (t + b) / 2.0),
+		Vector2(wall_thickness, b - t + wall_thickness * 2))
+
+	# 右墙：从 limit_right 向内缩 inward
+	_create_wall("BoundaryWall_Right", Vector2(r - inward, (t + b) / 2.0),
+		Vector2(wall_thickness, b - t + wall_thickness * 2))
+
+	# 上墙：贴紧 limit_top，不缩
+	_create_wall("BoundaryWall_Top", Vector2((l + r) / 2.0, t - wall_thickness / 2),
+		Vector2(r - l + wall_thickness * 2, wall_thickness))
+
+	# 下墙：从 limit_bottom 向内缩 inward
+	_create_wall("BoundaryWall_Bottom", Vector2((l + r) / 2.0, b - inward),
+		Vector2(r - l + wall_thickness * 2, wall_thickness))
+
+	print("✅ 空气墙已生成: (", l, ",", t, ") 到 (", r, ",", b, ")")
+
+# 创建单面空气墙
+func _create_wall(wall_name: String, pos: Vector2, size: Vector2):
+	var wall := StaticBody2D.new()
+	wall.name = wall_name
+	wall.collision_layer = 1
+	wall.collision_mask = 0
+	add_child(wall)
+
+	var shape := CollisionShape2D.new()
+	shape.name = "CollisionShape2D"
+	var rect := RectangleShape2D.new()
+	rect.size = size
+	shape.shape = rect
+	shape.position = Vector2.ZERO
+	wall.add_child(shape)
+
+	wall.position = pos
+
 func _create_level_up_button():
 	# 用 CanvasLayer 让 UI 不跟随玩家移动
 	var canvas = CanvasLayer.new()
@@ -185,9 +329,17 @@ func _play_bgm():
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.name = "BGMMusic"
 	_bgm_player.bus = "Master"
+	_bgm_player.volume_db = -8.0
 	add_child(_bgm_player)
 	var stream = load(bgm_path)
 	if stream and stream is AudioStream:
 		_bgm_player.stream = stream
-		stream.loop = true
+		# AudioStream 基类没有 loop 属性，需要用 audio_stream 自身的循环接口
+		# 如 AudioStreamMP3.loop_mode 等，这里直接播放，由引擎默认循环处理
 		_bgm_player.play()
+		
+# 测试地图位置
+func _process(delta):
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		print("玩家位置: ", players[0].global_position)
