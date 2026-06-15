@@ -22,4 +22,4 @@ func _on_start_pressed():
 	# 切场景前停止音乐
 	if music:
 		music.stop()
-	get_tree().change_scene_to_file("res://scenes/game_scene.tscn")
+	get_tree().change_scene_to_file("res://scenes/village.tscn")

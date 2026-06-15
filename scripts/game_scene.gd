@@ -14,10 +14,69 @@ var _level_up_info_label: Label = null
 var _btn_next_scene: Button = null
 
 func _ready():
+	# 村庄场景自动配置跳转路径
+	if get_tree().current_scene and get_tree().current_scene.scene_file_path == "res://scenes/village.tscn":
+		if next_scene_path == "":
+			next_scene_path = "res://scenes/ground1.tscn"
+		if scene_title == "":
+			scene_title = "🏘️ 村庄"
+	
+	_setup_scene_nodes()
 	_create_level_up_button()
 	if next_scene_path != "":
 		_create_next_scene_button()
 	_update_level_up_info()
+
+func _setup_scene_nodes():
+	var is_village = get_tree().current_scene and get_tree().current_scene.scene_file_path == "res://scenes/village.tscn"
+
+	# 如果没有玩家，自动创建玩家实例
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() == 0:
+		var player_scene = load("res://scenes/player.tscn")
+		if player_scene:
+			var player_instance = player_scene.instantiate()
+			player_instance.name = "Player"
+			# 如果有 SpawnPoint，使用其位置；否则使用默认位置
+			var spawn = get_node_or_null("SpawnPoint")
+			if spawn:
+				player_instance.global_position = spawn.global_position
+			else:
+				player_instance.position = Vector2(300, 300)
+			add_child(player_instance)
+
+			# 将相机挂载到玩家身上，实现视角跟随
+			var camera = get_node_or_null("Camera2D")
+			if camera:
+				camera.reparent(player_instance)
+				camera.position = Vector2.ZERO
+	
+	# 重新获取玩家（可能刚创建）
+	players = get_tree().get_nodes_in_group("player")
+
+	# 仅在村庄场景中自动创建 NPC
+	if not is_village:
+		return
+
+	# 如果没有商人，自动创建商人实例
+	var merchants = get_tree().get_nodes_in_group("merchant")
+	if merchants.size() == 0:
+		var merchant_scene = load("res://scenes/merchant.tscn")
+		if merchant_scene:
+			var merchant_instance = merchant_scene.instantiate()
+			merchant_instance.name = "merchant"
+			merchant_instance.position = Vector2(500, 300)
+			add_child(merchant_instance)
+
+	# 如果没有旅馆老板，自动创建旅馆老板实例
+	var hotel_owners = get_tree().get_nodes_in_group("hotel_owner")
+	if hotel_owners.size() == 0:
+		var hotel_scene = load("res://scenes/hotel_owner.tscn")
+		if hotel_scene:
+			var hotel_instance = hotel_scene.instantiate()
+			hotel_instance.name = "hotel owner"
+			hotel_instance.position = Vector2(378, 209)
+			add_child(hotel_instance)
 
 # 创建右上角自动升级按钮
 func _create_level_up_button():

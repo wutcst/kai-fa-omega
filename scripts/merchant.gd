@@ -74,6 +74,7 @@ func open_merchant_panel():
 
 func _on_panel_closed():
 	panel_open = false
+	merchant_panel = null
 	if player_nearby and hint_label:
 		hint_label.visible = true
 

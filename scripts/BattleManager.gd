@@ -310,7 +310,8 @@ func _exit_battle():
 	print("战斗结束，返回主界面")
 	var tree = get_tree()
 	if tree:
-		tree.change_scene_to_file("res://scenes/game_scene.tscn")
+		var return_scene = previous_scene if previous_scene != "" else "res://scenes/village.tscn"
+		tree.change_scene_to_file(return_scene)
 
 func _after_player_attack():
 	if battle_state != 6:   # 玩家行动中
@@ -403,7 +404,7 @@ func use_heal_potion():
 
 	var old_hp = player_battler.get_current_hp()
 	if GameData.consume_potion("血瓶"):
-		player_battler.current_hp = GameData.current_hp
+		player_battler.set_current_hp(GameData.current_hp)
 		var new_hp = player_battler.get_current_hp()
 		print("→ 【血瓶】恢复 HP | 旧:", old_hp, " → 新:", new_hp)
 		await get_tree().create_timer(0.5).timeout
@@ -419,7 +420,7 @@ func use_mana_potion():
 
 	var old_mp = player_battler.get_current_mp()
 	if GameData.consume_potion("蓝瓶"):
-		player_battler.current_mp = GameData.current_mp
+		player_battler.set_current_mp(GameData.current_mp)
 		var new_mp = player_battler.get_current_mp()
 		print("→ 【蓝瓶】恢复 MP | 旧:", old_mp, " → 新:", new_mp)
 		await get_tree().create_timer(0.5).timeout

@@ -50,22 +50,13 @@ func _setup_ui():
 	top_bar.position = Vector2(0, 0)
 	panel_bg.add_child(top_bar)
 
-	# 商人头像（左上角）
-	var merchant_icon = TextureRect.new()
-	merchant_icon.texture = load("res://Asset Bundle/sprites/merchant/archer.png")
-	merchant_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	merchant_icon.custom_minimum_size = Vector2(42, 42)
-	merchant_icon.size = Vector2(42, 42)
-	merchant_icon.position = Vector2(10, 4)
-	panel_bg.add_child(merchant_icon)
-
 	# 标题
 	var title = Label.new()
 	title.text = "商人交易"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 22)
 	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
-	title.position = Vector2(58, 6)
+	title.position = Vector2(1050/2 - 100, 6)
 	title.custom_minimum_size = Vector2(200, 0)
 	panel_bg.add_child(title)
 
@@ -252,6 +243,7 @@ func _create_equip_sell_row(item: Dictionary, idx: int) -> PanelContainer:
 
 	var icon_rect = TextureRect.new()
 	icon_rect.custom_minimum_size = Vector2(40, 40)
+	icon_rect.size = Vector2(40, 40)
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	var icon_path = item.get("icon", "")
@@ -303,6 +295,7 @@ func _create_buy_row(potion: Dictionary) -> PanelContainer:
 
 	var icon_rect = TextureRect.new()
 	icon_rect.custom_minimum_size = Vector2(40, 40)
+	icon_rect.size = Vector2(40, 40)
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	var tex = load(potion.icon)
@@ -352,6 +345,7 @@ func _create_food_buy_row(food: Dictionary) -> PanelContainer:
 
 	var icon_rect = TextureRect.new()
 	icon_rect.custom_minimum_size = Vector2(40, 40)
+	icon_rect.size = Vector2(40, 40)
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	var icon_path = food.get("icon", "")
@@ -412,7 +406,12 @@ func _on_buy_potion(potion: Dictionary):
 			found = true
 			break
 	if not found:
-		GameData.inventory_items.append({"name": potion.name, "quantity": 1, "icon": potion.icon, "description": potion.description})
+		var new_potion = {"name": potion.name, "quantity": 1, "icon": potion.icon, "description": potion.description, "type": "potion"}
+		if potion.name == "血瓶":
+			new_potion["heal"] = 50
+		elif potion.name == "蓝瓶":
+			new_potion["mana"] = 30
+		GameData.inventory_items.append(new_potion)
 	_show_hint("购买了 " + potion.name)
 	_refresh_gold_label()
 
