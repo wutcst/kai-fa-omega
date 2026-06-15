@@ -31,7 +31,8 @@ var _reward_panel: CanvasLayer = null
 
 func _ready():
 	_connect_to_enemies()
-	get_tree().node_added.connect(_on_node_added)
+	if not get_tree().node_added.is_connected(_on_node_added):
+		get_tree().node_added.connect(_on_node_added)
 
 func _on_node_added(node):
 	if not is_instance_valid(node):
@@ -52,12 +53,7 @@ func _try_connect_enemy(node):
 
 func _connect_to_enemies():
 	for enemy in get_tree().get_nodes_in_group("enemy"):
-		if enemy.has_signal("enter_battle"):
-			if not enemy.enter_battle.is_connected(_on_enter_battle):
-				enemy.enter_battle.connect(_on_enter_battle)
-		if enemy.has_signal("monster_died"):
-			if not enemy.monster_died.is_connected(_on_monster_died):
-				enemy.monster_died.connect(_on_monster_died)
+		_try_connect_enemy(enemy)
 
 func _on_enter_battle(attacking_monster):
 	if battle_state != STATE_IDLE:
@@ -102,13 +98,9 @@ func _on_enter_battle(attacking_monster):
 func _on_scene_change():
 	combat_scene = get_tree().current_scene
 
+	# 重连 enemy 信号（用统一的 try_connect 避免重复连接）
 	for enemy_node in get_tree().get_nodes_in_group("enemy"):
-		if enemy_node.has_signal("enter_battle"):
-			if not enemy_node.enter_battle.is_connected(_on_enter_battle):
-				enemy_node.enter_battle.connect(_on_enter_battle)
-		if enemy_node.has_signal("monster_died"):
-			if not enemy_node.monster_died.is_connected(_on_monster_died):
-				enemy_node.monster_died.connect(_on_monster_died)
+		_try_connect_enemy(enemy_node)
 
 	var battlers = get_tree().get_nodes_in_group("player")
 	if battlers.size() > 0:
@@ -314,15 +306,12 @@ func _exit_battle():
 		tree.change_scene_to_file(return_scene)
 
 func _after_player_attack():
-	if battle_state != 6:   # 玩家行动中
+	if battle_state == STATE_END:
 		return
 
 	if current_enemy and is_instance_valid(current_enemy) and not current_enemy.is_dead:
 		current_enemy.play_anim("idle")
 		print("→ 怪物受伤后回到 idle")
-
-	if current_enemy and current_enemy.is_dead:
-		current_enemy.die()
 
 	_end_player_turn()
 

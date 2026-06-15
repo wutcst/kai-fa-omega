@@ -412,13 +412,13 @@ func apply_drop(drop: Dictionary):
 
 func _add_potion(potion: Dictionary):
 	var pname: String = potion.get("name", "")
+	# 已存在则数量+1
 	for existing in inventory_items:
 		if existing is Dictionary and existing.get("name", "") == pname:
-			var qty = existing.get("quantity", 0)
-			existing["quantity"] = qty + 1
+			existing["quantity"] = int(existing.get("quantity", 0)) + 1
 			print("→ 获得道具：", pname, " x1（合计 x", existing["quantity"], "）")
 			return
-	# 没找到同名，新增一条
+	# 否则新增一条
 	var p = potion.duplicate(true)
 	p["quantity"] = 1
 	inventory_items.append(p)

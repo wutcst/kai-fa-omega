@@ -98,8 +98,9 @@ func _physics_process(_delta: float) -> void:
 	safe_move_and_slide()
 
 func perform_attack():
-	if is_dead || is_attacking || in_battle:
+	if is_dead or is_attacking or in_battle:
 		return
+	# 先标记进入战斗，再触发，避免重复发出信号
 	in_battle = true
 	is_attacking = true
 	attack_timer = attack_cd

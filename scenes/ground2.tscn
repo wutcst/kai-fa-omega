@@ -11,6 +11,7 @@
 script = ExtResource("0_game_scene_script")
 next_scene_path = "res://scenes/ground3.tscn"
 scene_title = "🏔 第二关 · 山径"
+bgm_path = "res://Asset Bundle/musicskull/黑暗环境下可循环(Dark_ambient_loopable_爱给网_aigei_com.mp3"
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(300, 300)

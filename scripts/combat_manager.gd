@@ -15,6 +15,7 @@ var _camera_origin: Vector2 = Vector2.ZERO
 
 # 动态创建的特效容器
 var _fx_layer: Node2D = null
+var _bgm_player: AudioStreamPlayer = null
 
 func _ready():
 	combat_ui.skill1_pressed.connect(_on_skill1)
@@ -28,6 +29,7 @@ func _ready():
 	_update_skill_buttons()
 	combat_ui.refresh_skill_locks()
 	combat_ui.update_exp_bar()
+	_play_bgm()
 
 	# 保存初始位置，便于震动后复位
 	if is_instance_valid(player_battler):
@@ -283,3 +285,14 @@ func _spawn_flash_overlay():
 	tween.tween_property(flash, "modulate:a", 0.6, 0.06)
 	tween.chain().tween_property(flash, "modulate:a", 0.0, 0.25)
 	tween.tween_callback(flash.queue_free)
+
+func _play_bgm():
+	_bgm_player = AudioStreamPlayer.new()
+	_bgm_player.name = "BGMMusic"
+	_bgm_player.bus = "Master"
+	add_child(_bgm_player)
+	var stream = load("res://Asset Bundle/battle/raging-battlefield-anime-theme-stocktune.mp3")
+	if stream and stream is AudioStream:
+		_bgm_player.stream = stream
+		stream.loop = true
+		_bgm_player.play()

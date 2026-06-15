@@ -9,6 +9,8 @@ var stats_label: Label = null
 var hint_label: Label = null
 var rest_btn: Button = null
 var _close_callback: Callable = Callable()
+var _hp_fill: ColorRect = null
+var _mp_fill: ColorRect = null
 
 const REST_PRICE: int = 25
 
@@ -90,11 +92,11 @@ func _setup_ui():
 	panel_bg.add_child(hp_bar_bg)
 
 	var hp_ratio: float = float(GameData.current_hp) / max(GameData.max_hp, 1)
-	var hp_bar = ColorRect.new()
-	hp_bar.color = Color(0.8, 0.2, 0.2, 0.9)
-	hp_bar.size = Vector2(300 * hp_ratio, 18)
-	hp_bar.position = Vector2(90, 160)
-	panel_bg.add_child(hp_bar)
+	_hp_fill = ColorRect.new()
+	_hp_fill.color = Color(0.8, 0.2, 0.2, 0.9)
+	_hp_fill.size = Vector2(300 * hp_ratio, 18)
+	_hp_fill.position = Vector2(90, 160)
+	panel_bg.add_child(_hp_fill)
 
 	var mp_bar_bg = ColorRect.new()
 	mp_bar_bg.color = Color(0.1, 0.1, 0.2, 0.8)
@@ -103,11 +105,11 @@ func _setup_ui():
 	panel_bg.add_child(mp_bar_bg)
 
 	var mp_ratio: float = float(GameData.current_mp) / max(GameData.max_mp, 1)
-	var mp_bar = ColorRect.new()
-	mp_bar.color = Color(0.2, 0.3, 0.8, 0.9)
-	mp_bar.size = Vector2(300 * mp_ratio, 18)
-	mp_bar.position = Vector2(90, 184)
-	panel_bg.add_child(mp_bar)
+	_mp_fill = ColorRect.new()
+	_mp_fill.color = Color(0.2, 0.3, 0.8, 0.9)
+	_mp_fill.size = Vector2(300 * mp_ratio, 18)
+	_mp_fill.position = Vector2(90, 184)
+	panel_bg.add_child(_mp_fill)
 
 	# HP/MP 标签
 	var hp_label = Label.new()
@@ -189,17 +191,13 @@ func _refresh_ui():
 		gold_label.text = "当前金币: " + str(GameData.gold)
 	if is_instance_valid(stats_label):
 		stats_label.text = _make_stats_text()
-	# Recreate bars by finding and updating them
-	for child in panel_bg.get_children():
-		if child is ColorRect and child.size.y == 18:
-			# HP bar (red)
-			if child.color.r > 0.7 and child.color.g < 0.3:
-				var hp_ratio: float = float(GameData.current_hp) / max(GameData.max_hp, 1)
-				child.size.x = 300 * hp_ratio
-			# MP bar (blue)
-			elif child.color.b > 0.7 and child.color.r < 0.3:
-				var mp_ratio: float = float(GameData.current_mp) / max(GameData.max_mp, 1)
-				child.size.x = 300 * mp_ratio
+	# 直接更新已记录的进度条引用，避免颜色硬编码脆弱
+	if is_instance_valid(_hp_fill):
+		var hp_ratio: float = float(GameData.current_hp) / max(GameData.max_hp, 1)
+		_hp_fill.size.x = 300 * hp_ratio
+	if is_instance_valid(_mp_fill):
+		var mp_ratio: float = float(GameData.current_mp) / max(GameData.max_mp, 1)
+		_mp_fill.size.x = 300 * mp_ratio
 
 func _on_close_pressed():
 	if _close_callback.is_valid():

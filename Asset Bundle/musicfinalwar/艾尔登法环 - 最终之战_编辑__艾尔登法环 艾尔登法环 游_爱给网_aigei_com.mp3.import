@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bm2ehaatnrwwi"
+path="res://.godot/imported/艾尔登法环 - 最终之战_编辑__艾尔登法环 艾尔登法环 游_爱给网_aigei_com.mp3-a2ee3316a123d809e4ead422228e5a20.mp3str"
+
+[deps]
+
+source_file="res://Asset Bundle/musicfinalwar/艾尔登法环 - 最终之战_编辑__艾尔登法环 艾尔登法环 游_爱给网_aigei_com.mp3"
+dest_files=["res://.godot/imported/艾尔登法环 - 最终之战_编辑__艾尔登法环 艾尔登法环 游_爱给网_aigei_com.mp3-a2ee3316a123d809e4ead422228e5a20.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

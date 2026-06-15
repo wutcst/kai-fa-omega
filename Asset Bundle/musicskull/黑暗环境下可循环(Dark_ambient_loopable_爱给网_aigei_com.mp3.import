@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cl1i5p3v8tqp7"
+path="res://.godot/imported/黑暗环境下可循环(Dark_ambient_loopable_爱给网_aigei_com.mp3-8d011113e7b24db82fc9af97c4a1560e.mp3str"
+
+[deps]
+
+source_file="res://Asset Bundle/musicskull/黑暗环境下可循环(Dark_ambient_loopable_爱给网_aigei_com.mp3"
+dest_files=["res://.godot/imported/黑暗环境下可循环(Dark_ambient_loopable_爱给网_aigei_com.mp3-8d011113e7b24db82fc9af97c4a1560e.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://bochuak8bsmy6"
+path="res://.godot/imported/save.mp3-63f872dc0c831aa419b54888b1f221f1.mp3str"
+
+[deps]
+
+source_file="res://Asset Bundle/musicforest/save.mp3"
+dest_files=["res://.godot/imported/save.mp3-63f872dc0c831aa419b54888b1f221f1.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

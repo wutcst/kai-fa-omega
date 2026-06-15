@@ -79,6 +79,17 @@ func _on_panel_closed():
 		hint_label.visible = true
 
 func play_anim(anim: String):
-	if is_instance_valid(animated_sprite):
-		if animated_sprite.sprite_frames.has_animation("hotel owner"):
-			animated_sprite.play("hotel owner")
+	if not is_instance_valid(animated_sprite):
+		return
+	# 先尝试播放具体动画（如 hotel_owner_idle），再尝试基础名称（如 hotel owner），都没有就播放 walk
+	var candidates: Array = [
+		"hotel_owner_" + anim,
+		"hotel owner_" + anim,
+		"hotel owner",
+		"hotel_owner",
+		anim,
+	]
+	for name in candidates:
+		if animated_sprite.sprite_frames.has_animation(name):
+			animated_sprite.play(name)
+			return

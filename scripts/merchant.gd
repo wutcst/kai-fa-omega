@@ -79,7 +79,15 @@ func _on_panel_closed():
 		hint_label.visible = true
 
 func play_anim(anim: String):
-	if is_instance_valid(animated_sprite):
-		var full_name = "merchant_" + anim
-		if animated_sprite.sprite_frames.has_animation(full_name):
-			animated_sprite.play(full_name)
+	if not is_instance_valid(animated_sprite):
+		return
+	# 尝试多个候选名，兼容不同的动画命名方式
+	var candidates: Array = [
+		"merchant_" + anim,
+		"merchant",
+		anim,
+	]
+	for name in candidates:
+		if animated_sprite.sprite_frames.has_animation(name):
+			animated_sprite.play(name)
+			return
