@@ -1,0 +1,20 @@
+[gd_scene load_steps=5 format=3 uid="uid://bugw41mdikx6"]
+
+[ext_resource type="Script" path="res://scripts/game_scene.gd" id="0_game_scene_script"]
+[ext_resource type="PackedScene" uid="uid://cmllep788adha" path="res://scenes/player.tscn" id="1_htcah"]
+[ext_resource type="PackedScene" uid="uid://mh36wh60adf6" path="res://scenes/merchant.tscn" id="4_merchant"]
+[ext_resource type="PackedScene" uid="uid://dfs1c2032aw5w" path="res://scenes/hotel_owner.tscn" id="5_hkneh"]
+
+[node name="Node2D" type="Node2D"]
+script = ExtResource("0_game_scene_script")
+next_scene_path = "res://scenes/ground1.tscn"
+scene_title = "🏠 主场景"
+
+[node name="Player" parent="." instance=ExtResource("1_htcah")]
+position = Vector2(141, 209)
+
+[node name="merchant" parent="." instance=ExtResource("4_merchant")]
+position = Vector2(500, 300)
+
+[node name="hotel owner" parent="." instance=ExtResource("5_hkneh")]
+position = Vector2(378, 209)
