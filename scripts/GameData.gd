@@ -44,6 +44,48 @@ var exclusive_backpack: Array = [
 	{"name": "力量戒指", "icon": SECOND_ACCESSORY_ICON, "type": "accessory", "hp_bonus": 20, "description": "蕴含神秘力量的戒指"},
 ]
 
+# 食物道具配置表（商人购买后加入专属背包栏，点击使用）
+# effect 字段：hp=回血 / mp=回蓝 / atk=永久加攻 / def=永久加防 / speed=永久加速 / crit=永久加暴击
+const FOOD_TABLE: Array = [
+	{"name": "苹果",     "icon": "res://Asset Bundle/sprites/food/apple.png",      "effect": "hp",    "value": 20, "description": "恢复20点生命值"},
+	{"name": "西瓜",     "icon": "res://Asset Bundle/sprites/food/watermelon.png", "effect": "hp",    "value": 50, "description": "恢复50点生命值"},
+	{"name": "草莓",     "icon": "res://Asset Bundle/sprites/food/strawberry.png", "effect": "mp",    "value": 15, "description": "恢复15点魔法值"},
+	{"name": "樱桃",     "icon": "res://Asset Bundle/sprites/food/cherry.png",     "effect": "mp",    "value": 25, "description": "恢复25点魔法值"},
+	{"name": "胡萝卜",   "icon": "res://Asset Bundle/sprites/food/carrot.png",     "effect": "atk",   "value": 2,  "description": "永久攻击力+2"},
+	{"name": "汉堡",     "icon": "res://Asset Bundle/sprites/food/burger.png",     "effect": "def",   "value": 2,  "description": "永久防御力+2"},
+	{"name": "薯条",     "icon": "res://Asset Bundle/sprites/food/fries.png",      "effect": "speed", "value": 5,  "description": "永久基础速度+5"},
+	{"name": "披萨",     "icon": "res://Asset Bundle/sprites/food/pizza.png",      "effect": "crit",  "value": 2,  "description": "永久暴击率+2%"},
+	{"name": "火腿",     "icon": "res://Asset Bundle/sprites/food/ham.png",        "effect": "atk",   "value": 3,  "description": "永久攻击力+3"},
+	{"name": "煎蛋",     "icon": "res://Asset Bundle/sprites/food/egg.png",        "effect": "hp",    "value": 30, "description": "恢复30点生命值"},
+	{"name": "寿司",     "icon": "res://Asset Bundle/sprites/food/sushi.png",      "effect": "def",   "value": 3,  "description": "永久防御力+3"},
+]
+const FOOD_PRICE: int = 15  # 所有食物统一15金币
+const FOOD_TYPE: String = "food"
+
+# 使用食物：返回是否成功
+func use_food(item: Dictionary) -> bool:
+	if item.get("type", "") != FOOD_TYPE:
+		return false
+	var effect = item.get("effect", "")
+	var value = item.get("value", 0)
+	match effect:
+		"hp":
+			current_hp = min(current_hp + value, max_hp)
+		"mp":
+			current_mp = min(current_mp + value, max_mp)
+		"atk":
+			attack += value
+		"def":
+			defense += value
+		"speed":
+			base_speed += value
+			current_speed = base_speed
+		"crit":
+			crit += value
+		_:
+			return false
+	return true
+
 # 道具栏数据
 var inventory_items: Array = [
 	{"name": "血瓶", "quantity": 3, "icon": "res://Asset Bundle/sprites/PotionPack/red_potion.png", "description": "恢复30点生命值"},
@@ -52,6 +94,9 @@ var inventory_items: Array = [
 
 # 已击败的怪物位置列表
 var defeated_monster_positions: Array = []
+
+# 金币（商人交易使用）
+var gold: int = 50
 
 # 战斗逃跑/结束后返回地图时的玩家位置
 var returning_from_battle: bool = false

@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://cedicajlk7pki"]
+
+[ext_resource type="Script" path="res://scripts/game_scene.gd" id="0_game_scene_script"]
+[ext_resource type="PackedScene" uid="uid://cmllep788adha" path="res://scenes/player.tscn" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://d3cm7o4fnxde0" path="res://scenes/dragon.tscn" id="2_dragon"]
+
+[node name="Node2D3" type="Node2D"]
+script = ExtResource("0_game_scene_script")
+scene_title = "🏯 第三关 · 地下城"
+bgm_path = "res://Asset Bundle/musicfinalwar/艾尔登法环 - 最终之战_编辑__艾尔登法环 艾尔登法环 游_爱给网_aigei_com.mp3"
+
+[node name="Player" parent="." instance=ExtResource("1_player")]
+position = Vector2(215, 326)
+
+[node name="dragon" parent="." instance=ExtResource("2_dragon")]
+position = Vector2(800, 300)
