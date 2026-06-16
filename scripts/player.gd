@@ -29,6 +29,7 @@ const ANIM_PREFIX: String = "swordsman"
 
 func _ready():
 	add_to_group("player")
+	z_index = 100
 	load_data_from_global()
 	play_anim("idle")
 	connect_signals()
@@ -62,7 +63,7 @@ func save_data_to_global():
 
 func load_data_from_global():
 	max_hp = GameData.max_hp
-	current_hp = min(GameData.current_hp, GameData.max_hp)
+	current_hp = min(GameData.current_hp, GameData.get_total_max_hp())
 	max_mp = GameData.max_mp
 	current_mp = min(GameData.current_mp, GameData.max_mp)
 	attack = GameData.attack

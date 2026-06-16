@@ -35,7 +35,7 @@ animations = [{
 "texture": SubResource("AtlasTexture_ljegp")
 }],
 "loop": true,
-"name": &"merchant_idle",
+"name": &"hotel_owner_idle",
 "speed": 5.0
 }]
 
@@ -47,8 +47,7 @@ script = ExtResource("2_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_merchant")
-animation = &"merchant_idle"
-frame_progress = 0.622071
+animation = &"hotel_owner_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 1.5)

@@ -563,6 +563,7 @@ func _on_unequip_clicked(slot_type: String):
 			return
 	old_item["type"] = slot_type
 	GameData.exclusive_backpack.append(old_item)
+	_sync_game_data_to_players()
 	refresh_ui()
 
 # == 点击专属背包栏图标使用食物/装备 ==
@@ -736,6 +737,7 @@ func equip_from_backpack(idx: int):
 			GameData.equip_accessory(item.duplicate(true))
 
 	GameData.exclusive_backpack.remove_at(idx)
+	_sync_game_data_to_players()
 	refresh_ui()
 
 # ============================================================
@@ -763,7 +765,7 @@ func _sync_game_data_to_players():
 	if not is_instance_valid(player_ref):
 		return
 	player_ref.max_hp = GameData.max_hp
-	player_ref.current_hp = GameData.current_hp
+	player_ref.current_hp = min(GameData.current_hp, GameData.get_total_max_hp())
 	player_ref.max_mp = GameData.max_mp
 	player_ref.current_mp = GameData.current_mp
 	player_ref.attack = GameData.attack
