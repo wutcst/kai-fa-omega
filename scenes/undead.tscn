@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=4 uid="uid://77775jemmlmh"]
+[gd_scene load_steps=34 format=4 uid="uid://77775jemmlmh"]
 
 [ext_resource type="Texture2D" uid="uid://dwuek8usofbm0" path="res://Asset Bundle/assets/undead/PNG/Ground_rocks.png" id="1_eyaqu"]
 [ext_resource type="Texture2D" uid="uid://ctue2hqkefmwy" path="res://Asset Bundle/assets/undead/PNG/Animation4.png" id="2_i21wi"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://cgqyp2ym0hdua" path="res://Asset Bundle/assets/undead/PNG/Animation2.png" id="8_d824p"]
 [ext_resource type="Texture2D" uid="uid://bu0hrbu3h7x0a" path="res://Asset Bundle/assets/undead/PNG/Animation3.png" id="9_42jqe"]
 [ext_resource type="Texture2D" uid="uid://b246onlp2auiv" path="res://Asset Bundle/assets/undead/PNG/king.png" id="13_tcwwh"]
+[ext_resource type="Script" path="res://scripts/game_scene.gd" id="14_8gmsc"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_p6qa0"]
 texture = ExtResource("1_eyaqu")
@@ -7951,6 +7952,8 @@ sources/2 = SubResource("TileSetAtlasSource_j82k5")
 sources/4 = SubResource("TileSetAtlasSource_sqv5m")
 
 [node name="Undead" type="Node2D"]
+script = ExtResource("14_8gmsc")
+bgm_path = "res://Asset Bundle/musicskull/黑暗环境下可循环(Dark_ambient_loopable_爱给网_aigei_com.mp3"
 
 [node name="GroundTileMapLayer" type="TileMapLayer" parent="."]
 position = Vector2(1, 0)
