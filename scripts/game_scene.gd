@@ -128,8 +128,8 @@ func _create_boundary_walls():
 	if r <= l or b <= t:
 		return
 
-	var wall_thickness := 100.0  # 墙的厚度（像素）
-	var inward := 7.0           # 向内收缩量（像素），越大越靠里
+	var wall_thickness := 10.0  # 墙的厚度（像素）
+	var inward := 15.0           # 向内收缩量（像素），越大越靠里
 
 	# 左墙：从 limit_left 向内缩 inward
 	_create_wall("BoundaryWall_Left", Vector2(l + inward, (t + b) / 2.0),
