@@ -9918,6 +9918,7 @@ size = Vector2(99, 153.5)
 script = ExtResource("1_714mf")
 next_scene_path = "res://scenes/ground1.tscn"
 scene_title = "🌲 森林"
+bgm_path = "res://Asset Bundle/musicforest/save.mp3"
 
 [node name="GroundTileMapLayer" type="TileMapLayer" parent="."]
 position = Vector2(-4, 8)

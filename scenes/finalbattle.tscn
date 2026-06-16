@@ -4148,6 +4148,7 @@ size = Vector2(99, 61.75)
 
 [node name="Finalbattle" type="Node2D"]
 script = ExtResource("1_g15lk")
+bgm_path = "res://Asset Bundle/musicfinalwar/艾尔登法环 - 最终之战_编辑__艾尔登法环 艾尔登法环 游_爱给网_aigei_com.mp3"
 
 [node name="wallTileMapLayer2" type="TileMapLayer" parent="."]
 z_index = 1

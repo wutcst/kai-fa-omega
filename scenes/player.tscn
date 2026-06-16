@@ -1,6 +1,6 @@
-[gd_scene format=3 uid="uid://cmllep788adha"]
+[gd_scene load_steps=69 format=3 uid="uid://cmllep788adha"]
 
-[ext_resource type="Script" uid="uid://d37dpm4mvdsq5" path="res://scripts/player.gd" id="1_qnjym"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_qnjym"]
 [ext_resource type="Texture2D" uid="uid://pnrdt8gx3jtv" path="res://Asset Bundle/sprites/Knight/Shield Knight/Attack/Knight_shield_attack-Sheet.png" id="6_3wpvq"]
 [ext_resource type="Texture2D" uid="uid://bnjp0f0gpjqh8" path="res://Asset Bundle/sprites/Knight/Shield Knight/Death/Knight_shield_death-Sheet.png" id="7_tax3n"]
 [ext_resource type="Texture2D" uid="uid://bilwd1maqm0pn" path="res://Asset Bundle/sprites/Knight/Shield Knight/Hurt/Knight_shield_hurt-Sheet.png" id="8_ugdv4"]
@@ -457,17 +457,17 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_xoaoh"]
 radius = 4.0
 
-[node name="Player" type="CharacterBody2D" unique_id=1631132370 groups=["player"]]
+[node name="Player" type="CharacterBody2D" groups=["player"]]
 position = Vector2(365, 246)
 script = ExtResource("1_qnjym")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=927800502]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(-2, -1)
 sprite_frames = SubResource("SpriteFrames_hcat4")
 animation = &"swordsman_idle"
 autoplay = "swordsman_idle"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1994788988]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-5, -1)
 scale = Vector2(2, 2)
 shape = SubResource("CircleShape2D_xoaoh")

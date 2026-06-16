@@ -7961,6 +7961,7 @@ size = Vector2(247.75, 228.5)
 
 [node name="Undead" type="Node2D"]
 script = ExtResource("1_myg3o")
+bgm_path = "res://Asset Bundle/musicskull/黑暗环境下可循环(Dark_ambient_loopable_爱给网_aigei_com.mp3"
 
 [node name="GroundTileMapLayer" type="TileMapLayer" parent="."]
 position = Vector2(1, 0)
