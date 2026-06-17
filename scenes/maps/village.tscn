@@ -1,4 +1,4 @@
-[gd_scene load_steps=93 format=4 uid="uid://cg6dao6w5shri"]
+[gd_scene load_steps=90 format=4 uid="uid://cg6dao6w5shri"]
 
 [ext_resource type="Texture2D" uid="uid://be1ys2ifugnlj" path="res://Asset Bundle/assets/tiles/use/Unorganized Parts/addwork.png" id="1_ces2b"]
 [ext_resource type="Script" path="res://scripts/maps/game_scene.gd" id="1_hsvbb"]
@@ -41,14 +41,11 @@
 [ext_resource type="PackedScene" uid="uid://mh36wh60adf6" path="res://scenes/npc/merchant.tscn" id="39_pho1d"]
 [ext_resource type="PackedScene" uid="uid://dbdtmf0c1imyf" path="res://scenes/npc/village_head.tscn" id="40_3mpxt"]
 [ext_resource type="AudioStream" uid="uid://bxxea6ds1qjdv" path="res://Asset Bundle/musicmain/BGM-26.6.7-明亮-温馨-欢快-_爱给网_aigei_com.mp3" id="41_c5jiw"]
-[ext_resource type="PackedScene" uid="uid://chc8ljmejrs2s" path="res://scenes/npc/npc_1.tscn" id="42_npc1a"]
-[ext_resource type="PackedScene" uid="uid://bn4w5di274qhv" path="res://scenes/npc/npc_2.tscn" id="43_npc2b"]
-[ext_resource type="PackedScene" uid="uid://coqcmuhyy2511" path="res://scenes/npc/npc_3.tscn" id="44_npc3c"]
-[ext_resource type="PackedScene" path="res://scenes/npc/npc_4.tscn" id="45_npc4d"]
+[ext_resource type="PackedScene" uid="uid://dq04j4qicghde" path="res://scenes/npc/npc_4.tscn" id="45_npc4d"]
 [ext_resource type="PackedScene" uid="uid://dsdvpdh3alnck" path="res://scenes/npc/npc_5.tscn" id="46_npc5e"]
-[ext_resource type="PackedScene" path="res://scenes/npc/npc_6.tscn" id="47_npc6f"]
+[ext_resource type="PackedScene" uid="uid://co8ltmulysvne" path="res://scenes/npc/npc_6.tscn" id="47_npc6f"]
 [ext_resource type="PackedScene" uid="uid://bukuhqjssvkcp" path="res://scenes/npc/npc_7.tscn" id="48_npc7g"]
-[ext_resource type="PackedScene" path="res://scenes/npc/npc_8.tscn" id="49_npc8h"]
+[ext_resource type="PackedScene" uid="uid://c3mnugwvrfiv0" path="res://scenes/npc/npc_8.tscn" id="49_npc8h"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sq3sw"]
 texture = ExtResource("1_ces2b")
@@ -10857,17 +10854,8 @@ position = Vector2(549, 391)
 [node name="village head" parent="." instance=ExtResource("40_3mpxt")]
 position = Vector2(946, 352)
 
-[node name="npc1" parent="." instance=ExtResource("42_npc1a")]
-position = Vector2(521, 209)
-
-[node name="npc2" parent="." instance=ExtResource("43_npc2b")]
-position = Vector2(1115, 318)
-
-[node name="npc3" parent="." instance=ExtResource("44_npc3c")]
-position = Vector2(285, 386)
-
 [node name="npc4" parent="." instance=ExtResource("45_npc4d")]
-position = Vector2(1358, 728)
+position = Vector2(1343, 728)
 
 [node name="npc5" parent="." instance=ExtResource("46_npc5e")]
 position = Vector2(269, 207)

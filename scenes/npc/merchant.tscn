@@ -1,38 +1,38 @@
 [gd_scene load_steps=9 format=3 uid="uid://mh36wh60adf6"]
 
+[ext_resource type="Texture2D" uid="uid://c6v2wb0s2mmij" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/002.png" id="2_iofts"]
 [ext_resource type="Script" path="res://scripts/npc/merchant.gd" id="2_merchant_script"]
-[ext_resource type="Texture2D" uid="uid://dojye8tu5km3o" path="res://Asset Bundle/sprites/npc/Character 1.png" id="2_yde3w"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_kyxwf"]
-atlas = ExtResource("2_yde3w")
-region = Rect2(0, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_68nck"]
+atlas = ExtResource("2_iofts")
+region = Rect2(0, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_rpi0b"]
-atlas = ExtResource("2_yde3w")
-region = Rect2(64, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_h1tln"]
+atlas = ExtResource("2_iofts")
+region = Rect2(48, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ste8r"]
-atlas = ExtResource("2_yde3w")
-region = Rect2(128, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_18ou3"]
+atlas = ExtResource("2_iofts")
+region = Rect2(96, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ljegp"]
-atlas = ExtResource("2_yde3w")
-region = Rect2(192, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_eybon"]
+atlas = ExtResource("2_iofts")
+region = Rect2(144, 0, 48, 48)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_merchant"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_kyxwf")
+"texture": SubResource("AtlasTexture_68nck")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_rpi0b")
+"texture": SubResource("AtlasTexture_h1tln")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ste8r")
+"texture": SubResource("AtlasTexture_18ou3")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ljegp")
+"texture": SubResource("AtlasTexture_eybon")
 }],
 "loop": true,
 "name": &"merchant_idle",
@@ -48,7 +48,7 @@ script = ExtResource("2_merchant_script")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_merchant")
 animation = &"merchant_idle"
-frame_progress = 0.359559
+frame_progress = 0.0900401
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 1.5)
