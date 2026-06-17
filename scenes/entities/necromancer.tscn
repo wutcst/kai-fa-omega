@@ -411,6 +411,17 @@ animations = [{
 
 [node name="Necromancer" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_boss_script")
+monster_name = "necromancer"
+max_hp = 350
+attack = 25
+defense = 10
+exp_reward = 200
+enemy_scene_path = "res://scenes/entities/necromancer.tscn"
+is_boss = true
+speed = 70.0
+chase_range = 250.0
+attack_range = 45.0
+attack_cd = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-4, 2)
@@ -419,3 +430,5 @@ shape = SubResource("RectangleShape2D_6t4qd")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_vkyse")
 animation = &"Necromancer_attack"
+
+[connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_anim_finished"]

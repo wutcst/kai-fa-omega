@@ -7,22 +7,31 @@ extends CharacterBody2D
 @export var attack: int = 25
 @export var defense: int = 10
 @export var exp_reward: int = 200
-@export var enemy_scene_path: String = ""
+@export var enemy_scene_path: String = "res://scenes/entities/necromancer.tscn"
 @export var is_boss: bool = true
+
+@export var speed: float = 70.0
+@export var chase_range: float = 250.0
+@export var attack_range: float = 45.0
+@export var attack_cd: float = 1.0
 
 var current_hp: int
 var is_dead: bool = false
 var in_battle: bool = false
 var is_turn: bool = false
+var player: Node2D = null
+var attack_timer: float = 0.0
+var is_attacking: bool = false
+var spawn_position: Vector2 = Vector2.ZERO
 
 var minions: Array = []
 var minion_scene: PackedScene = preload("res://scenes/battle/summoned_minion.tscn")
 var max_minions: int = 1
 var turn_count: int = 0
 
+signal enter_battle(monster)
 signal monster_died(monster)
 
-# HUD
 var hud: Control
 var hp_bar: ColorRect
 var hp_fill: ColorRect
@@ -31,7 +40,11 @@ var hp_label: Label
 func _ready():
 	add_to_group("enemy")
 	current_hp = max_hp
+	spawn_position = global_position
 	create_bars()
+	if animated_sprite:
+		animated_sprite.animation_finished.connect(_on_anim_finished)
+	play_anim("idle")
 
 func create_bars():
 	hud = Control.new()
@@ -64,7 +77,6 @@ func create_bars():
 	hp_label.text = str(current_hp) + "/" + str(max_hp)
 	hud.add_child(hp_label)
 
-	# Boss name label
 	var name_label = Label.new()
 	name_label.name = "BossName"
 	name_label.position = Vector2(0, -18)
@@ -86,21 +98,80 @@ func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
 	var full_name = "Necromancer_" + anim
-	if animated_sprite.sprite_frames.has_animation(full_name):
+	if animated_sprite and animated_sprite.sprite_frames.has_animation(full_name):
 		animated_sprite.play(full_name)
+
+func _on_anim_finished():
+	if is_dead:
+		return
+	if animated_sprite.animation.ends_with("_attack"):
+		is_attacking = false
+		attack_timer = 0
+		play_anim("idle")
+	if animated_sprite.animation.ends_with("_hurt"):
+		play_anim("idle")
+
+func _physics_process(_delta: float) -> void:
+	if not is_inside_tree():
+		return
+	if is_dead or in_battle:
+		velocity = Vector2.ZERO
+		is_attacking = false
+		attack_timer = 0
+		move_and_slide()
+		return
+
+	if attack_timer > 0:
+		attack_timer -= _delta
+		if attack_timer <= 0:
+			is_attacking = false
+
+	if player == null or not is_instance_valid(player):
+		var players = get_tree().get_nodes_in_group("player")
+		if players.size() > 0:
+			player = players[0]
+		else:
+			velocity = Vector2.ZERO
+			play_anim("idle")
+			move_and_slide()
+			return
+
+	var dis = global_position.distance_to(player.global_position)
+
+	if dis > chase_range:
+		velocity = Vector2.ZERO
+		play_anim("idle")
+	elif dis > attack_range:
+		var dir = (player.global_position - global_position).normalized()
+		animated_sprite.flip_h = dir.x < 0
+		velocity = dir * speed
+		play_anim("idle")
+	else:
+		velocity = Vector2.ZERO
+		if attack_timer <= 0 and not is_attacking:
+			perform_attack()
+
+	move_and_slide()
+
+func perform_attack():
+	if is_dead or is_attacking or in_battle:
+		return
+	in_battle = true
+	is_attacking = true
+	attack_timer = attack_cd
+	play_anim("attack")
+	emit_signal("enter_battle", self)
 
 func take_damage(dmg: int):
 	if is_dead:
 		return
 
-	# 检查是否有存活的随从抵挡伤害
 	for minion in minions:
 		if is_instance_valid(minion) and not minion.is_dead:
 			minion.take_damage(dmg)
 			print("→ 随从替亡灵法师抵挡了 ", dmg, " 点伤害！")
 			return
 
-	# 没有随从，直接受伤
 	current_hp -= dmg
 	update_hp_bar()
 
@@ -114,7 +185,6 @@ func take_damage(dmg: int):
 
 func die():
 	play_anim("death")
-	# 清理所有随从
 	for minion in minions:
 		if is_instance_valid(minion):
 			minion.queue_free()
@@ -126,24 +196,20 @@ func execute_turn():
 
 	turn_count += 1
 
-	# 检查是否有存活随从
 	var has_minion = false
 	for minion in minions:
 		if is_instance_valid(minion) and not minion.is_dead:
 			has_minion = true
 			break
 
-	# 优先召唤随从（如果没有存活随从）
 	if not has_minion:
 		await summon_minion()
 		return
 
-	# HP 低于 50% 时使用治疗技能
 	if current_hp < max_hp * 0.5:
 		await heal_skill()
 		return
 
-	# 否则攻击玩家
 	await attack_player()
 
 func summon_minion():
@@ -173,17 +239,16 @@ func attack_player():
 	play_anim("attack")
 	await _wait_anim("Necromancer_attack")
 
-	var player_battler = BattleManager.player_battler
-	if player_battler and not player_battler.is_dead and is_instance_valid(player_battler):
-		var def_val = player_battler.get_defense() if player_battler.has_method("get_defense") else 0
+	var pb = BattleManager.player_battler
+	if pb and not pb.is_dead and is_instance_valid(pb):
+		var def_val = pb.get_defense() if pb.has_method("get_defense") else 0
 		var damage = max(1, attack - def_val)
-		player_battler.take_damage(damage)
+		pb.take_damage(damage)
 		print("→ 亡灵法师攻击玩家，造成 ", damage, " 点伤害！")
 
-		# 等待玩家受伤动画
 		var hurt_duration: float = 0.3
-		if player_battler.has_node("AnimatedSprite2D"):
-			var psprite: AnimatedSprite2D = player_battler.get_node("AnimatedSprite2D")
+		if pb.has_node("AnimatedSprite2D"):
+			var psprite: AnimatedSprite2D = pb.get_node("AnimatedSprite2D")
 			var hurt_anim = "swordsman_hurt"
 			if psprite.sprite_frames.has_animation(hurt_anim):
 				var hfc = psprite.sprite_frames.get_frame_count(hurt_anim)
@@ -191,8 +256,8 @@ func attack_player():
 				hurt_duration = hfc / hspd
 		await get_tree().create_timer(hurt_duration).timeout
 
-		if not player_battler.is_dead:
-			player_battler.play_anim("idle")
+		if not pb.is_dead:
+			pb.play_anim("idle")
 
 	play_anim("idle")
 
@@ -205,4 +270,9 @@ func _wait_anim(anim_name: String):
 	await get_tree().create_timer(duration).timeout
 
 func exit_battle():
+	if is_dead:
+		return
 	in_battle = false
+	is_attacking = false
+	attack_timer = 0
+	play_anim("idle")
