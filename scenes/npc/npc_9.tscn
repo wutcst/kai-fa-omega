@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://x6wvj0iro513"]
+[gd_scene load_steps=9 format=3 uid="uid://dq0yebcviughd"]
 
 [ext_resource type="Script" path="res://scripts/npc/npc_dialogue.gd" id="2_npcsc"]
 [ext_resource type="Texture2D" uid="uid://47uu7geymmsm" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/009 (1).png" id="2_udkxj"]

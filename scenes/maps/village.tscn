@@ -1,4 +1,4 @@
-[gd_scene load_steps=88 format=4 uid="uid://cg6dao6w5shri"]
+[gd_scene load_steps=93 format=4 uid="uid://cg6dao6w5shri"]
 
 [ext_resource type="Texture2D" uid="uid://be1ys2ifugnlj" path="res://Asset Bundle/assets/tiles/use/Unorganized Parts/addwork.png" id="1_ces2b"]
 [ext_resource type="Script" path="res://scripts/maps/game_scene.gd" id="1_hsvbb"]
@@ -44,6 +44,11 @@
 [ext_resource type="PackedScene" uid="uid://chc8ljmejrs2s" path="res://scenes/npc/npc_1.tscn" id="42_npc1a"]
 [ext_resource type="PackedScene" uid="uid://bn4w5di274qhv" path="res://scenes/npc/npc_2.tscn" id="43_npc2b"]
 [ext_resource type="PackedScene" uid="uid://coqcmuhyy2511" path="res://scenes/npc/npc_3.tscn" id="44_npc3c"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc_4.tscn" id="45_npc4d"]
+[ext_resource type="PackedScene" uid="uid://dsdvpdh3alnck" path="res://scenes/npc/npc_5.tscn" id="46_npc5e"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc_6.tscn" id="47_npc6f"]
+[ext_resource type="PackedScene" uid="uid://bukuhqjssvkcp" path="res://scenes/npc/npc_7.tscn" id="48_npc7g"]
+[ext_resource type="PackedScene" path="res://scenes/npc/npc_8.tscn" id="49_npc8h"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sq3sw"]
 texture = ExtResource("1_ces2b")
@@ -10860,6 +10865,21 @@ position = Vector2(1115, 318)
 
 [node name="npc3" parent="." instance=ExtResource("44_npc3c")]
 position = Vector2(285, 386)
+
+[node name="npc4" parent="." instance=ExtResource("45_npc4d")]
+position = Vector2(1358, 728)
+
+[node name="npc5" parent="." instance=ExtResource("46_npc5e")]
+position = Vector2(269, 207)
+
+[node name="npc6" parent="." instance=ExtResource("47_npc6f")]
+position = Vector2(1114, 330)
+
+[node name="npc7" parent="." instance=ExtResource("48_npc7g")]
+position = Vector2(1462, 156)
+
+[node name="npc8" parent="." instance=ExtResource("49_npc8h")]
+position = Vector2(358, 726)
 
 [node name="village" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("41_c5jiw")

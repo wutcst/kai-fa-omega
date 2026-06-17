@@ -58,7 +58,7 @@ func _fit_camera_to_background():
 func _on_start_pressed():
 	if music:
 		music.stop()
-	get_tree().change_scene_to_file("res://scenes/maps/village.tscn")
+	get_tree().change_scene_to_file("res://scenes/maps/intro.tscn")
 
 func _on_load_pressed():
 	if not FileAccess.file_exists(SAVE_FILE_PATH):
