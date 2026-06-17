@@ -27,7 +27,7 @@ func _ready():
 	# 村庄场景自动配置跳转路径
 	if _is_village:
 		if next_scene_path == "":
-			next_scene_path = "res://scenes/maps/ground1.tscn"
+			next_scene_path = "res://scenes/maps/forest.tscn"
 		if scene_title == "":
 			scene_title = "🏘️ 村庄"
 	

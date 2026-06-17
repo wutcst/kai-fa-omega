@@ -9916,7 +9916,7 @@ size = Vector2(99, 153.5)
 
 [node name="Forest" type="Node2D"]
 script = ExtResource("1_714mf")
-next_scene_path = "res://scenes/maps/ground1.tscn"
+next_scene_path = "res://scenes/maps/undead.tscn"
 scene_title = "🌲 森林"
 bgm_path = "res://Asset Bundle/musicforest/save.mp3"
 min_zoom = 1.5
