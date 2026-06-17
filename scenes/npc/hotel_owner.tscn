@@ -1,0 +1,54 @@
+[gd_scene load_steps=9 format=3 uid="uid://dfs1c2032aw5w"]
+
+[ext_resource type="Texture2D" uid="uid://dojye8tu5km3o" path="res://Asset Bundle/sprites/npc/Character 1.png" id="2_g8k1m"]
+[ext_resource type="Script" path="res://scripts/npc/hotel_owner.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_kyxwf"]
+atlas = ExtResource("2_g8k1m")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rpi0b"]
+atlas = ExtResource("2_g8k1m")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ste8r"]
+atlas = ExtResource("2_g8k1m")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ljegp"]
+atlas = ExtResource("2_g8k1m")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_merchant"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_kyxwf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rpi0b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ste8r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ljegp")
+}],
+"loop": true,
+"name": &"hotel_owner_idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_merchant"]
+size = Vector2(16, 25)
+
+[node name="hotel_owner" type="CharacterBody2D" groups=["merchant"]]
+script = ExtResource("2_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_merchant")
+animation = &"hotel_owner_idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, 1.5)
+shape = SubResource("RectangleShape2D_merchant")
