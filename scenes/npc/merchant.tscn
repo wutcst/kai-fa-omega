@@ -48,7 +48,7 @@ script = ExtResource("2_merchant_script")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_merchant")
 animation = &"merchant_idle"
-frame_progress = 0.0900401
+frame_progress = 0.427736
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 1.5)

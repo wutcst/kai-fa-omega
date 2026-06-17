@@ -1,4 +1,4 @@
-[gd_scene load_steps=90 format=4 uid="uid://cg6dao6w5shri"]
+[gd_scene load_steps=92 format=4 uid="uid://cg6dao6w5shri"]
 
 [ext_resource type="Texture2D" uid="uid://be1ys2ifugnlj" path="res://Asset Bundle/assets/tiles/use/Unorganized Parts/addwork.png" id="1_ces2b"]
 [ext_resource type="Script" path="res://scripts/maps/game_scene.gd" id="1_hsvbb"]
@@ -43,7 +43,9 @@
 [ext_resource type="AudioStream" uid="uid://bxxea6ds1qjdv" path="res://Asset Bundle/musicmain/BGM-26.6.7-明亮-温馨-欢快-_爱给网_aigei_com.mp3" id="41_c5jiw"]
 [ext_resource type="PackedScene" uid="uid://dq04j4qicghde" path="res://scenes/npc/npc_4.tscn" id="45_npc4d"]
 [ext_resource type="PackedScene" uid="uid://dsdvpdh3alnck" path="res://scenes/npc/npc_5.tscn" id="46_npc5e"]
+[ext_resource type="PackedScene" uid="uid://dq0yebcviughd" path="res://scenes/npc/npc_9.tscn" id="47_gkt6d"]
 [ext_resource type="PackedScene" uid="uid://co8ltmulysvne" path="res://scenes/npc/npc_6.tscn" id="47_npc6f"]
+[ext_resource type="PackedScene" uid="uid://dl1aog1el23q2" path="res://scenes/npc/npc_10.tscn" id="48_5l45r"]
 [ext_resource type="PackedScene" uid="uid://bukuhqjssvkcp" path="res://scenes/npc/npc_7.tscn" id="48_npc7g"]
 [ext_resource type="PackedScene" uid="uid://c3mnugwvrfiv0" path="res://scenes/npc/npc_8.tscn" id="49_npc8h"]
 
@@ -10871,3 +10873,9 @@ position = Vector2(358, 726)
 
 [node name="village" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("41_c5jiw")
+
+[node name="npc9" parent="." instance=ExtResource("47_gkt6d")]
+position = Vector2(881, 726)
+
+[node name="npc10" parent="." instance=ExtResource("48_5l45r")]
+position = Vector2(525, 210)
