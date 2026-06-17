@@ -1,0 +1,57 @@
+[gd_scene load_steps=9 format=3 uid="uid://q4gttral6egs"]
+
+[ext_resource type="Texture2D" uid="uid://b7vytigu0nh2c" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/004 (1).png" id="2_at305"]
+[ext_resource type="Script" path="res://scripts/npc_dialogue.gd" id="2_npcsc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ce60r"]
+atlas = ExtResource("2_at305")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v2yrc"]
+atlas = ExtResource("2_at305")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bf4ae"]
+atlas = ExtResource("2_at305")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yejgu"]
+atlas = ExtResource("2_at305")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_npc4"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ce60r")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v2yrc")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bf4ae")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yejgu")
+}],
+"loop": true,
+"name": &"npc4",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_npc4"]
+size = Vector2(20, 29)
+
+[node name="npc4" type="CharacterBody2D"]
+script = ExtResource("2_npcsc")
+npc_name = "旅人"
+dialogue_text = "远方的道路充满了未知，但我会继续前行。"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_npc4")
+animation = &"npc4"
+autoplay = "npc4"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_npc4")

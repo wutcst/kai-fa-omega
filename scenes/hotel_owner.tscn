@@ -1,41 +1,41 @@
 [gd_scene load_steps=9 format=3 uid="uid://dfs1c2032aw5w"]
 
-[ext_resource type="Texture2D" uid="uid://dojye8tu5km3o" path="res://Asset Bundle/sprites/npc/Character 1.png" id="2_g8k1m"]
+[ext_resource type="Texture2D" uid="uid://47uu7geymmsm" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/009 (1).png" id="2_k0562"]
 [ext_resource type="Script" path="res://scripts/hotel_owner.gd" id="2_script"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_kyxwf"]
-atlas = ExtResource("2_g8k1m")
-region = Rect2(0, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_0c5y2"]
+atlas = ExtResource("2_k0562")
+region = Rect2(0, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_rpi0b"]
-atlas = ExtResource("2_g8k1m")
-region = Rect2(64, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_xbfrk"]
+atlas = ExtResource("2_k0562")
+region = Rect2(48, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ste8r"]
-atlas = ExtResource("2_g8k1m")
-region = Rect2(128, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_qcji6"]
+atlas = ExtResource("2_k0562")
+region = Rect2(96, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ljegp"]
-atlas = ExtResource("2_g8k1m")
-region = Rect2(192, 0, 64, 64)
+[sub_resource type="AtlasTexture" id="AtlasTexture_1l64a"]
+atlas = ExtResource("2_k0562")
+region = Rect2(144, 0, 48, 48)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_merchant"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_kyxwf")
+"texture": SubResource("AtlasTexture_0c5y2")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_rpi0b")
+"texture": SubResource("AtlasTexture_xbfrk")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ste8r")
+"texture": SubResource("AtlasTexture_qcji6")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ljegp")
+"texture": SubResource("AtlasTexture_1l64a")
 }],
 "loop": true,
-"name": &"hotel_owner_idle",
+"name": &"owner",
 "speed": 5.0
 }]
 
@@ -47,7 +47,8 @@ script = ExtResource("2_script")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_merchant")
-animation = &"hotel_owner_idle"
+animation = &"owner"
+autoplay = "owner"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 1.5)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=88 format=4 uid="uid://cg6dao6w5shri"]
+[gd_scene load_steps=93 format=4 uid="uid://cg6dao6w5shri"]
 
 [ext_resource type="Texture2D" uid="uid://be1ys2ifugnlj" path="res://Asset Bundle/assets/tiles/use/Unorganized Parts/addwork.png" id="1_ces2b"]
 [ext_resource type="Script" path="res://scripts/game_scene.gd" id="1_hsvbb"]
@@ -44,6 +44,11 @@
 [ext_resource type="PackedScene" uid="uid://chc8ljmejrs2s" path="res://scenes/npc_1.tscn" id="42_npc1a"]
 [ext_resource type="PackedScene" uid="uid://bn4w5di274qhv" path="res://scenes/npc_2.tscn" id="43_npc2b"]
 [ext_resource type="PackedScene" uid="uid://coqcmuhyy2511" path="res://scenes/npc_3.tscn" id="44_npc3c"]
+[ext_resource type="PackedScene" uid="uid://q4gttral6egs" path="res://scenes/npc_4.tscn" id="45_npc4d"]
+[ext_resource type="PackedScene" uid="uid://mqkvn2e85ijq" path="res://scenes/npc_5.tscn" id="46_npc5e"]
+[ext_resource type="PackedScene" uid="uid://coj5ycygui835" path="res://scenes/npc_6.tscn" id="47_npc6f"]
+[ext_resource type="PackedScene" uid="uid://b4t5jsnjb0ctq" path="res://scenes/npc_7.tscn" id="48_npc7g"]
+[ext_resource type="PackedScene" uid="uid://cafy812wo8f2l" path="res://scenes/npc_8.tscn" id="49_npc8h"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_sq3sw"]
 texture = ExtResource("1_ces2b")
@@ -10820,6 +10825,7 @@ pattern_0 = SubResource("TileMapPattern_nbra3")
 pattern_1 = SubResource("TileMapPattern_ytdmm")
 
 [node name="Village" type="Node2D"]
+position = Vector2(-16, 16)
 script = ExtResource("1_hsvbb")
 bgm_path = "res://Asset Bundle/musicmain/BGM-26.6.7-明亮-温馨-欢快-_爱给网_aigei_com.mp3"
 
@@ -10843,23 +10849,38 @@ limit_top = 40
 limit_right = 1564
 limit_bottom = 1037
 
-[node name="hotel_owner" parent="." instance=ExtResource("38_8x5d6")]
-position = Vector2(873, 231)
-
 [node name="merchant" parent="." instance=ExtResource("39_pho1d")]
-position = Vector2(549, 391)
+position = Vector2(547, 389)
 
 [node name="village head" parent="." instance=ExtResource("40_3mpxt")]
-position = Vector2(946, 352)
-
-[node name="npc1" parent="." instance=ExtResource("42_npc1a")]
-position = Vector2(521, 209)
+position = Vector2(948, 354)
 
 [node name="npc2" parent="." instance=ExtResource("43_npc2b")]
-position = Vector2(1115, 318)
+position = Vector2(875, 730)
 
 [node name="npc3" parent="." instance=ExtResource("44_npc3c")]
 position = Vector2(285, 386)
 
+[node name="npc4" parent="." instance=ExtResource("45_npc4d")]
+position = Vector2(1358, 728)
+
+[node name="npc5" parent="." instance=ExtResource("46_npc5e")]
+position = Vector2(269, 207)
+
+[node name="npc6" parent="." instance=ExtResource("47_npc6f")]
+position = Vector2(1114, 330)
+
+[node name="npc7" parent="." instance=ExtResource("48_npc7g")]
+position = Vector2(1462, 156)
+
+[node name="npc8" parent="." instance=ExtResource("49_npc8h")]
+position = Vector2(358, 726)
+
 [node name="village" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("41_c5jiw")
+
+[node name="hotel_owner" parent="." instance=ExtResource("38_8x5d6")]
+position = Vector2(867, 249)
+
+[node name="npc1" parent="." instance=ExtResource("42_npc1a")]
+position = Vector2(523, 210)

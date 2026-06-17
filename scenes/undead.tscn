@@ -7981,7 +7981,7 @@ tile_set = SubResource("TileSet_eyaqu")
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(568, 164)
 zoom = Vector2(1.5, 1.5)
-limit_left = 50
+limit_left = 0
 limit_top = -10
 limit_right = 1500
 limit_bottom = 820

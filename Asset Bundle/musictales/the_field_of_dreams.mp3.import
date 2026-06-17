@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://64ctb10y7oj4"
+path="res://.godot/imported/the_field_of_dreams.mp3-05eb8fa1cede95ad9c6a674b8ff9ebb3.mp3str"
+
+[deps]
+
+source_file="res://Asset Bundle/musictales/the_field_of_dreams.mp3"
+dest_files=["res://.godot/imported/the_field_of_dreams.mp3-05eb8fa1cede95ad9c6a674b8ff9ebb3.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

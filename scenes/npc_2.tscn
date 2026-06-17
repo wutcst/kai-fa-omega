@@ -1,77 +1,42 @@
-[gd_scene load_steps=14 format=3 uid="uid://bn4w5di274qhv"]
+[gd_scene load_steps=9 format=3 uid="uid://bn4w5di274qhv"]
 
-[ext_resource type="Texture2D" uid="uid://bjw4mdcndl02t" path="res://Asset Bundle/sprites/npc/SpriteSheet.png" id="1_rp41g"]
+[ext_resource type="Texture2D" uid="uid://ddy35l4tjwsmo" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/002 (1).png" id="2_mmetk"]
 [ext_resource type="Script" path="res://scripts/npc_dialogue.gd" id="2_npcsc2"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_1e2ev"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(0, 0, 23, 36)
+[sub_resource type="AtlasTexture" id="AtlasTexture_bixqp"]
+atlas = ExtResource("2_mmetk")
+region = Rect2(0, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_5tfkc"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(23, 0, 23, 36)
+[sub_resource type="AtlasTexture" id="AtlasTexture_8qxm7"]
+atlas = ExtResource("2_mmetk")
+region = Rect2(48, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3yh8g"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(46, 0, 23, 36)
+[sub_resource type="AtlasTexture" id="AtlasTexture_thtwy"]
+atlas = ExtResource("2_mmetk")
+region = Rect2(96, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_h0m74"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(69, 0, 23, 36)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_ls8ox"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(92, 0, 23, 36)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_jlfgd"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(115, 0, 23, 36)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_52r7x"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(138, 0, 23, 36)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_i5w6t"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(161, 0, 23, 36)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_08wod"]
-atlas = ExtResource("1_rp41g")
-region = Rect2(184, 0, 23, 36)
+[sub_resource type="AtlasTexture" id="AtlasTexture_42cem"]
+atlas = ExtResource("2_mmetk")
+region = Rect2(144, 0, 48, 48)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_am5s4"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_1e2ev")
+"texture": SubResource("AtlasTexture_bixqp")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_5tfkc")
+"texture": SubResource("AtlasTexture_8qxm7")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_3yh8g")
+"texture": SubResource("AtlasTexture_thtwy")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_h0m74")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_ls8ox")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_jlfgd")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_52r7x")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_i5w6t")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_08wod")
+"texture": SubResource("AtlasTexture_42cem")
 }],
 "loop": true,
 "name": &"new_animation",
-"speed": 10.0
+"speed": 5.0
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3aqob"]
@@ -86,7 +51,7 @@ dialogue_text = "辛苦了勇者，旅途顺利"
 sprite_frames = SubResource("SpriteFrames_am5s4")
 animation = &"new_animation"
 autoplay = "new_animation"
-frame_progress = 0.0964206
+frame_progress = 0.89556
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 2)
