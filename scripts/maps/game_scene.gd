@@ -16,6 +16,7 @@ var _level_up_hint_label: Label = null
 var _level_up_info_label: Label = null
 var _btn_next_scene: Button = null
 var _bgm_player: AudioStreamPlayer = null
+var _welcome_canvas: CanvasLayer = null
 
 # 当前场景缓存标志，避免重复解析路径
 var _is_village: bool = false
@@ -41,6 +42,9 @@ func _ready():
 		_create_next_scene_button()
 	_update_level_up_info()
 	_play_bgm()
+
+	if _is_village and GameData.show_village_welcome:
+		_show_village_welcome()
 
 # 判断是否是村庄场景：优先使用显式导出变量，否则通过 scene_file_path 兜底
 func _check_is_village_scene() -> bool:
@@ -377,7 +381,51 @@ func _play_bgm():
 		# AudioStream 基类没有 loop 属性，需要用 audio_stream 自身的循环接口
 		# 如 AudioStreamMP3.loop_mode 等，这里直接播放，由引擎默认循环处理
 		_bgm_player.play()
-		
+
+func _show_village_welcome():
+	GameData.show_village_welcome = false
+	var canvas = CanvasLayer.new()
+	canvas.name = "VillageWelcomeCanvas"
+	canvas.layer = 100
+	add_child(canvas)
+	_welcome_canvas = canvas
+
+	var dim = ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.7)
+	dim.size = get_viewport().get_visible_rect().size
+	canvas.add_child(dim)
+
+	var label = Label.new()
+	label.text = "拯救世界的勇者已经到来"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 32)
+	label.add_theme_color_override("font_color", Color(1, 0.9, 0.5, 1))
+	label.size = get_viewport().get_visible_rect().size
+	canvas.add_child(label)
+
+	var hint = Label.new()
+	hint.text = "按 E 继续"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 16)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	var vs = get_viewport().get_visible_rect().size
+	hint.position = Vector2(0, vs.y - 60)
+	hint.size = Vector2(vs.x, 40)
+	canvas.add_child(hint)
+
+func _dismiss_welcome():
+	if is_instance_valid(_welcome_canvas):
+		_welcome_canvas.queue_free()
+		_welcome_canvas = null
+
+func _input(event):
+	if _welcome_canvas and is_instance_valid(_welcome_canvas):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_E:
+				get_viewport().set_input_as_handled()
+				_dismiss_welcome()
+
 # 测试地图位置
 func _process(delta):
 	var players = get_tree().get_nodes_in_group("player")

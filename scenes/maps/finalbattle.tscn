@@ -4147,6 +4147,7 @@ sources/0 = SubResource("TileSetAtlasSource_r754c")
 size = Vector2(99, 61.75)
 
 [node name="Finalbattle" type="Node2D"]
+position = Vector2(46, -3)
 script = ExtResource("1_g15lk")
 bgm_path = "res://Asset Bundle/musicfinalwar/艾尔登法环 - 最终之战_编辑__艾尔登法环 艾尔登法环 游_爱给网_aigei_com.mp3"
 

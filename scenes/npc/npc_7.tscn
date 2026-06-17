@@ -1,0 +1,58 @@
+[gd_scene load_steps=9 format=3 uid="uid://b4t5jsnjb0ctq"]
+
+[ext_resource type="Texture2D" uid="uid://c3ovp1mqt7g14" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/007 (1).png" id="2_c14li"]
+[ext_resource type="Script" path="res://scripts/npc/npc_dialogue.gd" id="2_npcsc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_m07yo"]
+atlas = ExtResource("2_c14li")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2eost"]
+atlas = ExtResource("2_c14li")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_qtu7l"]
+atlas = ExtResource("2_c14li")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l8fjb"]
+atlas = ExtResource("2_c14li")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_npc7"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_m07yo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2eost")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_qtu7l")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l8fjb")
+}],
+"loop": true,
+"name": &"npc7",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_npc7"]
+size = Vector2(20, 29)
+
+[node name="npc7" type="CharacterBody2D"]
+script = ExtResource("2_npcsc")
+npc_name = "酒馆老板"
+dialogue_text = "听说最近地底有不少冒险者失踪了，小心点。"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_npc7")
+animation = &"npc7"
+autoplay = "npc7"
+frame_progress = 0.989826
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_npc7")
