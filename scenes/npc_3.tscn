@@ -1,38 +1,38 @@
 [gd_scene load_steps=9 format=3 uid="uid://coqcmuhyy2511"]
 
-[ext_resource type="Texture2D" uid="uid://bpinv64rhspy" path="res://Asset Bundle/sprites/npc/Girl_Sprite_Sheet.png" id="1_cu3d0"]
+[ext_resource type="Texture2D" uid="uid://cffflon1mx2rk" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/003 (1).png" id="2_d1ijw"]
 [ext_resource type="Script" path="res://scripts/npc_dialogue.gd" id="2_npcsc3"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ikqn5"]
-atlas = ExtResource("1_cu3d0")
-region = Rect2(8, 6, 23, 23)
+[sub_resource type="AtlasTexture" id="AtlasTexture_dm4ml"]
+atlas = ExtResource("2_d1ijw")
+region = Rect2(0, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_1cstj"]
-atlas = ExtResource("1_cu3d0")
-region = Rect2(8, 29, 23, 23)
+[sub_resource type="AtlasTexture" id="AtlasTexture_omoe1"]
+atlas = ExtResource("2_d1ijw")
+region = Rect2(48, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_mo2fm"]
-atlas = ExtResource("1_cu3d0")
-region = Rect2(8, 52, 23, 23)
+[sub_resource type="AtlasTexture" id="AtlasTexture_knyhd"]
+atlas = ExtResource("2_d1ijw")
+region = Rect2(96, 0, 48, 48)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3hqhg"]
-atlas = ExtResource("1_cu3d0")
-region = Rect2(8, 75, 23, 23)
+[sub_resource type="AtlasTexture" id="AtlasTexture_vm08n"]
+atlas = ExtResource("2_d1ijw")
+region = Rect2(144, 0, 48, 48)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_8tq7o"]
 animations = [{
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ikqn5")
+"texture": SubResource("AtlasTexture_dm4ml")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_1cstj")
+"texture": SubResource("AtlasTexture_omoe1")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_mo2fm")
+"texture": SubResource("AtlasTexture_knyhd")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_3hqhg")
+"texture": SubResource("AtlasTexture_vm08n")
 }],
 "loop": true,
 "name": &"new_animation",
@@ -50,7 +50,7 @@ dialogue_text = "能给我看看你的剑吗？勇者"
 sprite_frames = SubResource("SpriteFrames_8tq7o")
 animation = &"new_animation"
 autoplay = "new_animation"
-frame_progress = 0.678167
+frame_progress = 0.508002
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(1, 1)

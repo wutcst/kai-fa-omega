@@ -1,0 +1,58 @@
+[gd_scene load_steps=9 format=3 uid="uid://cafy812wo8f2l"]
+
+[ext_resource type="Texture2D" uid="uid://dk0rbcpi8nm0d" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/008 (1).png" id="2_kfj4b"]
+[ext_resource type="Script" path="res://scripts/npc_dialogue.gd" id="2_npcsc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_8b1qr"]
+atlas = ExtResource("2_kfj4b")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n2stp"]
+atlas = ExtResource("2_kfj4b")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10pvf"]
+atlas = ExtResource("2_kfj4b")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6yt3t"]
+atlas = ExtResource("2_kfj4b")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_npc8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_8b1qr")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n2stp")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10pvf")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6yt3t")
+}],
+"loop": true,
+"name": &"npc8",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_npc8"]
+size = Vector2(20, 29)
+
+[node name="npc8" type="CharacterBody2D"]
+script = ExtResource("2_npcsc")
+npc_name = "小女孩"
+dialogue_text = "大哥哥，你能打败恶龙吗？"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_npc8")
+animation = &"npc8"
+autoplay = "npc8"
+frame_progress = 0.989826
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_npc8")
