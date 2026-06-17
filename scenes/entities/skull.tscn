@@ -339,9 +339,9 @@ radius = 20.025
 [node name="skull" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_fgwvc")
 monster_name = "skull"
-max_hp = 130
-attack = 22
-defense = 10
+max_hp = 90
+attack = 16
+defense = 6
 attack_range = 35.0
 exp_reward = 50
 enemy_scene_path = "res://scenes/entities/skull.tscn"

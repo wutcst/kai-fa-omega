@@ -4,8 +4,8 @@ extends CharacterBody2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 @export var monster_name: String = "slime"
-@export var max_hp: int = 80
-@export var attack: int = 15
+@export var max_hp: int = 60
+@export var attack: int = 12
 @export var defense: int = 3
 @export var speed: float = 70.0
 @export var chase_range: float = 200.0

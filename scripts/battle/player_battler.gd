@@ -265,9 +265,9 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 		
 		var multiplier: float = 1.0
 		if action == "heavyhit":
-			multiplier = 1.5
+			multiplier = 1.7
 		elif action == "attack":
-			multiplier = 2.5
+			multiplier = 2.1
 		
 		var damage: int
 		if armor_pierce:

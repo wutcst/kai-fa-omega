@@ -4164,10 +4164,9 @@ tile_set = SubResource("TileSet_7yxob")
 [node name="Camera2D" type="Camera2D" parent="."]
 visible = false
 position = Vector2(339, 218)
-zoom = Vector2(1.5, 1.5)
-limit_left = -50
-limit_top = 0
-limit_right = 740
+limit_left = 0
+limit_top = 20
+limit_right = 800
 limit_bottom = 450
 
 [node name="groundTileMapLayer" type="TileMapLayer" parent="."]

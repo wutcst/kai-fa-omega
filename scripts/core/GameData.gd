@@ -3,20 +3,20 @@ extends Node
 # ============================================================
 # 玩家基础属性
 # ============================================================
-var max_hp: int = 150
-var current_hp: int = 150
-var max_mp: int = 50
-var current_mp: int = 50
+var max_hp: int = 180
+var current_hp: int = 180
+var max_mp: int = 60
+var current_mp: int = 60
 
-var attack: int = 12
-var defense: int = 5
+var attack: int = 18
+var defense: int = 8
 var base_speed: int = 200
 var current_speed: int = 200
 
 var level: int = 1
 var current_exp: int = 0
 var exp_to_next_level: int = 50
-var level_up_growth: float = 1.2
+var level_up_growth: float = 1.25
 
 # 暴击率（百分比）
 var crit: int = 5

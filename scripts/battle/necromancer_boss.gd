@@ -3,9 +3,9 @@ extends CharacterBody2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 @export var monster_name: String = "necromancer"
-@export var max_hp: int = 350
-@export var attack: int = 25
-@export var defense: int = 10
+@export var max_hp: int = 260
+@export var attack: int = 20
+@export var defense: int = 7
 @export var exp_reward: int = 200
 @export var enemy_scene_path: String = "res://scenes/entities/necromancer.tscn"
 @export var is_boss: bool = true
@@ -228,7 +228,7 @@ func heal_skill():
 	play_anim("skill")
 	await _wait_anim("Necromancer_skill")
 
-	var heal_amount = int(max_hp * 0.25)
+	var heal_amount = int(max_hp * 0.15)
 	current_hp = min(current_hp + heal_amount, max_hp)
 	update_hp_bar()
 	print("→ 亡灵法师使用黑暗治愈，恢复了 ", heal_amount, " 点生命！")

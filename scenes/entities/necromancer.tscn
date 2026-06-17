@@ -412,9 +412,9 @@ animations = [{
 [node name="Necromancer" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_boss_script")
 monster_name = "necromancer"
-max_hp = 350
-attack = 25
-defense = 10
+max_hp = 260
+attack = 20
+defense = 7
 exp_reward = 200
 enemy_scene_path = "res://scenes/entities/necromancer.tscn"
 is_boss = true

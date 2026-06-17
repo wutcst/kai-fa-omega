@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
-@export var max_hp: int = 60
+@export var max_hp: int = 40
 
 var current_hp: int
 var is_dead: bool = false
