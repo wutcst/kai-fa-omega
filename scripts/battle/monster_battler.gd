@@ -62,7 +62,7 @@ func _apply_foot_alignment():
 	if frame_size == Vector2.ZERO:
 		_original_sprite_offset = animated_sprite.offset
 		return
-	animated_sprite.position = Vector2(0, 0)
+	animated_sprite.position = Vector2(animated_sprite.position.x, 0)
 	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
 	_original_sprite_offset = animated_sprite.offset
 

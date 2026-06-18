@@ -82,7 +82,8 @@ func _on_enter_battle(attacking_monster):
 
 	var scene_path = attacking_monster.get("enemy_scene_path")
 	enemy_scene = scene_path if scene_path is String else ""
-	enemy_position = attacking_monster.get("spawn_position") if attacking_monster.get("spawn_position") else attacking_monster.global_position
+	var sp = attacking_monster.get("spawn_position")
+	enemy_position = sp if sp is Vector2 and sp != Vector2.ZERO else attacking_monster.global_position
 
 	if attacking_monster.has_node("AnimatedSprite2D"):
 		var enemy_sprite = attacking_monster.get_node("AnimatedSprite2D")
@@ -223,13 +224,9 @@ func _setup_monster_battler(battler):
 						bsprite.offset = Vector2(0, -tex.get_size().y / 2.0)
 
 	# ============================================================
-	# 设置 custom_monster_sprite_scale：
-	# 记录源精灵的原始 scale，让 _fit_background 用它做基准缩放
-	# （不同怪物的精灵帧大小不同，不能用默认怪物的 scale）
+	# 重置 monster offset，确保新怪物翻转时重新计算
 	# ============================================================
-	if is_instance_valid(combat_scene) and combat_scene.has_method("set_custom_monster_sprite_scale"):
-		combat_scene.set_custom_monster_sprite_scale(source_scale)
-		# 重置 monster offset，确保新怪物翻转时重新计算
+	if is_instance_valid(combat_scene) and combat_scene.has_method("reset_monster_offset"):
 		combat_scene.reset_monster_offset()
 
 	# ============================================================
@@ -334,7 +331,7 @@ func _execute_enemy_attack(enemy):
 	var dir_norm: Vector2 = dir_to_player.normalized() if dir_to_player.length() > 0.1 else Vector2.LEFT
 	# 目标位置：在玩家前方保持一小段距离，y 保持原值
 	var target_glob: Vector2 = Vector2(
-		player_glob.x - dir_norm.x * 80.0,
+		player_glob.x - dir_norm.x * 150.0,
 		enemy.global_position.y
 	)
 
@@ -369,7 +366,7 @@ func _execute_enemy_attack(enemy):
 			var spd = max(1.0, sprite.sprite_frames.get_animation_speed(anim_name))
 			duration = fc / spd
 	# 提高上限，让动画能完整播放
-	duration = min(duration, 0.8)
+	duration = min(duration, 1.5)
 
 	await get_tree().create_timer(duration).timeout
 
@@ -651,14 +648,16 @@ func try_escape():
 	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
 
+	battle_state = STATE_END
 	print("尝试逃跑...")
 	if randf() < 0.5:
 		print("逃跑成功！")
 		_end_battle(false)
 	else:
 		print("逃跑失败！")
+		battle_state = STATE_PLAYER
 		await get_tree().create_timer(0.5).timeout
-		if not _battle_exiting:
+		if not _battle_exiting and battle_state == STATE_PLAYER:
 			_end_player_turn()
 
 func _process(_delta):

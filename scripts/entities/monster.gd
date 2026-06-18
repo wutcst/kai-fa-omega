@@ -14,6 +14,7 @@ extends CharacterBody2D
 @export var exp_reward: int = 20
 @export var enemy_scene_path: String = ""
 @export var is_boss: bool = false
+@export var display_name: String = ""
 
 var current_hp: int
 var is_dead: bool = false
@@ -30,6 +31,12 @@ signal monster_died(monster)
 var spawn_position: Vector2
 var _original_sprite_offset: Vector2 = Vector2.ZERO
 
+# Boss HUD（战斗中 Boss 用）
+var hud: Control
+var hp_bar: ColorRect
+var hp_fill: ColorRect
+var hp_label: Label
+
 func _ready():
 	current_hp = max_hp
 	spawn_position = global_position
@@ -37,15 +44,20 @@ func _ready():
 	# 应用脚对齐：自动计算 offset，让角色脚底对齐节点原点
 	_apply_foot_alignment()
 	
-	# 检查是否已被击败（地图重载后自动清除）
-	for pos in GameData.defeated_monster_positions:
-		if pos is Vector2:
-			if spawn_position.distance_to(pos) < chase_range:
-				print("→ 怪物已被击败，自动清除：", monster_name, " at ", spawn_position)
-				queue_free()
-				return
+	# 战斗中 Boss 实例：创建 HUD，不检查击败记录
+	if in_battle and is_boss:
+		_create_boss_hud()
+	else:
+		# 检查是否已被击败（地图重载后自动清除）
+		for pos in GameData.defeated_monster_positions:
+			if pos is Vector2:
+				if spawn_position.distance_to(pos) < chase_range:
+					print("→ 怪物已被击败，自动清除：", monster_name, " at ", spawn_position)
+					queue_free()
+					return
 	
 	play_anim("idle")
+	
 	connect_signals()
 
 # ============================================================
@@ -70,7 +82,7 @@ func _apply_foot_alignment():
 	if frame_size == Vector2.ZERO:
 		_original_sprite_offset = animated_sprite.offset
 		return
-	animated_sprite.position = Vector2(0, 0)
+	animated_sprite.position = Vector2(animated_sprite.position.x, 0)
 	# 脚对齐：在 Godot 4 中，AnimatedSprite2D 将帧渲染在节点位置+offset处，帧为居中绘制
 	# 帧底部 = offset.y + frame_height/2，想要帧底部（角色脚底）在节点原点 → offset.y = -frame_height/2
 	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
@@ -135,10 +147,10 @@ func _physics_process(_delta: float) -> void:
 		play_anim("idle")
 		# 仍然面向玩家
 		var dir = (player.global_position - global_position).normalized()
-		_set_flip_h((dir.x < 0) != (monster_name == "skull" or monster_name == "slime_king"))
+		_set_flip_h((dir.x < 0) != (monster_name == "skull" or monster_name == "slime_king" or monster_name == "Bringer"))
 	elif dis > attack_range:
 		var dir = (player.global_position - global_position).normalized()
-		_set_flip_h((dir.x < 0) != (monster_name == "skull" or monster_name == "slime_king"))
+		_set_flip_h((dir.x < 0) != (monster_name == "skull" or monster_name == "slime_king" or monster_name == "Bringer"))
 		velocity = dir * speed
 		play_anim("walk")
 	else:
@@ -157,13 +169,69 @@ func perform_attack():
 	play_anim("attack")
 	emit_signal("enter_battle", self)
 
+# ============================================================
+# Boss HUD：战斗中 Boss 的血条创建和更新
+# ============================================================
+func _create_boss_hud():
+	hud = Control.new()
+	hud.name = "BossHUD"
+	hud.position = Vector2(-60, -90)
+	add_child(hud)
+
+	hp_bar = ColorRect.new()
+	hp_bar.name = "HPBarBg"
+	hp_bar.size = Vector2(120, 16)
+	hp_bar.position = Vector2(0, 0)
+	hp_bar.color = Color(0.1, 0.1, 0.1)
+	hud.add_child(hp_bar)
+
+	hp_fill = ColorRect.new()
+	hp_fill.name = "HPFill"
+	hp_fill.size = Vector2(120, 16)
+	hp_fill.position = Vector2(0, 0)
+	hp_fill.color = Color(0.85, 0.1, 0.5)
+	hud.add_child(hp_fill)
+
+	hp_label = Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.position = Vector2(0, -2)
+	hp_label.size = Vector2(120, 16)
+	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hp_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	hp_label.add_theme_font_size_override("font_size", 10)
+	hp_label.add_theme_color_override("font_color", Color(1, 1, 1))
+	hp_label.text = str(current_hp) + "/" + str(max_hp)
+	hud.add_child(hp_label)
+
+	var name_label = Label.new()
+	name_label.name = "BossName"
+	name_label.position = Vector2(0, -14)
+	name_label.size = Vector2(120, 16)
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 11)
+	name_label.add_theme_color_override("font_color", Color(1, 0.4, 0.2))
+	name_label.text = display_name if display_name != "" else monster_name
+	hud.add_child(name_label)
+
+func update_hp_bar():
+	if hp_fill:
+		var ratio = float(current_hp) / float(max_hp)
+		hp_fill.size.x = hp_bar.size.x * ratio
+	if hp_label:
+		hp_label.text = str(current_hp) + "/" + str(max_hp)
+
 func take_damage(dmg: int):
 	if is_dead: return
 	current_hp -= dmg
+	if is_boss and in_battle:
+		update_hp_bar()
 	if current_hp <= 0:
 		current_hp = 0
 		is_dead = true
 		emit_signal("monster_died", self)
+		die()
+	else:
+		play_anim("hurt")
 
 func die():
 	if is_dead == false: return

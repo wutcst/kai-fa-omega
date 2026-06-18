@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://dhmxenum2fkwk" path="res://Asset Bundle/sprites/Golems_Free_Version/Golems_Free_Version/Golem_1/Blue/No_Swoosh_VFX/Golem_1_walk.png" id="5_dnjoc"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7bk7l"]
-radius = 48.1664
+radius = 32.0156
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rh2fo"]
 atlas = ExtResource("2_werqk")
@@ -376,7 +376,7 @@ position = Vector2(3, 8)
 shape = SubResource("CircleShape2D_7bk7l")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(3.25001, -34.125)
-scale = Vector2(2.41667, 2.62891)
+position = Vector2(3.99999, -16)
+scale = Vector2(1.63056, 1.72071)
 sprite_frames = SubResource("SpriteFrames_0ngu3")
 animation = &"Rock Giant_attack"

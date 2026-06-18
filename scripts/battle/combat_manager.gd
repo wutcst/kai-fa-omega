@@ -7,8 +7,12 @@ extends Node2D
 const DESIGN_WIDTH = 1152.0
 const DESIGN_HEIGHT = 648.0
 
-# 全局战斗缩放：统一放缩玩家和怪物，保持相对比例
-const GLOBAL_SCALE = 1.5
+# 战斗场景中玩家的目标像素高度（设计分辨率内）
+const PLAYER_TARGET_HEIGHT = 130.0
+# 怪物比玩家大的基础比例（小怪如 bear 帧很小，需要更高比例才显大）
+const MONSTER_SIZE_RATIO = 1.35
+# 怪物视觉高度上限（玩家高度的倍数，防止 Boss 过大）
+const MONSTER_MAX_VISUAL_RATIO = 2.0
 
 func _get_sprite_info(sprite: AnimatedSprite2D) -> Dictionary:
 	var result = {"size": Vector2.ZERO, "has_anim": false}
@@ -20,14 +24,27 @@ func _get_sprite_info(sprite: AnimatedSprite2D) -> Dictionary:
 	if sprite.sprite_frames.get_frame_count(anims[0]) == 0:
 		return result
 	var tex = sprite.sprite_frames.get_frame_texture(anims[0], 0)
+
 	if not tex:
 		return result
 	result["size"] = tex.get_size()
 	result["has_anim"] = true
 	return result
 
+# 根据帧高度和目标高度计算战斗缩放
+func _calc_battle_scale(sprite: AnimatedSprite2D, target_height: float, scale_factor: float) -> Vector2:
+	var info = _get_sprite_info(sprite)
+	if not info["has_anim"] or info["size"].y <= 0:
+		return Vector2.ONE * scale_factor
+	var s = target_height / info["size"].y * scale_factor
+	return Vector2(s, s)
+
 func _position_hud(character: Node2D) -> void:
 	var hud = character.get_node_or_null("HUD")
+	if not hud:
+		hud = character.get_node_or_null("BossHUD")
+	if not hud:
+		hud = character.get_node_or_null("MinionHUD")
 	if not hud:
 		return
 	var sprite = character.get_node_or_null("AnimatedSprite2D")
@@ -44,16 +61,15 @@ func _position_hud(character: Node2D) -> void:
 	for child in hud.get_children():
 		if child is ColorRect or child is Label:
 			hud_height = max(hud_height, child.position.y + child.size.y)
-	# 额外空隙（10px）让血条与精灵之间有间隔
-	var gap: float = 10.0
-	# 血条完全放在精灵顶部之上，不遮挡人物
-	hud.position.y = visual_top - hud_height - gap
+
+	# 血条紧贴精灵顶部，略微重叠 3px
+	hud.position.y = visual_top - hud_height + 3.0 
 	# X 坐标：根据 HUD 内最大元素宽度自动居中
 	var hud_width: float = 0.0
 	for child in hud.get_children():
 		if child is ColorRect or child is Label:
 			hud_width = max(hud_width, child.size.x)
-	hud.position.x = -hud_width / 2.0
+	hud.position.x = -hud_width / 2.0 + sprite.position.x
 
 @onready var combat_ui: CombatUI = $CombatUI
 
@@ -76,13 +92,8 @@ var _current_monster: Node2D:
 # ============================================================
 var _original_bg_scale: Vector2 = Vector2.ONE
 var _original_player_pos: Vector2 = Vector2.ZERO
-var _original_player_sprite_scale: Vector2 = Vector2.ONE
 var _original_monster_pos: Vector2 = Vector2.ZERO      # 默认怪物的原始位置
-var _original_monster_sprite_scale: Vector2 = Vector2.ONE
-# 当前怪物自己的原始 AnimatedSprite2D scale（由 _setup_monster_battler 设置，不同于默认怪物）
-var _custom_monster_sprite_scale: Vector2 = Vector2.ZERO
-# 动态怪物专用：记录每个动态怪物的原始 AnimatedSprite2D scale 和 global_position
-var _dynamic_monster_original_sprite_scale: Dictionary = {}  # key: instance_id -> Vector2
+# 动态怪物专用：记录每个动态怪物的原始 global_position
 var _dynamic_monster_original_pos: Dictionary = {}        # key: instance_id -> Vector2
 
 # 记录初始位置（用于震动后复位）
@@ -91,6 +102,8 @@ var _monster_origin: Vector2 = Vector2.ZERO
 var _camera_origin: Vector2 = Vector2.ZERO
 # 怪物原始 offset（用于翻转时修正位置，如 skull 帧内角色不居中）
 var _monster_original_offset: Vector2 = Vector2.ZERO
+# 怪物原始 sprite position.x（用于翻转时补偿精灵帧不居中）
+var _monster_original_sprite_pos_x: float = NAN
 
 # 动态创建的特效容器
 var _fx_layer: Node2D = null
@@ -112,14 +125,8 @@ func _ready():
 		_original_bg_scale = bg_sprite.scale
 	if is_instance_valid(player_battler):
 		_original_player_pos = player_battler.position
-		if player_battler.has_node("AnimatedSprite2D"):
-			var ps = player_battler.get_node("AnimatedSprite2D")
-			_original_player_sprite_scale = ps.scale
 	if is_instance_valid(monster_battler):
 		_original_monster_pos = monster_battler.position
-		if monster_battler.has_node("AnimatedSprite2D"):
-			var ms = monster_battler.get_node("AnimatedSprite2D")
-			_original_monster_sprite_scale = ms.scale
 
 	_update_skill_buttons()
 	combat_ui.refresh_skill_locks()
@@ -166,16 +173,8 @@ func _on_window_resized():
 # ============================================================
 func refit():
 	print("[refit] 被调用！_current_monster=", _current_monster.name if is_instance_valid(_current_monster) else "无效")
-	# BattleManager 在 _on_scene_change 中已经把玩家/怪物的 AnimatedSprite2D scale 改为外面地图的值
-	# 这里重新保存，确保 _fit_background 用外面地图的实际相对比例
-	if is_instance_valid(player_battler) and player_battler.has_node("AnimatedSprite2D"):
-		var ps = player_battler.get_node("AnimatedSprite2D")
-		_original_player_sprite_scale = ps.scale
-	if is_instance_valid(monster_battler) and monster_battler.has_node("AnimatedSprite2D"):
-		var ms = monster_battler.get_node("AnimatedSprite2D")
-		_original_monster_sprite_scale = ms.scale
-	_fit_background()
 	_auto_face_targets()
+	_fit_background()
 	if is_instance_valid(player_battler):
 		_player_origin = player_battler.position
 	if is_instance_valid(_current_monster):
@@ -184,11 +183,9 @@ func refit():
 func get_original_monster_pos() -> Vector2:
 	return _original_monster_pos
 
-func set_custom_monster_sprite_scale(s: Vector2):
-	_custom_monster_sprite_scale = s
-
 func reset_monster_offset():
 	_monster_original_offset = Vector2.ZERO
+	_monster_original_sprite_pos_x = NAN
 
 func _fit_background():
 	# 按窗口大小等比例缩放整个战斗场景（背景 + 玩家 + 怪物）
@@ -211,69 +208,64 @@ func _fit_background():
 		bg_sprite.position = viewport_size / 2.0
 
 	# ============================================================
-	# 2. 玩家：AnimatedSprite2D 放大 + 位置按比例移动
+	# 2. 玩家：根据帧高度和目标高度计算缩放，位置按比例移动
 	# ============================================================
+	var player_base_scale = Vector2.ONE * scale_factor
 	if is_instance_valid(player_battler):
-		# 位置按比例缩放（从原始设计坐标映射到新窗口大小）
 		player_battler.position = _original_player_pos * scale_factor
-
-	# AnimatedSprite2D：用原始scale统一放大，保持与外面地图相同的相对比例
 		if player_battler.has_node("AnimatedSprite2D"):
 			var p_sprite = player_battler.get_node("AnimatedSprite2D")
-			p_sprite.scale = _original_player_sprite_scale * scale_factor * GLOBAL_SCALE
-
-		# 血条位置：根据精灵实际渲染高度，放在头顶上方
+			p_sprite.scale = _calc_battle_scale(p_sprite, PLAYER_TARGET_HEIGHT, scale_factor)
+			player_base_scale = p_sprite.scale
 		_position_hud(player_battler)
 
 	# ============================================================
-	# 3. 怪物：使用 _current_monster 动态获取当前实际战斗的怪物
+	# 3. 怪物：用玩家缩放 × 1.35，小怪明显比玩家大；帧大的 Boss 自动上限
 	# ============================================================
 	var actual_monster = _current_monster
 	if is_instance_valid(actual_monster) and actual_monster.has_node("AnimatedSprite2D"):
 		var m_sprite = actual_monster.get_node("AnimatedSprite2D")
 		var mid = actual_monster.get_instance_id()
 
+		# 计算怪物缩放（带上限）
+		var monster_scale = player_base_scale * MONSTER_SIZE_RATIO
+		var m_info = _get_sprite_info(m_sprite)
+		if m_info["has_anim"] and m_info["size"].y > 0:
+			var player_h = PLAYER_TARGET_HEIGHT * scale_factor
+			var monster_h = m_info["size"].y * monster_scale.x
+			var max_h = player_h * MONSTER_MAX_VISUAL_RATIO
+			if monster_h > max_h:
+				var capped = max_h / m_info["size"].y
+				monster_scale = Vector2(capped, capped)
+
 		if actual_monster == monster_battler:
-			# a) 默认怪物：使用保存的原始 AnimatedSprite2D scale + 位置
-			# 如果当前怪物有自己的原始 scale（如 slime 的 (1,1)），优先使用它
-			var base_scale = _custom_monster_sprite_scale if _custom_monster_sprite_scale != Vector2.ZERO else _original_monster_sprite_scale
-			m_sprite.scale = base_scale * scale_factor * GLOBAL_SCALE
-			# Y 对齐玩家，确保脚底在同一水平线上
+			# a) 默认怪物
+			m_sprite.scale = monster_scale
 			var player_y = _original_player_pos.y * scale_factor
-			actual_monster.position = Vector2(_original_monster_pos.x * scale_factor, player_y)
-			# 血条位置：根据精灵实际渲染高度，放在头顶上方
+			actual_monster.position = Vector2(_original_monster_pos.x * scale_factor - m_sprite.position.x, player_y)
 			_position_hud(actual_monster)
 		else:
-			# b) 动态怪物（如 Bone Knight）：
-			#    - 第一次遇到时记录原始 AnimatedSprite2D scale 和 global_position
-			#    - 之后每次用自己的原始值重新计算（避免叠加缩放）
-			if not (mid in _dynamic_monster_original_sprite_scale):
-				_dynamic_monster_original_sprite_scale[mid] = m_sprite.scale
+			# b) 动态怪物（如 Bone Knight、Boss 实例）
 			if not (mid in _dynamic_monster_original_pos):
 				_dynamic_monster_original_pos[mid] = actual_monster.global_position
 
-			# 用自己的原始 AnimatedSprite2D scale 来缩放（而不是默认怪物的）
-			var orig_sprite_scale: Vector2 = _dynamic_monster_original_sprite_scale[mid]
-			m_sprite.scale = orig_sprite_scale * scale_factor * GLOBAL_SCALE
+			m_sprite.scale = monster_scale
 
-			# 位置：x 按原始位置缩放，y 对齐玩家（使用 local position 保持一致性）
 			var orig_pos: Vector2 = _dynamic_monster_original_pos[mid]
 			var player_y_scaled = _original_player_pos.y * scale_factor
-			# 如果父节点有偏移，将 global_x 转为 local 坐标，或直接用 combat_manager 的相对位置
 			var parent_node = actual_monster.get_parent()
+			var sprite_comp_x = -m_sprite.position.x
 			if parent_node and parent_node != self:
-				# 有中间父节点，用 local position 更安全
 				var parent_glob = parent_node.global_position
 				actual_monster.position = Vector2(
-					(orig_pos.x - parent_glob.x) * scale_factor,
+					(orig_pos.x - parent_glob.x) * scale_factor + sprite_comp_x,
 					(_original_player_pos.y) * scale_factor
 				)
 			else:
-				actual_monster.position = Vector2(orig_pos.x * scale_factor, player_y_scaled)
-			# 血条位置
+				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, player_y_scaled)
 			_position_hud(actual_monster)
 
-const MONSTERS_NO_FLIP := ["skull", "slime_king"]
+const MONSTERS_NO_FLIP := ["skull", "slime_king", "Bringer"]
 
 func _auto_face_targets():
 	# 玩家朝右（面向怪物方向）
@@ -289,6 +281,15 @@ func _auto_face_targets():
 			_monster_original_offset = m_sprite.offset
 
 		m_sprite.flip_h = new_flip
+		# 对于帧内水平不居中的特殊角色，调整 position.x 补偿翻转
+		if is_nan(_monster_original_sprite_pos_x):
+			# 优先读取 Boss 脚本记录的原始 position.x（比当前值更可靠）
+			var boss_orig = _current_monster.get("_original_sprite_pos_x")
+			_monster_original_sprite_pos_x = boss_orig if boss_orig != null else m_sprite.position.x
+		if new_flip:
+			m_sprite.position.x = -_monster_original_sprite_pos_x
+		else:
+			m_sprite.position.x = _monster_original_sprite_pos_x
 		# 对于帧内水平不居中的特殊角色，调整 offset.x
 		if _monster_original_offset.x != 0:
 			if new_flip:

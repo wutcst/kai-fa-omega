@@ -1,6 +1,6 @@
 [gd_scene load_steps=48 format=3 uid="uid://dels3ovfdv1fu"]
 
-[ext_resource type="Script" path="res://scripts/entities/monster.gd" id="1_26x1w"]
+[ext_resource type="Script" path="res://scripts/entities/boss.gd" id="1_26x1w"]
 [ext_resource type="Texture2D" uid="uid://j0nsipsrfv4n" path="res://Asset Bundle/sprites/Bringer-Of-Death/Bringer-Of-Death/SpriteSheet/Bringer-of-Death-SpritSheet.png" id="2_6bw6o"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6t4qd"]
@@ -338,7 +338,7 @@ animations = [{
 [node name="Bringer_of_death" type="CharacterBody2D" groups=["enemy"]]
 position = Vector2(1, 1)
 script = ExtResource("1_26x1w")
-monster_name = "mushroom"
+monster_name = "Bringer"
 max_hp = 300
 attack = 34
 defense = 14
@@ -347,14 +347,16 @@ chase_range = 250.0
 attack_range = 45.0
 attack_cd = 0.9
 exp_reward = 200
-enemy_scene_path = "res://scenes/entities/mushroom.tscn"
+enemy_scene_path = "res://scenes/entities/Bringer_of_death.tscn"
+is_boss = true
+display_name = "死亡使者"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(13.5, 8.5)
 shape = SubResource("RectangleShape2D_6t4qd")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(-26, -9)
+position = Vector2(-25, -9)
 sprite_frames = SubResource("SpriteFrames_fmj53")
-animation = &"Bringer_idle"
+animation = &"Bringer_hurt"
 autoplay = "Bringer_idle"
