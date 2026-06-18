@@ -1,13 +1,58 @@
-[gd_scene load_steps=43 format=3 uid="uid://dg04wg4jxo6lb"]
+[gd_scene load_steps=55 format=3 uid="uid://dg04wg4jxo6lb"]
 
 [ext_resource type="Script" path="res://scripts/entities/monster.gd" id="1_b3b2h"]
 [ext_resource type="Texture2D" uid="uid://b01qt36xvk0x" path="res://Asset Bundle/sprites/Golems_Free_Version/Golems_Free_Version/Golem_1/Blue/No_Swoosh_VFX/Golem_1_die.png" id="2_1e1vr"]
+[ext_resource type="Texture2D" uid="uid://cpvrkqlikgvqm" path="res://Asset Bundle/sprites/Golems_Free_Version/Golems_Free_Version/Golem_1/Blue/No_Swoosh_VFX/Golem_1_attack.png" id="2_werqk"]
 [ext_resource type="Texture2D" uid="uid://bu0pmvegs6sss" path="res://Asset Bundle/sprites/Golems_Free_Version/Golems_Free_Version/Golem_1/Blue/No_Swoosh_VFX/Golem_1_hurt.png" id="3_y80ux"]
 [ext_resource type="Texture2D" uid="uid://7exo3uite7jv" path="res://Asset Bundle/sprites/Golems_Free_Version/Golems_Free_Version/Golem_1/Blue/No_Swoosh_VFX/Golem_1_idle.png" id="4_wlq50"]
 [ext_resource type="Texture2D" uid="uid://dhmxenum2fkwk" path="res://Asset Bundle/sprites/Golems_Free_Version/Golems_Free_Version/Golem_1/Blue/No_Swoosh_VFX/Golem_1_walk.png" id="5_dnjoc"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7bk7l"]
-radius = 20.025
+radius = 32.0156
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rh2fo"]
+atlas = ExtResource("2_werqk")
+region = Rect2(0, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0dovo"]
+atlas = ExtResource("2_werqk")
+region = Rect2(90, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1mali"]
+atlas = ExtResource("2_werqk")
+region = Rect2(180, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_oadvj"]
+atlas = ExtResource("2_werqk")
+region = Rect2(270, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_xgf13"]
+atlas = ExtResource("2_werqk")
+region = Rect2(360, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ij020"]
+atlas = ExtResource("2_werqk")
+region = Rect2(450, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3nf8b"]
+atlas = ExtResource("2_werqk")
+region = Rect2(540, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hqjwe"]
+atlas = ExtResource("2_werqk")
+region = Rect2(630, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2oy81"]
+atlas = ExtResource("2_werqk")
+region = Rect2(720, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_83lsi"]
+atlas = ExtResource("2_werqk")
+region = Rect2(810, 0, 90, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7vujh"]
+atlas = ExtResource("2_werqk")
+region = Rect2(900, 0, 90, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_lbm3o"]
 atlas = ExtResource("2_1e1vr")
@@ -153,6 +198,44 @@ region = Rect2(810, 0, 90, 64)
 animations = [{
 "frames": [{
 "duration": 1.0,
+"texture": SubResource("AtlasTexture_rh2fo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0dovo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1mali")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_oadvj")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_xgf13")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ij020")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3nf8b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hqjwe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2oy81")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_83lsi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7vujh")
+}],
+"loop": false,
+"name": &"Rock Giant_attack",
+"speed": 6.0
+}, {
+"frames": [{
+"duration": 1.0,
 "texture": SubResource("AtlasTexture_lbm3o")
 }, {
 "duration": 1.0,
@@ -280,12 +363,12 @@ animations = [{
 [node name="Rock Giant" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_b3b2h")
 monster_name = "rock_giant"
-max_hp = 130
-attack = 20
-defense = 8
+max_hp = 180
+attack = 28
+defense = 11
 speed = 60.0
 attack_cd = 1.2
-exp_reward = 65
+exp_reward = 100
 enemy_scene_path = "res://scenes/entities/rock_giant.tscn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -293,6 +376,7 @@ position = Vector2(3, 8)
 shape = SubResource("CircleShape2D_7bk7l")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(4, -7)
+position = Vector2(3.99999, -16)
+scale = Vector2(1.63056, 1.72071)
 sprite_frames = SubResource("SpriteFrames_0ngu3")
-animation = &"Rock Giant_idle"
+animation = &"Rock Giant_attack"

@@ -1,0 +1,70 @@
+[gd_scene load_steps=6 format=3 uid="uid://v5b1g1klykuk"]
+
+[ext_resource type="PackedScene" uid="uid://musweenqg21s" path="res://scenes/entities/mushroom.tscn" id="1_phoqn"]
+[ext_resource type="PackedScene" uid="uid://c3b6wa5044c8x" path="res://scenes/entities/bear.tscn" id="2_p5uo7"]
+[ext_resource type="PackedScene" uid="uid://cmf0qwvh3lsl" path="res://scenes/entities/slime.tscn" id="3_hnsxx"]
+[ext_resource type="PackedScene" uid="uid://dank6uyw6q7q8" path="res://scenes/entities/slime_king.tscn" id="4_fm1kf"]
+[ext_resource type="PackedScene" uid="uid://dg04wg4jxo6lb" path="res://scenes/entities/rock_giant.tscn" id="5_88ayl"]
+
+[node name="forest enemies" type="Node2D"]
+position = Vector2(5, 15)
+
+[node name="mushroom" parent="." instance=ExtResource("1_phoqn")]
+position = Vector2(213, 105)
+
+[node name="mushroom2" parent="." instance=ExtResource("1_phoqn")]
+position = Vector2(534, 259)
+
+[node name="mushroom3" parent="." instance=ExtResource("1_phoqn")]
+position = Vector2(225, 466)
+
+[node name="mushroom4" parent="." instance=ExtResource("1_phoqn")]
+position = Vector2(962, 99)
+
+[node name="mushroom5" parent="." instance=ExtResource("1_phoqn")]
+position = Vector2(954, 483)
+
+[node name="bear" parent="." instance=ExtResource("2_p5uo7")]
+position = Vector2(1825, 122)
+
+[node name="bear2" parent="." instance=ExtResource("2_p5uo7")]
+position = Vector2(1907, 459)
+
+[node name="bear3" parent="." instance=ExtResource("2_p5uo7")]
+position = Vector2(1444, 512)
+
+[node name="bear4" parent="." instance=ExtResource("2_p5uo7")]
+position = Vector2(2299, 100)
+
+[node name="bear5" parent="." instance=ExtResource("2_p5uo7")]
+position = Vector2(2301, 516)
+
+[node name="slime" parent="." instance=ExtResource("3_hnsxx")]
+position = Vector2(1465, 880)
+
+[node name="slime2" parent="." instance=ExtResource("3_hnsxx")]
+position = Vector2(2031, 1213)
+
+[node name="slime3" parent="." instance=ExtResource("3_hnsxx")]
+position = Vector2(1482, 1313)
+
+[node name="slime4" parent="." instance=ExtResource("3_hnsxx")]
+position = Vector2(2319, 908)
+
+[node name="slime5" parent="." instance=ExtResource("3_hnsxx")]
+position = Vector2(2340, 1320)
+
+[node name="slime6" parent="." instance=ExtResource("3_hnsxx")]
+position = Vector2(1862, 1001)
+
+[node name="Rock Giant" parent="." instance=ExtResource("5_88ayl")]
+position = Vector2(367, 1103)
+
+[node name="Rock Giant2" parent="." instance=ExtResource("5_88ayl")]
+position = Vector2(885, 1080)
+
+[node name="mushroom6" parent="." instance=ExtResource("1_phoqn")]
+position = Vector2(642, 447)
+
+[node name="slime_king" parent="." instance=ExtResource("4_fm1kf")]
+position = Vector2(627, 1051)

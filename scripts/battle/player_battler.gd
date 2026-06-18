@@ -15,7 +15,8 @@ var is_dead: bool = false
 var in_attack: bool = false
 var current_attack_target: Node2D = null
 var _original_position: Vector2 = Vector2.ZERO   # 玩家在战斗场景的初始站位
-const _APPROACH_SPEED: float = 500.0              # 走向怪物的速度（像素/秒）
+var _original_sprite_offset: Vector2 = Vector2.ZERO   # 脚对齐后的原始 offset
+const _APPROACH_SPEED: float = 1000.0              # 走向怪物的速度（像素/秒）
 const _STAND_OFF_DIST: float = 80.0               # 与怪物保持的距离（不重合）
 
 const MP_COST_HEAVY: int = 15
@@ -65,9 +66,37 @@ func consume_mp(cost: int):
 func _ready():
 	# 用 global_position 记录初始站位（玩家和怪物在不同父节点，局部坐标不可直接相减
 	_original_position = global_position
+	# 应用脚对齐：自动计算 offset，让角色脚底对齐节点原点
+	_apply_foot_alignment()
 	create_bars()
 	_create_attack_variants()
 	play_anim("idle")
+
+# ============================================================
+# 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
+# 与 monster.gd 的对齐方式保持一致，确保战斗中玩家与怪物正确相对
+# ============================================================
+func _get_first_frame_size() -> Vector2:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return Vector2.ZERO
+	var anims = animated_sprite.sprite_frames.get_animation_names()
+	if anims.size() == 0:
+		return Vector2.ZERO
+	if animated_sprite.sprite_frames.get_frame_count(anims[0]) == 0:
+		return Vector2.ZERO
+	var tex = animated_sprite.sprite_frames.get_frame_texture(anims[0], 0)
+	if not tex:
+		return Vector2.ZERO
+	return tex.get_size()
+
+func _apply_foot_alignment():
+	var frame_size = _get_first_frame_size()
+	if frame_size == Vector2.ZERO:
+		_original_sprite_offset = animated_sprite.offset
+		return
+	animated_sprite.position = Vector2(0, 0)
+	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
+	_original_sprite_offset = animated_sprite.offset
 
 func create_bars():
 	hud = Control.new()
@@ -285,13 +314,25 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 	if not enemy_died and is_instance_valid(current_attack_target):
 		if current_attack_target.has_node("AnimatedSprite2D") and not current_attack_target.is_dead:
 			var sprite: AnimatedSprite2D = current_attack_target.get_node("AnimatedSprite2D")
-			var hurt_name = current_attack_target.monster_name + "_hurt"
+			var mname = current_attack_target.monster_name
+			var hurt_name = mname + "_hurt"
+			var found_anim = ""
 			if sprite and sprite.sprite_frames.has_animation(hurt_name):
-				var hfc = sprite.sprite_frames.get_frame_count(hurt_name)
-				var hspd = sprite.sprite_frames.get_animation_speed(hurt_name)
+				found_anim = hurt_name
+			else:
+				# 模糊匹配：查找以 "_hurt" 结尾的动画
+				for a in sprite.sprite_frames.get_animation_names():
+					if a.ends_with("_hurt"):
+						found_anim = a
+						break
+			if found_anim != "" and sprite and sprite.sprite_frames:
+				var hfc = sprite.sprite_frames.get_frame_count(found_anim)
+				var hspd = sprite.sprite_frames.get_animation_speed(found_anim)
 				tree = get_tree()
 				if tree:
-					await tree.create_timer(hfc / max(1.0, hspd)).timeout
+					var hd = hfc / max(1.0, hspd)
+					hd = min(hd, 0.6)
+					await tree.create_timer(hd).timeout
 
 	# ------------------------------------------------------------
 	# 阶段 4：走回初始位置（敌人没死才走回去

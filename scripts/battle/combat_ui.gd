@@ -138,18 +138,17 @@ func refresh_skill_locks():
 func _apply_skill_lock(btn: Button, idx: int):
 	var unlocked = GameData.is_skill_unlocked(idx)
 	if unlocked:
-		btn.tooltip_text = ""
-	else:
-		var req = GameData.get_skill_req_level(idx)
-		btn.tooltip_text = "Lv." + str(req) + " 解锁"
-		var dim = Color(0.15, 0.15, 0.18)
-		var locked_style = StyleBoxFlat.new()
-		locked_style.bg_color = dim
-		locked_style.set_corner_radius_all(6)
-		btn.add_theme_stylebox_override("normal", locked_style)
-		btn.add_theme_stylebox_override("hover", locked_style)
-		btn.add_theme_stylebox_override("pressed", locked_style)
-		btn.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))
+		return
+	var req = GameData.get_skill_req_level(idx)
+	btn.tooltip_text = "Lv." + str(req) + " 解锁"
+	var dim = Color(0.15, 0.15, 0.18)
+	var locked_style = StyleBoxFlat.new()
+	locked_style.bg_color = dim
+	locked_style.set_corner_radius_all(6)
+	btn.add_theme_stylebox_override("normal", locked_style)
+	btn.add_theme_stylebox_override("hover", locked_style)
+	btn.add_theme_stylebox_override("pressed", locked_style)
+	btn.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))
 
 func _set_button_colors():
 	var skill_colors = [
