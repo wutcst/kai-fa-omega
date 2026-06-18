@@ -71,10 +71,6 @@ func _make_icon_box(icon_path: String, size: int = ICON_SIZE,
 		var tex = load(icon_path)
 		if tex is Texture2D:
 			tex_rect.texture = tex
-		else:
-			tex_rect.color = Color(0.3, 0.25, 0.4, 1)
-	else:
-		tex_rect.color = Color(0.3, 0.25, 0.4, 1)
 
 	return box
 
@@ -280,9 +276,9 @@ func _build_equipment_section(parent: VBoxContainer):
 			"armor":     equip = GameData.armor
 			"accessory": equip = GameData.accessory
 			_:           equip = {}
-		var icon_path: String = equip.get("icon", "")
 		var name_str: String = equip.get("name", "无")
 		var is_empty: bool = (name_str == "无") or name_str == ""
+		var icon_path: String = equip.get("icon", "") if not is_empty else ""
 
 		# 图标
 		var icon_box = _make_icon_box(icon_path, 28)

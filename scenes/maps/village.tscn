@@ -10858,6 +10858,7 @@ position = Vector2(946, 352)
 
 [node name="npc4" parent="." instance=ExtResource("45_npc4d")]
 position = Vector2(1343, 728)
+dialogue_text = "远方的道路充满了未知，我作为守墓人，守候着大家。"
 
 [node name="npc5" parent="." instance=ExtResource("46_npc5e")]
 position = Vector2(269, 207)
@@ -10870,6 +10871,7 @@ position = Vector2(1462, 156)
 
 [node name="npc8" parent="." instance=ExtResource("49_npc8h")]
 position = Vector2(358, 726)
+dialogue_text = "大哥哥，我这里有新鲜的蔬菜，来尝尝吗？"
 
 [node name="village" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("41_c5jiw")

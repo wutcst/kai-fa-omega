@@ -361,6 +361,8 @@ exp_reward = 80
 enemy_scene_path = "res://scenes/entities/Bone Knight.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-1, 0)
+scale = Vector2(0.96875, 1)
 sprite_frames = SubResource("SpriteFrames_5df1m")
 animation = &"Bone Knight_idle"
 autoplay = "Bone Knight_walk"

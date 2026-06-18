@@ -245,7 +245,7 @@ func _execute_enemy_attack(enemy):
 		player_battler.take_damage(damage)
 
 		var hurt_duration: float = 0.3
-		var hurt_anim = "swordsman" + "_hurt"
+		var hurt_anim = "hurt"
 		if player_battler.animated_sprite.sprite_frames.has_animation(hurt_anim):
 			var hfc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
 			var hspd = max(1.0, player_battler.animated_sprite.sprite_frames.get_animation_speed(hurt_anim))
