@@ -53,6 +53,10 @@ func _ready():
 			if pos is Vector2:
 				if spawn_position.distance_to(pos) < chase_range:
 					print("→ 怪物已被击败，自动清除：", monster_name, " at ", spawn_position)
+					# 立即标记死亡并禁用碰撞，防止当前帧内再次触发战斗
+					is_dead = true
+					if collision_shape:
+						collision_shape.disabled = true
 					queue_free()
 					return
 	
@@ -93,6 +97,8 @@ func safe_move_and_slide():
 		move_and_slide()
 
 func connect_signals():
+	if animated_sprite.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
+		return
 	animated_sprite.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
 func _draw():
@@ -122,6 +128,12 @@ func _physics_process(_delta: float) -> void:
 		velocity = Vector2.ZERO
 		is_attacking = false
 		attack_timer = 0
+		safe_move_and_slide()
+		return
+
+	# 攻击动画播放中：禁止移动和状态切换，让攻击动画完整播完
+	if is_attacking:
+		velocity = Vector2.ZERO
 		safe_move_and_slide()
 		return
 
@@ -251,6 +263,12 @@ func play_anim(anim: String):
 		return
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
+	# 高优先级动画播放中：禁止低优先级动画（walk/idle）打断，让攻击/受伤动画完整播完
+	if animated_sprite.is_playing():
+		var current_anim: String = animated_sprite.animation
+		if current_anim.ends_with("_attack") or current_anim.ends_with("_hurt"):
+			if anim == "walk" or anim == "idle":
+				return
 	var full_name = monster_name + "_" + anim
 	if animated_sprite.sprite_frames.has_animation(full_name):
 		animated_sprite.play(full_name)

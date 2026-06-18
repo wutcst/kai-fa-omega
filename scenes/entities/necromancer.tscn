@@ -420,8 +420,6 @@ shape = SubResource("RectangleShape2D_6t4qd")
 position = Vector2(11, 1.90735e-06)
 scale = Vector2(1.605, 1.39)
 sprite_frames = SubResource("SpriteFrames_vkyse")
-animation = &"Necromancer_attack"
-frame = 12
-frame_progress = 1.0
+animation = &"Necromancer_skill"
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_anim_finished"]

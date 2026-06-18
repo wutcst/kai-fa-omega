@@ -307,7 +307,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 		return
 
 	play_anim("idle")
-	BattleManager._after_player_attack()
+
 
 
 # 把玩家水平移动到目标 global 位置（匀速

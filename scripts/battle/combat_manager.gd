@@ -322,22 +322,27 @@ func _on_skill1():
 	print("→ 玩家点击了【技能1：斩击】 - 无特效")
 	BattleManager.use_skill(1)
 	await _wait_for_attack_done()
+	BattleManager._after_player_attack()
 
 func _on_skill2():
 	print("→ 玩家点击了【技能2：重斩】 - 攻击动画后播放轻微震动")
 	BattleManager.use_skill(2)
 	var monster_alive = await _wait_for_attack_done()
 	if not monster_alive:
+		BattleManager._after_player_attack()
 		return
 	# 重斩：只加入轻微震动
 	_tween_shake(_current_monster, 4.0, 0.25)
 	_tween_shake(player_battler, 2.0, 0.2)
+	await get_tree().create_timer(0.3).timeout
+	BattleManager._after_player_attack()
 
 func _on_skill3():
 	print("→ 玩家点击了【技能3：破甲斩】")
 	BattleManager.use_skill(3)
 	var monster_alive = await _wait_for_attack_done()
 	if not monster_alive:
+		BattleManager._after_player_attack()
 		return
 
 	# 破甲斩：短距离弧形重劈 + 盔甲碎裂白光 + 金属冲击感
@@ -351,11 +356,15 @@ func _on_skill3():
 	await get_tree().create_timer(0.06).timeout
 	_spawn_metal_sparks()            # 金属碎片飞散
 
+	await get_tree().create_timer(0.3).timeout
+	BattleManager._after_player_attack()
+
 func _on_skill4():
 	print("→ 玩家点击了【技能4：怒斩苍穹】 - 攻击动画后播放大招特效")
 	BattleManager.use_skill(4)
 	var monster_alive = await _wait_for_attack_done()
 	if not monster_alive:
+		BattleManager._after_player_attack()
 		return
 
 	# ── 时间线：怒斩苍穹 ──
@@ -383,6 +392,9 @@ func _on_skill4():
 	_spawn_shockwave_fx()
 	_tween_shake(_current_monster, 20.0, 0.8)
 	_tween_shake(player_battler, 8.0, 0.5)
+
+	await get_tree().create_timer(0.5).timeout
+	BattleManager._after_player_attack()
 
 func _on_player_escape():
 	print("→ 玩家点击了【逃跑】")
