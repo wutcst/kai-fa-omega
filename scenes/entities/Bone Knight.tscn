@@ -347,28 +347,29 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6t4qd"]
-size = Vector2(18, 32)
+size = Vector2(36, 52)
 
 [node name="Bone Knight" type="CharacterBody2D" groups=["enemy"]]
+position = Vector2(1, 2)
 script = ExtResource("2_dragon_script")
 monster_name = "bone_knight"
-max_hp = 150
-attack = 22
-defense = 9
-chase_range = 250.0
-attack_range = 45.0
-exp_reward = 80
+max_hp = 80
+attack = 15
+defense = 4
+chase_range = 180.0
+attack_range = 35.0
+exp_reward = 40
 enemy_scene_path = "res://scenes/entities/Bone Knight.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(3.68752, -1.12496)
+scale = Vector2(1.54102, 1.62891)
 sprite_frames = SubResource("SpriteFrames_5df1m")
-animation = &"Bone Knight_idle"
-autoplay = "Bone Knight_walk"
-frame = 3
-frame_progress = 1.0
+animation = &"Bone Knight_walk"
+autoplay = "Bone Knight_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-5, -1.25)
+position = Vector2(-1, -1)
 shape = SubResource("RectangleShape2D_6t4qd")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

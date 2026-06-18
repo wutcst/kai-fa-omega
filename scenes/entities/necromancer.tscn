@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://ymboylob412u" path="res://Asset Bundle/sprites/Undead executioner/Undead executioner puppet/png/summon.png" id="6_w5xuc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6t4qd"]
-size = Vector2(18, 32)
+size = Vector2(58, 70)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ta6qe"]
 atlas = ExtResource("2_0pv8j")
@@ -411,23 +411,14 @@ animations = [{
 
 [node name="Necromancer" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_boss_script")
-monster_name = "necromancer"
-max_hp = 260
-attack = 20
-defense = 7
-exp_reward = 200
-enemy_scene_path = "res://scenes/entities/necromancer.tscn"
-is_boss = true
-speed = 70.0
-chase_range = 250.0
-attack_range = 45.0
-attack_cd = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-4, 2)
+position = Vector2(8, 3)
 shape = SubResource("RectangleShape2D_6t4qd")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(17, -1)
+scale = Vector2(1.93, 1.9)
 sprite_frames = SubResource("SpriteFrames_vkyse")
 animation = &"Necromancer_attack"
 

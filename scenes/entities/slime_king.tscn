@@ -457,21 +457,23 @@ radius = 34.0147
 [node name="slime_king" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_1gnr0")
 monster_name = "slime_king"
-max_hp = 180
-attack = 24
-defense = 7
+max_hp = 220
+attack = 26
+defense = 9
 speed = 60.0
 chase_range = 250.0
 attack_range = 50.0
-exp_reward = 100
+attack_cd = 1.2
+exp_reward = 130
 enemy_scene_path = "res://scenes/entities/slime_king.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(2.5, 0)
-scale = Vector2(1.07813, 1)
+position = Vector2(9, -4)
+scale = Vector2(1.08073, 1.125)
 sprite_frames = SubResource("SpriteFrames_2e02g")
-animation = &"slime_king_walk"
+animation = &"slime_king_idle"
+autoplay = "slime_king_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(4, 43)
+position = Vector2(14, 43)
 shape = SubResource("CircleShape2D_t4g87")

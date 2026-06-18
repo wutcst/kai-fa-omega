@@ -1,4 +1,4 @@
-[gd_scene load_steps=33 format=4 uid="uid://bqcldg1ispmo3"]
+[gd_scene load_steps=34 format=4 uid="uid://bqcldg1ispmo3"]
 
 [ext_resource type="Script" path="res://scripts/maps/game_scene.gd" id="1_714mf"]
 [ext_resource type="Texture2D" uid="uid://ikgpxmy3l46l" path="res://Asset Bundle/assets/tiles/use/[A]Grass1-Grass2_pipo.png" id="1_o50cj"]
@@ -15,6 +15,7 @@
 [ext_resource type="Texture2D" uid="uid://cf0hpx7lhnwvg" path="res://Asset Bundle/assets/tiles/4season/addwork.png" id="12_27rp4"]
 [ext_resource type="Script" path="res://scripts/maps/return_portal.gd" id="13_return"]
 [ext_resource type="Script" path="res://scripts/maps/enter_portal.gd" id="14_enter"]
+[ext_resource type="PackedScene" uid="uid://v5b1g1klykuk" path="res://scenes/enemies maps/forest_enemies.tscn" id="16_iw5re"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_n6bys"]
 texture = ExtResource("1_o50cj")
@@ -9969,3 +9970,6 @@ texture = ExtResource("12_27rp4")
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="StaticBody2D"]
 position = Vector2(1029, 475)
 polygon = PackedVector2Array(2, -1, 65, -37, 133, -49, 165, -43, 236, -5, 266, 43, 282, 94, 282, 126, 272, 160, 254, 188, 235, 205, 193, 216, 170, 218, 161, 222, 165, 230, 176, 237, 189, 254, 168, 261, 159, 271, 136, 271, 110, 273, 93, 269, 70, 258, 55, 251, 77, 237, 95, 222, 63, 219, 28, 212, -5, 195, -23, 166, -29, 145, -32, 114, -34, 89, -23, 64, -8, 32, -1, 8, 10, -7)
+
+[node name="forest enemies" parent="." instance=ExtResource("16_iw5re")]
+position = Vector2(-123, -20)

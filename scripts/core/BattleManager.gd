@@ -23,6 +23,9 @@ var enemy_sprite_scale: Vector2 = Vector2.ONE
 var player_sprite_scale: Vector2 = Vector2.ONE
 var combat_scene: Node2D = null
 
+# 退出战斗标志：战斗结束/逃跑时设为 true，防止异步代码继续执行
+var _battle_exiting: bool = false
+
 # 最近一次掉落（供 UI 显示）
 var last_drop: Dictionary = {"gold": 0, "items": []}
 
@@ -59,6 +62,8 @@ func _on_enter_battle(attacking_monster):
 	if battle_state != STATE_IDLE:
 		return
 
+	# 重置战斗状态标志
+	_battle_exiting = false
 	battle_state = STATE_STARTING
 	current_enemy = attacking_monster
 
@@ -106,56 +111,73 @@ func _on_scene_change():
 	var battlers = get_tree().get_nodes_in_group("player")
 	if battlers.size() > 0:
 		player_battler = battlers[0]
-		if enemy_sprite_scale != Vector2.ONE and player_battler.has_node("AnimatedSprite2D"):
+		if enemy_sprite_scale != Vector2.ONE and is_instance_valid(player_battler) and player_battler.has_node("AnimatedSprite2D"):
 			var player_battler_sprite = player_battler.get_node("AnimatedSprite2D")
 			player_battler_sprite.scale = player_sprite_scale
 
 	# Boss 战：移除默认 Monster-Battler，替换为 Boss 实例
 	var is_boss = enemy_data.get("is_boss", false)
 	if is_boss:
-		var enemy_team = combat_scene.get_node_or_null("EnemyTeam")
-		if enemy_team:
-			# 移除默认的 Monster-Battler
-			for child in enemy_team.get_children():
-				child.queue_free()
+		if is_instance_valid(combat_scene):
+			var enemy_team = combat_scene.get_node_or_null("EnemyTeam")
+			if enemy_team:
+				# 保存默认怪物位置，Boss 使用相同位置
+				var boss_position = combat_scene.get_original_monster_pos() if combat_scene.has_method("get_original_monster_pos") else Vector2(833, 363)
+				# 移除默认的 Monster-Battler
+				for child in enemy_team.get_children():
+					child.queue_free()
 
-			if enemy_scene != "":
-				var boss_resource = load(enemy_scene)
-				if boss_resource:
-					var boss_instance = boss_resource.instantiate()
-					boss_instance.position = Vector2(0, 0)
-					boss_instance.in_battle = true
-					enemy_team.add_child(boss_instance)
-					enemies = [boss_instance]
-					current_enemy = boss_instance
-					# 连接 Boss 的 monster_died 信号
-					if boss_instance.has_signal("monster_died"):
-						if not boss_instance.monster_died.is_connected(_on_monster_died):
-							boss_instance.monster_died.connect(_on_monster_died)
-					print("→ Boss 战：亡灵法师登场！")
+				if enemy_scene != "":
+					var boss_resource = load(enemy_scene)
+					if boss_resource:
+						var boss_instance = boss_resource.instantiate()
+						boss_instance.position = boss_position
+						boss_instance.in_battle = true
+						# Boss 实例化时 _ready() 会自动调用脚对齐（如果脚本支持）
+						enemy_team.add_child(boss_instance)
+						enemies = [boss_instance]
+						current_enemy = boss_instance
+						# 连接 Boss 的 monster_died 信号
+						if boss_instance.has_signal("monster_died"):
+							if not boss_instance.monster_died.is_connected(_on_monster_died):
+								boss_instance.monster_died.connect(_on_monster_died)
+						# 重置 monster offset，让 combat_manager._auto_face_targets() 重新记录 Boss 的脚对齐 offset
+						if combat_scene.has_method("reset_monster_offset"):
+							combat_scene.reset_monster_offset()
+						print("→ Boss 战：亡灵法师登场！")
 	else:
 		enemies = []
 		for enemy_node in get_tree().get_nodes_in_group("enemy"):
+			# 跳过默认的 Monster-Battler 占位符（它只是场景模板，不是实际敌人）
+			if is_instance_valid(combat_scene) and enemy_node == combat_scene.monster_battler:
+				continue
 			enemy_node.in_battle = true
+			# 战斗中的怪物统一朝左（面向玩家）
+			# 骷髅默认朝左，不需要翻转
+			if is_instance_valid(enemy_node) and enemy_node.has_node("AnimatedSprite2D"):
+				var m_sprite = enemy_node.get_node("AnimatedSprite2D")
+				m_sprite.flip_h = enemy_node.monster_name != "skull" and enemy_node.monster_name != "slime_king"
 			enemies.append(enemy_node)
 
-		if enemies.size() == 0 and current_enemy and enemy_scene != "":
-			var enemy_resource = load(enemy_scene)
-			if enemy_resource:
-				var enemy_instance = enemy_resource.instantiate()
-				enemy_instance.global_position = Vector2(800, 322)
-				get_tree().current_scene.add_child(enemy_instance)
-				enemy_instance.in_battle = true
-				enemies.append(enemy_instance)
-				current_enemy = enemy_instance
-		elif enemies.size() > 0 and current_enemy:
+		if enemies.size() == 0 and enemy_scene != "":
+			# 没有真实敌人：加载怪物场景的精灵帧复制到 monster_battler
+			if is_instance_valid(combat_scene) and is_instance_valid(combat_scene.monster_battler):
+				_setup_monster_battler(combat_scene.monster_battler)
+				enemies.append(combat_scene.monster_battler)
+				current_enemy = combat_scene.monster_battler
+		elif enemies.size() > 0:
+			# 使用场景中已有的真实怪物
+			current_enemy = enemies[0]
 			_setup_monster_battler(enemies[0])
 
 	print("战斗开始！")
+	# 让战斗场景重新适配（缩放动态创建的怪物、玩家大小等）
+	if is_instance_valid(combat_scene) and combat_scene.has_method("refit"):
+		combat_scene.refit()
 	_start_player_turn()
 
 func _setup_monster_battler(battler):
-	if not battler:
+	if not is_instance_valid(battler):
 		return
 
 	battler.monster_name = enemy_data.get("monster_name", "bat")
@@ -163,7 +185,14 @@ func _setup_monster_battler(battler):
 	battler.attack = enemy_data.get("attack", 15)
 	battler.defense = enemy_data.get("defense", 3)
 	battler.current_hp = battler.max_hp
+	# 刷新血条显示
+	if battler.has_method("set_current_hp"):
+		battler.set_current_hp(battler.current_hp)
 
+	# ============================================================
+	# 复制精灵帧 + 脚对齐重算（关键修复）
+	# ============================================================
+	var source_scale: Vector2 = Vector2.ONE
 	if enemy_scene != "":
 		var enemy_resource = load(enemy_scene)
 		if enemy_resource:
@@ -172,29 +201,63 @@ func _setup_monster_battler(battler):
 				var source_sprite = temp_instance.get_node("AnimatedSprite2D")
 				if source_sprite and source_sprite.sprite_frames:
 					battler.animated_sprite.sprite_frames = source_sprite.sprite_frames.duplicate()
+					# 记录源精灵的原始 scale，用于后续缩放计算
+					source_scale = source_sprite.scale
 			temp_instance.queue_free()
 
-	if enemy_sprite_scale != Vector2.ONE and battler.has_node("AnimatedSprite2D"):
-		var battler_sprite = battler.get_node("AnimatedSprite2D")
-		battler_sprite.scale = enemy_sprite_scale
+	# ============================================================
+	# 脚对齐重算：用新的精灵帧重新计算 offset（不复制 position/offset）
+	# ============================================================
+	if battler.has_method("reapply_foot_alignment"):
+		battler.reapply_foot_alignment(source_scale)
+	else:
+		# 兼容没有 reapply_foot_alignment 的旧脚本
+		if battler.has_node("AnimatedSprite2D"):
+			var bsprite = battler.get_node("AnimatedSprite2D")
+			bsprite.position = Vector2(0, 0)
+			if bsprite.sprite_frames and bsprite.sprite_frames.get_animation_names().size() > 0:
+				var first_anim = bsprite.sprite_frames.get_animation_names()[0]
+				if bsprite.sprite_frames.get_frame_count(first_anim) > 0:
+					var tex = bsprite.sprite_frames.get_frame_texture(first_anim, 0)
+					if tex:
+						bsprite.offset = Vector2(0, -tex.get_size().y / 2.0)
+
+	# ============================================================
+	# 设置 custom_monster_sprite_scale：
+	# 记录源精灵的原始 scale，让 _fit_background 用它做基准缩放
+	# （不同怪物的精灵帧大小不同，不能用默认怪物的 scale）
+	# ============================================================
+	if is_instance_valid(combat_scene) and combat_scene.has_method("set_custom_monster_sprite_scale"):
+		combat_scene.set_custom_monster_sprite_scale(source_scale)
+		# 重置 monster offset，确保新怪物翻转时重新计算
+		combat_scene.reset_monster_offset()
+
+	# ============================================================
+	# 怪物朝向：不在这里设置 flip_h，让 combat_manager._auto_face_targets() 处理
+	# （避免脚对齐后又被翻转逻辑覆盖）
+	# ============================================================
 
 	battler.play_anim("idle")
 	current_enemy = battler
 
 func _start_player_turn():
+	if _battle_exiting:
+		return
 	battle_state = STATE_PLAYER
-	if player_battler:
+	if is_instance_valid(player_battler):
 		player_battler.is_turn = true
-	if combat_scene:
+	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
 		if ui:
 			ui.set_buttons_enabled(true)
 	print("玩家回合开始")
 
 func _end_player_turn():
-	if player_battler:
+	if _battle_exiting:
+		return
+	if is_instance_valid(player_battler):
 		player_battler.is_turn = false
-	if combat_scene:
+	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
 		if ui:
 			ui.set_buttons_enabled(false)
@@ -202,46 +265,123 @@ func _end_player_turn():
 	_start_enemy_turn()
 
 func _start_enemy_turn():
+	if _battle_exiting:
+		return
 	print("敌人回合开始")
 
 	# Boss 战：委托给 Boss 自己的回合逻辑
-	if current_enemy and current_enemy.has_method("execute_turn"):
+	if is_instance_valid(current_enemy) and current_enemy.has_method("execute_turn"):
 		battle_state = 5
 		await current_enemy.execute_turn()
+		if _battle_exiting:
+			return
 		call_deferred("_check_battle_after_enemy_attack")
 		return
 
 	if enemies.size() > 0:
 		for enemy in enemies:
-			if not enemy.is_dead:
+			if enemy and is_instance_valid(enemy) and not enemy.is_dead:
 				_execute_enemy_attack(enemy)
 				break
 	else:
-		_end_battle(true)
+		if not _battle_exiting:
+			_end_battle(true)
+
+# ============================================================
+# 工具函数：在 sprite_frames 中模糊匹配动画名
+#   - 先尝试精确匹配 monster_name + "_" + anim
+#   - 失败则查找所有以 "_" + anim 结尾的动画
+#   - 用于怪物名与动画前缀不一致的情况
+#     （如 monster_name="bone_knight" 而动画名是 "Bone Knight_idle"）
+# ============================================================
+func _find_animation_name(sprite: AnimatedSprite2D, monster_name: String, anim: String) -> String:
+	if not sprite or not sprite.sprite_frames:
+		return ""
+	var exact = monster_name + "_" + anim
+	if sprite.sprite_frames.has_animation(exact):
+		return exact
+	var target = "_" + anim
+	for a in sprite.sprite_frames.get_animation_names():
+		if a.ends_with(target):
+			return a
+	return ""
+
+func _wait_for_animation(sprite: AnimatedSprite2D, anim_name: String, max_duration: float = 0.8):
+	var duration: float = 0.5
+	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation(anim_name):
+		var fc = sprite.sprite_frames.get_frame_count(anim_name)
+		var spd = max(1.0, sprite.sprite_frames.get_animation_speed(anim_name))
+		duration = fc / spd
+	duration = min(duration, max_duration)
+	await get_tree().create_timer(duration).timeout
 
 func _execute_enemy_attack(enemy):
-	if battle_state != STATE_ENEMY:
+	if _battle_exiting or battle_state != STATE_ENEMY:
 		return
 
 	battle_state = 5  # 内部：敌人行动中
 
+	if not is_instance_valid(enemy) or not is_instance_valid(player_battler):
+		return
+
+	# ------------------------------------------------------------
+	# 阶段 1：怪物向玩家移动（不重合）
+	# ------------------------------------------------------------
+	var enemy_home: Vector2 = enemy.global_position
+	var player_glob: Vector2 = player_battler.global_position
+	# 计算怪物朝玩家的方向（只取水平方向）
+	var dir_to_player: Vector2 = Vector2(player_glob.x - enemy.global_position.x, 0)
+	var dir_norm: Vector2 = dir_to_player.normalized() if dir_to_player.length() > 0.1 else Vector2.LEFT
+	# 目标位置：在玩家前方保持一小段距离，y 保持原值
+	var target_glob: Vector2 = Vector2(
+		player_glob.x - dir_norm.x * 80.0,
+		enemy.global_position.y
+	)
+
+	# 播放 walk 动画（如果存在的话）
+	if enemy.has_node("AnimatedSprite2D"):
+		var e_sprite = enemy.get_node("AnimatedSprite2D")
+		var walk_name = _find_animation_name(e_sprite, enemy.monster_name, "walk")
+		if walk_name != "":
+			e_sprite.play(walk_name)
+		else:
+			var idle_name = _find_animation_name(e_sprite, enemy.monster_name, "idle")
+			if idle_name != "":
+				e_sprite.play(idle_name)
+
+	await _move_monster_to(enemy, target_glob)
+
+	if _battle_exiting or not is_instance_valid(enemy) or not is_instance_valid(player_battler):
+		return
+
+	# ------------------------------------------------------------
+	# 阶段 2：播放攻击动画
+	# ------------------------------------------------------------
 	if enemy.has_method("play_anim"):
 		enemy.play_anim("attack")
 
 	var duration: float = 0.5
 	if enemy.has_node("AnimatedSprite2D"):
 		var sprite: AnimatedSprite2D = enemy.get_node("AnimatedSprite2D")
-		var anim_name = enemy.monster_name + "_attack"
-		if sprite.sprite_frames.has_animation(anim_name):
+		var anim_name = _find_animation_name(sprite, enemy.monster_name, "attack")
+		if anim_name != "":
 			var fc = sprite.sprite_frames.get_frame_count(anim_name)
 			var spd = max(1.0, sprite.sprite_frames.get_animation_speed(anim_name))
 			duration = fc / spd
+	# 提高上限，让动画能完整播放
+	duration = min(duration, 0.8)
 
 	await get_tree().create_timer(duration).timeout
 
-	if player_battler and not player_battler.is_dead and is_instance_valid(player_battler):
+	if _battle_exiting:
+		return
+
+	# ------------------------------------------------------------
+	# 阶段 3：造成伤害 + 玩家 hurt 动画
+	# ------------------------------------------------------------
+	if is_instance_valid(player_battler) and not player_battler.is_dead:
 		var defense = player_battler.get_defense() if player_battler.has_method("get_defense") else 0
-		var damage = max(1, enemy.attack - defense)
+		var damage = max(1, enemy.attack - defense / 2)
 		player_battler.take_damage(damage)
 
 		var hurt_duration: float = 0.3
@@ -250,18 +390,58 @@ func _execute_enemy_attack(enemy):
 			var hfc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
 			var hspd = max(1.0, player_battler.animated_sprite.sprite_frames.get_animation_speed(hurt_anim))
 			hurt_duration = hfc / hspd
+		# 提高上限，让受伤动画完整播放
+		hurt_duration = min(hurt_duration, 0.6)
 		await get_tree().create_timer(hurt_duration).timeout
 
-		if not player_battler.is_dead:
+		if _battle_exiting:
+			return
+
+		if is_instance_valid(player_battler) and not player_battler.is_dead:
 			player_battler.play_anim("idle")
 
-	if enemy.has_method("play_anim") and not enemy.is_dead:
+	# ------------------------------------------------------------
+	# 阶段 4：怪物走回原位
+	# ------------------------------------------------------------
+	if is_instance_valid(enemy) and not enemy.is_dead and not _battle_exiting:
+		if enemy.has_node("AnimatedSprite2D"):
+			var e_sprite2 = enemy.get_node("AnimatedSprite2D")
+			var walk_name2 = _find_animation_name(e_sprite2, enemy.monster_name, "walk")
+			if walk_name2 != "":
+				e_sprite2.play(walk_name2)
+		await _move_monster_to(enemy, enemy_home)
+
+	if not _battle_exiting and is_instance_valid(enemy) and enemy.has_method("play_anim") and not enemy.is_dead:
 		enemy.play_anim("idle")
 
-	call_deferred("_check_battle_after_enemy_attack")
+	if not _battle_exiting:
+		call_deferred("_check_battle_after_enemy_attack")
+
+func _move_monster_to(monster: Node2D, target_glob: Vector2):
+	# 让怪物水平移动到目标 global 位置
+	var tree = get_tree()
+	if not tree or not is_instance_valid(monster):
+		return
+	var start_glob: Vector2 = monster.global_position
+	var dx_total: float = target_glob.x - start_glob.x
+	if abs(dx_total) < 2.0:
+		monster.global_position = Vector2(target_glob.x, start_glob.y)
+		return
+	var move_speed: float = 1000.0
+	var duration: float = abs(dx_total) / move_speed
+	var elapsed: float = 0.0
+	while elapsed < duration and is_instance_valid(monster) and get_tree():
+		elapsed += get_process_delta_time()
+		var k: float = clamp(elapsed / duration, 0.0, 1.0)
+		monster.global_position = Vector2(start_glob.x + dx_total * k, start_glob.y)
+		await tree.process_frame
+	if is_instance_valid(monster):
+		monster.global_position = Vector2(target_glob.x, start_glob.y)
 
 func _check_battle_after_enemy_attack():
-	if player_battler and player_battler.is_dead:
+	if _battle_exiting:
+		return
+	if is_instance_valid(player_battler) and player_battler.is_dead:
 		_end_battle(false)
 	else:
 		battle_state = STATE_PLAYER
@@ -284,6 +464,7 @@ func _on_monster_died(monster):
 # 战斗结束：发放奖励 + 掉落
 # ============================================================
 func _end_battle(player_won: bool):
+	_battle_exiting = true
 	battle_state = STATE_END
 
 	if player_won:
@@ -322,7 +503,7 @@ func _reward_player():
 
 	print("→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level)
 
-	if combat_scene:
+	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
 		if ui:
 			ui.update_exp_bar()
@@ -330,12 +511,16 @@ func _reward_player():
 
 func _exit_battle():
 	battle_state = STATE_IDLE
+	_battle_exiting = true
 
 	for enemy_node in get_tree().get_nodes_in_group("enemy"):
-		if not enemy_node.is_dead and enemy_node.has_method("exit_battle"):
+		if is_instance_valid(enemy_node) and not enemy_node.is_dead and enemy_node.has_method("exit_battle"):
 			enemy_node.exit_battle()
 
+	# 清空所有节点引用，防止访问已释放节点
+	player_battler = null
 	current_enemy = null
+	combat_scene = null
 	enemies.clear()
 
 	print("战斗结束，返回主界面")
@@ -345,10 +530,10 @@ func _exit_battle():
 		tree.change_scene_to_file(return_scene)
 
 func _after_player_attack():
-	if battle_state == STATE_END:
+	if _battle_exiting or battle_state == STATE_END:
 		return
 
-	if current_enemy and is_instance_valid(current_enemy) and not current_enemy.is_dead:
+	if is_instance_valid(current_enemy) and not current_enemy.is_dead:
 		# Boss 战：让 Boss 自己处理 idle
 		if current_enemy.has_method("execute_turn"):
 			current_enemy.play_anim("idle")
@@ -362,10 +547,10 @@ func _after_player_attack():
 # 技能：使用
 # ============================================================
 func use_skill(skill_index: int):
-	if battle_state != STATE_PLAYER:
+	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
 
-	if not player_battler or player_battler.is_dead or not current_enemy:
+	if not is_instance_valid(player_battler) or player_battler.is_dead or not is_instance_valid(current_enemy):
 		return
 
 	var skill_idx: int = skill_index - 1
@@ -388,7 +573,7 @@ func use_skill(skill_index: int):
 				return
 
 	battle_state = 6  # 玩家行动中
-	if combat_scene:
+	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
 		if ui:
 			ui.set_buttons_enabled(false)
@@ -411,17 +596,17 @@ func use_skill(skill_index: int):
 			_skill_ultimate()
 
 func _skill_power_attack():
-	if not player_battler or not current_enemy:
+	if not is_instance_valid(player_battler) or not is_instance_valid(current_enemy):
 		return
 	player_battler.heavy_attack_enemy(current_enemy)
 
 func _skill_armor_pierce():
-	if not player_battler or not current_enemy:
+	if not is_instance_valid(player_battler) or not is_instance_valid(current_enemy):
 		return
 	player_battler.armor_pierce_attack_enemy(current_enemy)
 
 func _skill_ultimate():
-	if not player_battler or not current_enemy:
+	if not is_instance_valid(player_battler) or not is_instance_valid(current_enemy):
 		return
 	player_battler.ultimate_attack_enemy(current_enemy)
 
@@ -429,9 +614,9 @@ func _skill_ultimate():
 # 药水 / 逃跑
 # ============================================================
 func use_heal_potion():
-	if battle_state != STATE_PLAYER:
+	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
-	if not player_battler or player_battler.is_dead:
+	if not is_instance_valid(player_battler) or player_battler.is_dead:
 		return
 
 	var old_hp = player_battler.get_current_hp()
@@ -440,14 +625,15 @@ func use_heal_potion():
 		var new_hp = player_battler.get_current_hp()
 		print("→ 【血瓶】恢复 HP | 旧:", old_hp, " → 新:", new_hp)
 		await get_tree().create_timer(0.5).timeout
-		_end_player_turn()
+		if not _battle_exiting:
+			_end_player_turn()
 	else:
 		print("→ 没有可用的血瓶")
 
 func use_mana_potion():
-	if battle_state != STATE_PLAYER:
+	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
-	if not player_battler or player_battler.is_dead:
+	if not is_instance_valid(player_battler) or player_battler.is_dead:
 		return
 
 	var old_mp = player_battler.get_current_mp()
@@ -456,12 +642,13 @@ func use_mana_potion():
 		var new_mp = player_battler.get_current_mp()
 		print("→ 【蓝瓶】恢复 MP | 旧:", old_mp, " → 新:", new_mp)
 		await get_tree().create_timer(0.5).timeout
-		_end_player_turn()
+		if not _battle_exiting:
+			_end_player_turn()
 	else:
 		print("→ 没有可用的蓝瓶")
 
 func try_escape():
-	if battle_state != STATE_PLAYER:
+	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
 
 	print("尝试逃跑...")
@@ -471,7 +658,8 @@ func try_escape():
 	else:
 		print("逃跑失败！")
 		await get_tree().create_timer(0.5).timeout
-		_end_player_turn()
+		if not _battle_exiting:
+			_end_player_turn()
 
 func _process(_delta):
 	if battle_state != STATE_STARTING:

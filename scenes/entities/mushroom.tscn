@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://dptt4gpvkav5o" path="res://Asset Bundle/sprites/Forest_Monsters_FREE/Forest_Monsters_FREE/Mushroom/Mushroom with VFX/Mushroom-Run.png" id="6_8j8m6"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6t4qd"]
-size = Vector2(18, 32)
+size = Vector2(45, 53)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_01rft"]
 atlas = ExtResource("2_ta2ep")
@@ -356,14 +356,14 @@ animations = [{
 [node name="mushroom" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_0vs2k")
 monster_name = "mushroom"
-max_hp = 65
-attack = 13
+max_hp = 80
+attack = 15
 defense = 4
 speed = 75.0
 chase_range = 180.0
 attack_range = 35.0
 attack_cd = 0.9
-exp_reward = 35
+exp_reward = 40
 enemy_scene_path = "res://scenes/entities/mushroom.tscn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -374,3 +374,4 @@ shape = SubResource("RectangleShape2D_6t4qd")
 position = Vector2(-1, -9)
 sprite_frames = SubResource("SpriteFrames_neggd")
 animation = &"mushroom_idle"
+autoplay = "mushroom_idle"
