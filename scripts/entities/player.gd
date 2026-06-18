@@ -46,7 +46,7 @@ func connect_signals():
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
 
 func save_data_to_global():
-	GameData.max_hp = max_hp
+	# max_hp 由 GameData.get_total_max_hp() 计算（基础 + 饰品加成），不应由玩家侧覆盖
 	GameData.current_hp = current_hp
 	GameData.max_mp = max_mp
 	GameData.current_mp = current_mp
@@ -60,7 +60,7 @@ func save_data_to_global():
 	GameData.exp_to_next_level = exp_to_next_level
 
 func load_data_from_global():
-	max_hp = GameData.max_hp
+	max_hp = GameData.get_total_max_hp()
 	current_hp = min(GameData.current_hp, GameData.get_total_max_hp())
 	max_mp = GameData.max_mp
 	current_mp = min(GameData.current_mp, GameData.max_mp)
@@ -72,10 +72,9 @@ func load_data_from_global():
 	level = GameData.level
 	current_exp = GameData.current_exp
 	exp_to_next_level = GameData.exp_to_next_level
-	
 	if current_hp <= 0:
-		current_hp = max_hp
-		GameData.current_hp = max_hp
+		current_hp = GameData.get_total_max_hp()
+		GameData.current_hp = GameData.get_total_max_hp()
 		print("→ 战斗失败，重生并恢复满血")
 
 # 获取装备加成后的战斗用属性

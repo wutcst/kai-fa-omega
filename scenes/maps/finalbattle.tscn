@@ -11,7 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://bhdeem3jgo3oq" path="res://Asset Bundle/assets/final_battle/Other_objects.png" id="7_e37be"]
 [ext_resource type="Texture2D" uid="uid://cl8p032u8kdtd" path="res://Asset Bundle/assets/final_battle/coins-chests-etc-2-0.png" id="9_n3dgr"]
 [ext_resource type="Script" path="res://scripts/maps/return_portal.gd" id="11_30ob8"]
-[ext_resource type="PackedScene" uid="uid://cievw1bd4nlga" path="res://scenes/entities/necromancer.tscn" id="12_5txtg"]
+[ext_resource type="PackedScene" uid="uid://cievw1bd4nlga" path="res://scenes/entities/necromancer.tscn" id="12_at6r3"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_buoti"]
 texture = ExtResource("1_k82fb")
@@ -4184,8 +4184,9 @@ target_scene = "res://scenes/maps/undead.tscn"
 hint_text = "按 E 返回不死族领地"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ReturnPortal"]
-position = Vector2(-1010, 169.125)
+position = Vector2(-1009, 170)
 shape = SubResource("RectangleShape2D_eoym7")
 
-[node name="Necromancer" parent="." instance=ExtResource("12_5txtg")]
-position = Vector2(523, 194)
+[node name="Necromancer" parent="." instance=ExtResource("12_at6r3")]
+z_index = 2
+position = Vector2(319, 329)

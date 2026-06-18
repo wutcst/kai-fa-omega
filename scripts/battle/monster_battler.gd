@@ -17,6 +17,7 @@ var current_hp: int
 var is_dead: bool = false
 var is_attacking: bool = false
 var in_battle: bool = false
+var _original_sprite_offset: Vector2 = Vector2.ZERO   # 脚对齐后的原始 offset
 
 @warning_ignore("unused_signal")
 signal enter_battle(monster)
@@ -25,8 +26,45 @@ signal monster_died(monster)
 
 func _ready():
 	current_hp = max_hp
+	_apply_foot_alignment()
 	create_bars()
 	play_anim("idle")
+
+# ============================================================
+# 公开接口：重新应用脚对齐（用于精灵帧动态更换后）
+# 外部调用：battler.reapply_foot_alignment(new_source_scale)
+#   source_scale: 源怪物的 AnimatedSprite2D scale，不传则保持当前 scale
+# ============================================================
+func reapply_foot_alignment(source_scale: Vector2 = Vector2.ZERO):
+	if source_scale != Vector2.ZERO:
+		animated_sprite.scale = source_scale
+	_apply_foot_alignment()
+
+# ============================================================
+# 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
+# ============================================================
+func _get_first_frame_size() -> Vector2:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return Vector2.ZERO
+	var anims = animated_sprite.sprite_frames.get_animation_names()
+	if anims.size() == 0:
+		return Vector2.ZERO
+	var first_anim = anims[0]
+	if animated_sprite.sprite_frames.get_frame_count(first_anim) == 0:
+		return Vector2.ZERO
+	var tex = animated_sprite.sprite_frames.get_frame_texture(first_anim, 0)
+	if not tex:
+		return Vector2.ZERO
+	return tex.get_size()
+
+func _apply_foot_alignment():
+	var frame_size = _get_first_frame_size()
+	if frame_size == Vector2.ZERO:
+		_original_sprite_offset = animated_sprite.offset
+		return
+	animated_sprite.position = Vector2(animated_sprite.position.x, 0)
+	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
+	_original_sprite_offset = animated_sprite.offset
 
 func setup_from_monster(monster_node):
 	monster_name = monster_node.get("monster_name") if monster_node.get("monster_name") else monster_name
@@ -128,11 +166,28 @@ func exit_battle():
 func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
-	var full_name = monster_name + "_" + anim
-	if animated_sprite.sprite_frames.has_animation(full_name):
-		animated_sprite.play(full_name)
-	elif anim == "idle" and animated_sprite.sprite_frames.has_animation(monster_name + "_walk"):
-		animated_sprite.play(monster_name + "_walk")
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
+	
+	# 1. 精确匹配：monster_name + "_" + anim
+	var exact_name = monster_name + "_" + anim
+	if animated_sprite.sprite_frames.has_animation(exact_name):
+		animated_sprite.play(exact_name)
+		return
+	
+	# 2. 模糊匹配：以 "_" + anim 结尾的动画
+	var target_suffix = "_" + anim
+	for a in animated_sprite.sprite_frames.get_animation_names():
+		if a.ends_with(target_suffix):
+			animated_sprite.play(a)
+			return
+	
+	# 3. idle 备用：如果是 idle 但没找到，尝试 walk
+	if anim == "idle":
+		for a in animated_sprite.sprite_frames.get_animation_names():
+			if a.ends_with("_walk"):
+				animated_sprite.play(a)
+				return
 
 func _on_animation_finished(_anim_name: String = ""):
 	if is_dead:

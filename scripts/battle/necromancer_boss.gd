@@ -3,10 +3,10 @@ extends CharacterBody2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 @export var monster_name: String = "necromancer"
-@export var max_hp: int = 260
-@export var attack: int = 20
-@export var defense: int = 7
-@export var exp_reward: int = 200
+@export var max_hp: int = 350
+@export var attack: int = 28
+@export var defense: int = 10
+@export var exp_reward: int = 300
 @export var enemy_scene_path: String = "res://scenes/entities/necromancer.tscn"
 @export var is_boss: bool = true
 
@@ -23,6 +23,7 @@ var player: Node2D = null
 var attack_timer: float = 0.0
 var is_attacking: bool = false
 var spawn_position: Vector2 = Vector2.ZERO
+var _original_sprite_offset: Vector2 = Vector2.ZERO   # 脚对齐后的原始 offset
 
 var minions: Array = []
 var minion_scene: PackedScene = preload("res://scenes/battle/summoned_minion.tscn")
@@ -41,9 +42,35 @@ func _ready():
 	add_to_group("enemy")
 	current_hp = max_hp
 	spawn_position = global_position
+	_apply_foot_alignment()
 	create_bars()
 	# 信号已在 necromancer.tscn 中通过编辑器连接，此处不再重复连接
 	play_anim("idle")
+
+# ============================================================
+# 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
+# ============================================================
+func _get_first_frame_size() -> Vector2:
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return Vector2.ZERO
+	var anims = animated_sprite.sprite_frames.get_animation_names()
+	if anims.size() == 0:
+		return Vector2.ZERO
+	if animated_sprite.sprite_frames.get_frame_count(anims[0]) == 0:
+		return Vector2.ZERO
+	var tex = animated_sprite.sprite_frames.get_frame_texture(anims[0], 0)
+	if not tex:
+		return Vector2.ZERO
+	return tex.get_size()
+
+func _apply_foot_alignment():
+	var frame_size = _get_first_frame_size()
+	if frame_size == Vector2.ZERO:
+		_original_sprite_offset = animated_sprite.offset
+		return
+	animated_sprite.position = Vector2(0, 0)
+	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
+	_original_sprite_offset = animated_sprite.offset
 
 func create_bars():
 	hud = Control.new()
@@ -96,9 +123,18 @@ func update_hp_bar():
 func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
+	if not animated_sprite or not animated_sprite.sprite_frames:
+		return
 	var full_name = "Necromancer_" + anim
-	if animated_sprite and animated_sprite.sprite_frames.has_animation(full_name):
+	if animated_sprite.sprite_frames.has_animation(full_name):
 		animated_sprite.play(full_name)
+		return
+	# 模糊匹配：以 "_" + anim 结尾的动画
+	var target = "_" + anim
+	for a in animated_sprite.sprite_frames.get_animation_names():
+		if a.ends_with(target):
+			animated_sprite.play(a)
+			return
 
 func _on_anim_finished():
 	if is_dead:
@@ -223,8 +259,12 @@ func summon_minion():
 	await _wait_anim("Necromancer_summon")
 
 	var minion = minion_scene.instantiate()
-	minion.position = Vector2(-60, 30)
+	minion.position = Vector2(-80, 0)
 	add_child(minion)
+	# 缩放随从的精灵，使其与战斗场景匹配
+	if minion.has_node("AnimatedSprite2D"):
+		var m_sprite = minion.get_node("AnimatedSprite2D")
+		m_sprite.scale = Vector2(3.5, 3.5)
 	minions.append(minion)
 	print("→ 亡灵法师召唤了一个随从！")
 
@@ -250,7 +290,7 @@ func attack_player():
 	var pb = BattleManager.player_battler
 	if pb and not pb.is_dead and is_instance_valid(pb):
 		var def_val = pb.get_defense() if pb.has_method("get_defense") else 0
-		var damage = max(1, attack - def_val)
+		var damage = max(1, attack - def_val / 2)
 		pb.take_damage(damage)
 		print("→ 亡灵法师攻击玩家，造成 ", damage, " 点伤害！")
 

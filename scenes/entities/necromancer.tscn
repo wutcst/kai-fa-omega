@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://ymboylob412u" path="res://Asset Bundle/sprites/Undead executioner/Undead executioner puppet/png/summon.png" id="6_w5xuc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6t4qd"]
-size = Vector2(18, 32)
+size = Vector2(41, 56)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_ta6qe"]
 atlas = ExtResource("2_0pv8j")
@@ -413,10 +413,12 @@ animations = [{
 script = ExtResource("1_boss_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-4, 2)
+position = Vector2(3.5, 10)
 shape = SubResource("RectangleShape2D_6t4qd")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(11, 1.90735e-06)
+scale = Vector2(1.605, 1.39)
 sprite_frames = SubResource("SpriteFrames_vkyse")
 animation = &"Necromancer_attack"
 frame = 12

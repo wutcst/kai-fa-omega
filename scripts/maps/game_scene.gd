@@ -91,6 +91,7 @@ func _setup_scene_nodes():
 	# 根据相机 limit 生成空气墙，防止玩家走出地图
 	_create_boundary_walls()
 
+
 	# 仅在村庄场景中自动创建 NPC
 	if not is_village:
 		return
@@ -425,9 +426,3 @@ func _input(event):
 			if event.keycode == KEY_E:
 				get_viewport().set_input_as_handled()
 				_dismiss_welcome()
-
-# 测试地图位置
-func _process(delta):
-	var players = get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		print("玩家位置: ", players[0].global_position)

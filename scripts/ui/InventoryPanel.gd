@@ -71,6 +71,10 @@ func _make_icon_box(icon_path: String, size: int = ICON_SIZE,
 		var tex = load(icon_path)
 		if tex is Texture2D:
 			tex_rect.texture = tex
+		else:
+			tex_rect.modulate = Color(0.3, 0.25, 0.4, 1)
+	else:
+		tex_rect.modulate = Color(0.3, 0.25, 0.4, 1)
 
 	return box
 
@@ -708,29 +712,23 @@ func equip_from_backpack(idx: int):
 	if not itype in ["weapon", "armor", "accessory"]:
 		return
 
-	# 把当前装备（如果有的话）先收回背包，再装备新的
-	var cur: Dictionary
-	var has_cur: bool = false
+	# 获取当前装备并收回背包
+	var cur: Dictionary = {}
 	match itype:
-		"weapon":
-			cur = GameData.weapon
-			has_cur = cur.get("name", "") not in ["", "无"]
-			if has_cur:
-				GameData.exclusive_backpack.append(cur.duplicate(true))
-			GameData.weapon = item.duplicate(true)
-		"armor":
-			cur = GameData.armor
-			has_cur = cur.get("name", "") not in ["", "无"]
-			if has_cur:
-				GameData.exclusive_backpack.append(cur.duplicate(true))
-			GameData.armor = item.duplicate(true)
-		"accessory":
-			cur = GameData.accessory
-			has_cur = cur.get("name", "") not in ["", "无"]
-			if has_cur:
-				GameData.exclusive_backpack.append(cur.duplicate(true))
-				GameData.unequip_accessory()
-			GameData.equip_accessory(item.duplicate(true))
+		"weapon": cur = GameData.weapon
+		"armor": cur = GameData.armor
+		"accessory": cur = GameData.accessory
+	if cur.get("name", "") not in ["", "无"]:
+		GameData.exclusive_backpack.append(cur.duplicate(true))
+
+	# 装备新物品
+	if itype == "accessory":
+		GameData.unequip_accessory()
+		GameData.equip_accessory(item.duplicate(true))
+	else:
+		match itype:
+			"weapon": GameData.weapon = item.duplicate(true)
+			"armor": GameData.armor = item.duplicate(true)
 
 	GameData.exclusive_backpack.remove_at(idx)
 	_sync_game_data_to_players()
@@ -760,7 +758,7 @@ func _on_window_resized():
 func _sync_game_data_to_players():
 	if not is_instance_valid(player_ref):
 		return
-	player_ref.max_hp = GameData.max_hp
+	player_ref.max_hp = GameData.get_total_max_hp()
 	player_ref.current_hp = min(GameData.current_hp, GameData.get_total_max_hp())
 	player_ref.max_mp = GameData.max_mp
 	player_ref.current_mp = GameData.current_mp

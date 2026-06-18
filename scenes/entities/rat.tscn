@@ -309,29 +309,27 @@ animations = [{
 }]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7bk7l"]
-radius = 20.025
+radius = 12.6491
 
 [node name="rat" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_ixfqb")
 monster_name = "rat"
-max_hp = 40
-attack = 10
-defense = 1
-speed = 82.0
-chase_range = 190.0
-attack_range = 30.0
-attack_cd = 0.85
-exp_reward = 15
+attack = 14
+speed = 80.0
+attack_range = 35.0
+attack_cd = 0.8
+exp_reward = 25
 enemy_scene_path = "res://scenes/entities/rat.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 position = Vector2(3, -2)
+scale = Vector2(0.714286, 0.728571)
 sprite_frames = SubResource("SpriteFrames_unyt6")
 animation = &"rat_walk"
 autoplay = "rat_idle"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(2, -1)
+position = Vector2(2, -2)
 shape = SubResource("CircleShape2D_7bk7l")
 
 [connection signal="animation_finished" from="AnimatedSprite2D" to="." method="_on_animated_sprite_2d_animation_finished"]

@@ -3,20 +3,20 @@ extends Node
 # ============================================================
 # 玩家基础属性
 # ============================================================
-var max_hp: int = 180
-var current_hp: int = 180
+var max_hp: int = 120
+var current_hp: int = 120
 var max_mp: int = 60
 var current_mp: int = 60
 
-var attack: int = 18
-var defense: int = 8
+var attack: int = 15
+var defense: int = 5
 var base_speed: int = 200
 var current_speed: int = 200
 
 var level: int = 1
 var current_exp: int = 0
 var exp_to_next_level: int = 50
-var level_up_growth: float = 1.25
+var level_up_growth: float = 1.3
 
 # 暴击率（百分比）
 var crit: int = 5
@@ -136,11 +136,11 @@ const EMPTY_SLOT_DATA = {"name": "无", "icon": "", "type": "",
 						 "description": "空槽位"}
 
 # ============================================================
-# 当前穿戴的装备（默认从 套装1 起步）
+# 当前穿戴的装备（默认空）
 # ============================================================
-var weapon: Dictionary = EQUIPMENT_SETS[0]["weapon"].duplicate(true)
-var armor: Dictionary = EQUIPMENT_SETS[0]["armor"].duplicate(true)
-var accessory: Dictionary = EQUIPMENT_SETS[0]["accessory"].duplicate(true)
+var weapon: Dictionary = EMPTY_SLOT_DATA.duplicate(true)
+var armor: Dictionary = EMPTY_SLOT_DATA.duplicate(true)
+var accessory: Dictionary = EMPTY_SLOT_DATA.duplicate(true)
 
 # ============================================================
 # 背包栏（未装备的装备 + 道具）
@@ -175,7 +175,7 @@ func use_food(item: Dictionary) -> bool:
 	var value = item.get("value", 0)
 	match effect:
 		"hp":
-			current_hp = min(current_hp + value, max_hp)
+			current_hp = min(current_hp + value, get_total_max_hp())
 		"mp":
 			current_mp = min(current_mp + value, max_mp)
 		"atk":
@@ -248,6 +248,7 @@ func equip_accessory(new_accessory: Dictionary):
 	if hp_bonus > 0:
 		current_hp += hp_bonus
 	accessory = new_accessory.duplicate(true)
+	current_hp = min(current_hp, get_total_max_hp())
 
 func unequip_accessory():
 	var hp_bonus = accessory.get("hp_bonus", 0)
@@ -263,106 +264,72 @@ func unequip_accessory():
 # ============================================================
 func level_up():
 	level += 1
-	max_hp += 8
+	max_hp += 10
 	max_mp += 5
-	attack += 1
+	attack += 2
 	defense += 1
 	base_speed += 5
 	current_speed = base_speed
-	current_hp = max_hp
+	current_hp = get_total_max_hp()
 	current_mp = max_mp
 	exp_to_next_level = int(exp_to_next_level * level_up_growth)
-	print("→ 升级！当前等级：Lv.", level, "  HP:", max_hp, "  MP:", max_mp, "  攻击:", attack, "  防御:", defense)
+	print("→ 升级！当前等级：Lv.", level, "  HP:", get_total_max_hp(), "  MP:", max_mp, "  攻击:", attack, "  防御:", defense)
 
 # ============================================================
 # 掉落系统
 #   输入：monster_name 用于决定掉落池；exp_reward 决定强度
 #   输出：{"gold": int, "items": [装备/道具dict...]}
 # ============================================================
+# 怪物掉落配置表：每个怪物有自己的金币区间和掉落装备层级
+const _MONSTER_CONFIG := {
+	"rat": {"gold_min": 3, "gold_max": 10, "tier_min": 1, "tier_max": 2},
+	"slime": {"gold_min": 3, "gold_max": 10, "tier_min": 1, "tier_max": 1},
+	"bat": {"gold_min": 8, "gold_max": 20, "tier_min": 1, "tier_max": 2},
+	"mushroom": {"gold_min": 10, "gold_max": 25, "tier_min": 1, "tier_max": 2},
+	"goblin": {"gold_min": 15, "gold_max": 35, "tier_min": 2, "tier_max": 3},
+	"bear": {"gold_min": 18, "gold_max": 45, "tier_min": 2, "tier_max": 3},
+	"skull": {"gold_min": 20, "gold_max": 45, "tier_min": 3, "tier_max": 4},
+	"rock_giant": {"gold_min": 25, "gold_max": 55, "tier_min": 3, "tier_max": 4},
+	"bone_knight": {"gold_min": 70, "gold_max": 140, "tier_min": 4, "tier_max": 5},
+	"slime_king": {"gold_min": 35, "gold_max": 70, "tier_min": 3, "tier_max": 4},
+	"dragon": {"gold_min": 80, "gold_max": 150, "tier_min": 4, "tier_max": 5},
+	"necromancer": {"gold_min": 150, "gold_max": 300, "tier_min": 5, "tier_max": 5},
+}
+
+const _DEFAULT_MONSTER_CONFIG := {"gold_min": 10, "gold_max": 25, "tier_min": 1, "tier_max": 3}
+
+const _EQUIP_CHANCE := 0.45
+const _POTION_CHANCE := 0.25
+
+func _get_monster_config(name: String) -> Dictionary:
+	if _MONSTER_CONFIG.has(name):
+		return _MONSTER_CONFIG[name]
+	return _DEFAULT_MONSTER_CONFIG
+
 func generate_drop(monster_name: String, _exp_reward: int) -> Dictionary:
 	var result = {"gold": 0, "items": []}
-
-	# --- 金币掉落：按怪物名给出不同数值区间 ---
-	var gold_min: int = 5
-	var gold_max: int = 20
-	match monster_name:
-		"slime":
-			gold_min = 3; gold_max = 10
-		"rat":
-			gold_min = 5; gold_max = 15
-		"bat":
-			gold_min = 8; gold_max = 20
-		"mushroom":
-			gold_min = 10; gold_max = 25
-		"goblin":
-			gold_min = 15; gold_max = 35
-		"skull":
-			gold_min = 20; gold_max = 45
-		"rock_giant":
-			gold_min = 25; gold_max = 55
-		"bone_knight":
-			gold_min = 40; gold_max = 80
-		"slime_king":
-			gold_min = 50; gold_max = 100
-		"dragon":
-			gold_min = 80; gold_max = 150
-		"necromancer":
-			gold_min = 150; gold_max = 300
-		_:
-			gold_min = 10; gold_max = 25
-	result["gold"] = randi_range(gold_min, gold_max)
-
-	# --- 装备/道具掉落概率 ---
-	var equip_chance: float = 0.45   # 45% 掉一件装备
-	var potion_chance: float = 0.25  # 25% 掉药水
-
-	# 根据怪物名调整掉落强度（tier）
-	var min_tier: int = 1
-	var max_tier: int = 2
-	match monster_name:
-		"slime":
-			min_tier = 1; max_tier = 1
-		"rat":
-			min_tier = 1; max_tier = 2
-		"bat":
-			min_tier = 1; max_tier = 2
-		"mushroom":
-			min_tier = 1; max_tier = 2
-		"goblin":
-			min_tier = 2; max_tier = 3
-		"skull":
-			min_tier = 3; max_tier = 4
-		"rock_giant":
-			min_tier = 3; max_tier = 4
-		"bone_knight":
-			min_tier = 4; max_tier = 5
-		"slime_king":
-			min_tier = 4; max_tier = 5
-		"dragon":
-			min_tier = 4; max_tier = 5
-		"necromancer":
-			min_tier = 5; max_tier = 5
-		_:
-			min_tier = 1; max_tier = 3
+	var cfg = _get_monster_config(monster_name)
+	
+	result["gold"] = randi_range(int(cfg.get("gold_min", 10)), int(cfg.get("gold_max", 25)))
+	var min_tier = int(cfg.get("tier_min", 1))
+	var max_tier = int(cfg.get("tier_max", 3))
 
 	# --- 装备掉落 ---
-	if randf() < equip_chance:
+	if randf() < _EQUIP_CHANCE:
+		var slot: String
 		var roll = randf()
-		var picked_equip: Variant
 		if roll < 0.45:
-			# 武器
-			picked_equip = _pick_equip_from_set("weapon", min_tier, max_tier)
+			slot = "weapon"
 		elif roll < 0.8:
-			# 护甲
-			picked_equip = _pick_equip_from_set("armor", min_tier, max_tier)
+			slot = "armor"
 		else:
-			# 饰品
-			picked_equip = _pick_equip_from_set("accessory", min_tier, max_tier)
-		if picked_equip != null:
-			result["items"].append(picked_equip.duplicate(true))
+			slot = "accessory"
+		var picked = _pick_equip_from_set(slot, min_tier, max_tier)
+		if picked != null:
+			result["items"].append(picked.duplicate(true))
 
 	# --- 药水掉落 ---
-	if randf() < potion_chance:
+	if randf() < _POTION_CHANCE:
 		if randf() < 0.5:
 			result["items"].append({
 				"name": "血瓶", "quantity": 1, "icon": POTION_HEAL,
@@ -380,37 +347,34 @@ func generate_drop(monster_name: String, _exp_reward: int) -> Dictionary:
 
 # 从 装备套装 里选一件指定类型、tier 在范围内的装备；
 # 如果套装里没有符合要求的，再从 EXTRA_* 里随机选。
+func _get_extras_for_slot(slot: String) -> Array:
+	match slot:
+		"weapon": return EXTRA_WEAPONS
+		"armor": return EXTRA_ARMORS
+		"accessory": return EXTRA_RINGS
+	return []
+
 func _pick_equip_from_set(slot: String, min_tier: int, max_tier: int) -> Variant:
 	var pool: Array = []
+	# 套装池
 	for s in EQUIPMENT_SETS:
 		var item = s.get(slot, null)
 		if item is Dictionary:
 			var t = item.get("tier", 1)
 			if t >= min_tier and t <= max_tier:
 				pool.append(item)
-
-	# 也把额外池里的装备加进来
-	var extras: Array = []
-	match slot:
-		"weapon":
-			extras = EXTRA_WEAPONS
-		"armor":
-			extras = EXTRA_ARMORS
-		"accessory":
-			extras = EXTRA_RINGS
-	for ex in extras:
+	# 额外装备池
+	for ex in _get_extras_for_slot(slot):
 		var t = ex.get("tier", 1)
 		if t >= min_tier and t <= max_tier:
 			pool.append(ex)
-
+	# 兜底
 	if pool.is_empty():
-		# 兜底：直接返回最低 tier 的套装装备
 		for s in EQUIPMENT_SETS:
 			var item = s.get(slot, null)
 			if item is Dictionary:
 				return item
 		return null
-
 	var idx: int = randi() % pool.size()
 	return pool[idx]
 
