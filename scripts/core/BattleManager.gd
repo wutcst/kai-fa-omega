@@ -31,6 +31,8 @@ var last_drop: Dictionary = {"gold": 0, "items": []}
 
 # 掉落提示面板节点（战斗胜利时显示）
 var _reward_panel: CanvasLayer = null
+# 天使拯救面板节点（玩家死亡时显示）
+var _angel_panel: CanvasLayer = null
 
 func _ready():
 	_connect_to_enemies()
@@ -336,15 +338,18 @@ func _execute_enemy_attack(enemy):
 	)
 
 	# 播放 walk 动画（如果存在的话）
-	if enemy.has_node("AnimatedSprite2D"):
-		var e_sprite = enemy.get_node("AnimatedSprite2D")
-		var walk_name = _find_animation_name(e_sprite, enemy.monster_name, "walk")
-		if walk_name != "":
-			e_sprite.play(walk_name)
-		else:
-			var idle_name = _find_animation_name(e_sprite, enemy.monster_name, "idle")
-			if idle_name != "":
-				e_sprite.play(idle_name)
+	if enemy.has_method("play_anim"):
+		enemy.play_anim("walk")
+	else:
+		if enemy.has_node("AnimatedSprite2D"):
+			var e_sprite = enemy.get_node("AnimatedSprite2D")
+			var walk_name = _find_animation_name(e_sprite, enemy.monster_name, "walk")
+			if walk_name != "":
+				e_sprite.play(walk_name)
+			else:
+				var idle_name = _find_animation_name(e_sprite, enemy.monster_name, "idle")
+				if idle_name != "":
+					e_sprite.play(idle_name)
 
 	await _move_monster_to(enemy, target_glob)
 
@@ -365,10 +370,20 @@ func _execute_enemy_attack(enemy):
 			var fc = sprite.sprite_frames.get_frame_count(anim_name)
 			var spd = max(1.0, sprite.sprite_frames.get_animation_speed(anim_name))
 			duration = fc / spd
-	# 提高上限，让动画能完整播放
 	duration = min(duration, 1.5)
 
-	await get_tree().create_timer(duration).timeout
+	var max_wait := duration + 0.1
+	var elapsed := 0.0
+	while elapsed < max_wait:
+		await get_tree().process_frame
+		elapsed += get_process_delta_time()
+		if enemy == null or not is_instance_valid(enemy):
+			break
+		if enemy.has_node("AnimatedSprite2D"):
+			var chk_sprite: AnimatedSprite2D = enemy.get_node("AnimatedSprite2D")
+			if chk_sprite and not chk_sprite.is_playing():
+				if chk_sprite.frame >= chk_sprite.sprite_frames.get_frame_count(chk_sprite.animation) - 1:
+					break
 
 	if _battle_exiting:
 		return
@@ -382,7 +397,7 @@ func _execute_enemy_attack(enemy):
 		player_battler.take_damage(damage)
 
 		var hurt_duration: float = 0.3
-		var hurt_anim = "swordsman" + "_hurt"
+		var hurt_anim = "hurt"
 		if player_battler.animated_sprite.sprite_frames.has_animation(hurt_anim):
 			var hfc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
 			var hspd = max(1.0, player_battler.animated_sprite.sprite_frames.get_animation_speed(hurt_anim))
@@ -401,11 +416,14 @@ func _execute_enemy_attack(enemy):
 	# 阶段 4：怪物走回原位
 	# ------------------------------------------------------------
 	if is_instance_valid(enemy) and not enemy.is_dead and not _battle_exiting:
-		if enemy.has_node("AnimatedSprite2D"):
-			var e_sprite2 = enemy.get_node("AnimatedSprite2D")
-			var walk_name2 = _find_animation_name(e_sprite2, enemy.monster_name, "walk")
-			if walk_name2 != "":
-				e_sprite2.play(walk_name2)
+		if enemy.has_method("play_anim"):
+			enemy.play_anim("walk")
+		else:
+			if enemy.has_node("AnimatedSprite2D"):
+				var e_sprite2 = enemy.get_node("AnimatedSprite2D")
+				var walk_name2 = _find_animation_name(e_sprite2, enemy.monster_name, "walk")
+				if walk_name2 != "":
+					e_sprite2.play(walk_name2)
 		await _move_monster_to(enemy, enemy_home)
 
 	if not _battle_exiting and is_instance_valid(enemy) and enemy.has_method("play_anim") and not enemy.is_dead:
@@ -483,6 +501,26 @@ func _end_battle(player_won: bool):
 			print("→ 记录击败怪物位置：", enemy_position)
 	else:
 		print("战斗失败！")
+
+		# ------------------------------------------------------------
+		# 阶段 1：等待玩家死亡动画播放完毕
+		# ------------------------------------------------------------
+		if is_instance_valid(player_battler) and player_battler.has_node("AnimatedSprite2D"):
+			var p_sprite: AnimatedSprite2D = player_battler.get_node("AnimatedSprite2D")
+			var death_duration: float = 2.0  # 默认保底时长
+			if p_sprite.sprite_frames and p_sprite.sprite_frames.has_animation("death"):
+				var fc = p_sprite.sprite_frames.get_frame_count("death")
+				var spd = max(1.0, p_sprite.sprite_frames.get_animation_speed("death"))
+				death_duration = float(fc) / spd
+			# 等待死亡动画播放（+0.3秒缓冲）
+			await get_tree().create_timer(death_duration + 0.3).timeout
+
+		# ------------------------------------------------------------
+		# 阶段 2：显示天使拯救面板，等待玩家点击按钮
+		# ------------------------------------------------------------
+		_show_angel_panel()
+		# 等待面板上的按钮被点击（由 _on_angel_rescue_clicked 触发场景切换）
+		return
 
 	call_deferred("_exit_battle")
 
@@ -804,3 +842,173 @@ func _hide_reward_panel():
 	if is_instance_valid(_reward_panel):
 		_reward_panel.queue_free()
 	_reward_panel = null
+
+# ============================================================
+# 天使拯救面板：玩家死亡后显示
+# ============================================================
+func _show_angel_panel():
+	var tree = get_tree()
+	if tree == null:
+		return
+
+	# 1. 创建最顶层 CanvasLayer
+	_angel_panel = CanvasLayer.new()
+	_angel_panel.name = "AngelPanel"
+	_angel_panel.layer = 200  # 确保显示在所有其他 UI 之上
+	if is_instance_valid(combat_scene):
+		combat_scene.add_child(_angel_panel)
+	else:
+		tree.root.add_child(_angel_panel)
+
+	# 2. 半透明遮罩背景（让战斗场景变暗）
+	var dim_bg = ColorRect.new()
+	dim_bg.name = "DimBackground"
+	dim_bg.color = Color(0.05, 0.03, 0.1, 0.75)
+	dim_bg.custom_minimum_size = Vector2(
+		tree.root.size.x if tree and tree.root else 1920,
+		tree.root.size.y if tree and tree.root else 1080
+	)
+	dim_bg.size = dim_bg.custom_minimum_size
+	dim_bg.mouse_filter = Control.MOUSE_FILTER_STOP  # 拦截所有点击事件，防止穿透
+	_angel_panel.add_child(dim_bg)
+
+	# 3. 主面板容器
+	var panel = Panel.new()
+	panel.name = "MainPanel"
+	panel.custom_minimum_size = Vector2(560, 280)
+	panel.size = Vector2(560, 280)
+	panel.position = Vector2(
+		((tree.root.size.x if tree and tree.root else 1920) - panel.custom_minimum_size.x) / 2.0,
+		((tree.root.size.y if tree and tree.root else 1080) - panel.custom_minimum_size.y) / 2.0
+	)
+	# 面板样式：金色边框 + 深色半透明背景
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.12, 0.08, 0.18, 0.92)
+	panel_style.border_width_left = 3
+	panel_style.border_width_right = 3
+	panel_style.border_width_top = 3
+	panel_style.border_width_bottom = 3
+	panel_style.border_color = Color(1.0, 0.88, 0.4)
+	panel_style.corner_radius_top_left = 14
+	panel_style.corner_radius_top_right = 14
+	panel_style.corner_radius_bottom_left = 14
+	panel_style.corner_radius_bottom_right = 14
+	panel.add_theme_stylebox_override("panel", panel_style)
+	_angel_panel.add_child(panel)
+
+	# 4. 图标（天使符号）
+	var icon_label = Label.new()
+	icon_label.name = "AngelIcon"
+	icon_label.text = "✨ 👼 ✨"
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.add_theme_font_size_override("font_size", 42)
+	icon_label.add_theme_color_override("font_color", Color(1.0, 0.92, 0.5))
+	icon_label.custom_minimum_size = Vector2(520, 60)
+	icon_label.position = Vector2(20, 20)
+	panel.add_child(icon_label)
+
+	# 5. 主标题文字
+	var title_label = Label.new()
+	title_label.name = "TitleLabel"
+	title_label.text = "天使大人降临，拯救力竭的勇者"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.45))
+	title_label.custom_minimum_size = Vector2(520, 50)
+	title_label.position = Vector2(20, 90)
+	panel.add_child(title_label)
+
+	# 6. 副标题提示（柔和的灰色）
+	var sub_label = Label.new()
+	sub_label.name = "SubLabel"
+	sub_label.text = "愿圣光指引你前行，重新踏上冒险之旅"
+	sub_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub_label.add_theme_font_size_override("font_size", 15)
+	sub_label.add_theme_color_override("font_color", Color(0.75, 0.7, 0.85))
+	sub_label.custom_minimum_size = Vector2(520, 30)
+	sub_label.position = Vector2(20, 140)
+	panel.add_child(sub_label)
+
+	# 7. "返回村庄"按钮
+	var rescue_btn = Button.new()
+	rescue_btn.name = "RescueButton"
+	rescue_btn.text = "返回村庄"
+	rescue_btn.custom_minimum_size = Vector2(200, 50)
+	rescue_btn.size = Vector2(200, 50)
+	rescue_btn.position = Vector2(180, 195)
+	rescue_btn.add_theme_font_size_override("font_size", 20)
+
+	# 按钮样式：金色
+	var btn_normal = StyleBoxFlat.new()
+	btn_normal.bg_color = Color(0.85, 0.65, 0.25)
+	btn_normal.corner_radius_top_left = 8
+	btn_normal.corner_radius_top_right = 8
+	btn_normal.corner_radius_bottom_left = 8
+	btn_normal.corner_radius_bottom_right = 8
+	rescue_btn.add_theme_stylebox_override("normal", btn_normal)
+
+	var btn_hover = StyleBoxFlat.new()
+	btn_hover.bg_color = Color(1.0, 0.82, 0.35)
+	btn_hover.corner_radius_top_left = 8
+	btn_hover.corner_radius_top_right = 8
+	btn_hover.corner_radius_bottom_left = 8
+	btn_hover.corner_radius_bottom_right = 8
+	rescue_btn.add_theme_stylebox_override("hover", btn_hover)
+
+	var btn_pressed = StyleBoxFlat.new()
+	btn_pressed.bg_color = Color(0.65, 0.48, 0.18)
+	btn_pressed.corner_radius_top_left = 8
+	btn_pressed.corner_radius_top_right = 8
+	btn_pressed.corner_radius_bottom_left = 8
+	btn_pressed.corner_radius_bottom_right = 8
+	rescue_btn.add_theme_stylebox_override("pressed", btn_pressed)
+
+	rescue_btn.add_theme_color_override("font_color", Color(1, 1, 1))
+	rescue_btn.add_theme_color_override("font_hover_color", Color(1, 1, 1))
+	rescue_btn.add_theme_color_override("font_pressed_color", Color(1, 1, 1))
+
+	# 绑定按钮点击事件
+	rescue_btn.pressed.connect(_on_angel_rescue_clicked)
+	panel.add_child(rescue_btn)
+
+# ------------------------------------------------------------
+# 天使拯救面板按钮点击回调
+# - 回满 HP/MP（不改变等级、经验、攻击、防御等属性）
+# - 切回 village 场景
+# ------------------------------------------------------------
+func _on_angel_rescue_clicked():
+	# 1. 回满 HP 和 MP（保留其他所有属性不变）
+	GameData.current_hp = GameData.get_total_max_hp()
+	GameData.current_mp = GameData.max_mp
+	print("→ 天使拯救！HP 恢复至满值：", GameData.current_hp, "/", GameData.get_total_max_hp())
+	print("→ MP 恢复至满值：", GameData.current_mp, "/", GameData.max_mp)
+	print("→ 当前等级：Lv.", GameData.level, " | 经验：", GameData.current_exp, "/", GameData.exp_to_next_level)
+
+	# 2. 设置复活位置：切回 village 后玩家出现在 (x:900, y:350)
+	GameData.player_return_position = Vector2(900, 350)
+	GameData.returning_from_battle = true
+	print("→ 复活位置：(", GameData.player_return_position.x, ", ", GameData.player_return_position.y, ")")
+
+	# 3. 清理天使面板
+	if is_instance_valid(_angel_panel):
+		_angel_panel.queue_free()
+	_angel_panel = null
+
+	# 4. 执行战斗退出流程（切回 village 场景）
+	_battle_exiting = true
+	battle_state = STATE_END
+
+	# 清空怪物节点引用
+	for enemy_node in get_tree().get_nodes_in_group("enemy"):
+		if is_instance_valid(enemy_node) and not enemy_node.is_dead and enemy_node.has_method("exit_battle"):
+			enemy_node.exit_battle()
+
+	player_battler = null
+	current_enemy = null
+	combat_scene = null
+	enemies.clear()
+
+	# 5. 切换到 village 场景
+	var tree = get_tree()
+	if tree:
+		tree.change_scene_to_file("res://scenes/maps/village.tscn")

@@ -25,8 +25,6 @@ var in_battle: bool = false
 var inventory_panel: CanvasLayer = null
 var inventory_open: bool = false
 
-const ANIM_PREFIX: String = "swordsman"
-
 func _ready():
 	add_to_group("player")
 	z_index = 100
@@ -105,7 +103,7 @@ func _physics_process(_delta: float) -> void:
 
 	if inventory_open:
 		velocity = Vector2.ZERO
-		if not animated_sprite.animation.ends_with("_idle"):
+		if animated_sprite.animation != "idle":
 			play_anim("idle")
 		return
 
@@ -120,15 +118,14 @@ func _physics_process(_delta: float) -> void:
 		play_anim("idle")
 
 func play_anim(action_name: String) -> void:
-	var anim_name = ANIM_PREFIX + "_" + action_name
-	if animated_sprite.sprite_frames.has_animation(anim_name):
-		animated_sprite.play(anim_name)
+	if animated_sprite.sprite_frames.has_animation(action_name):
+		animated_sprite.play(action_name)
 
 func _on_animated_sprite_animation_finished():
 	if is_dead:
 		return
 	var current = animated_sprite.animation
-	if current.ends_with("_attack") || current.ends_with("_hurt"):
+	if current == "hit" or current == "heavyhit" or current == "Armor Break Slash" or current == "Sky Cleave" or current == "hurt":
 		play_anim("idle")
 
 func toggle_inventory():

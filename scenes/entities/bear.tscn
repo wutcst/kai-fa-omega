@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://c3b6wa5044c8x"]
+[gd_scene load_steps=27 format=3 uid="uid://denkhlrm7r76f"]
 
 [ext_resource type="Script" path="res://scripts/entities/monster.gd" id="1_n2b7l"]
 [ext_resource type="Texture2D" uid="uid://c6chy1f16erxq" path="res://Asset Bundle/sprites/MinifolksForestAnimals/Outline/MiniBear.png" id="2_78cag"]
@@ -191,12 +191,12 @@ animations = [{
 [node name="bear" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_n2b7l")
 monster_name = "bear"
-max_hp = 140
-attack = 22
-defense = 6
+max_hp = 190
+attack = 24
+defense = 11
 speed = 80.0
 chase_range = 210.0
-exp_reward = 70
+exp_reward = 75
 enemy_scene_path = "res://scenes/entities/bear.tscn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

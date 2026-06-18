@@ -3,7 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://ia535d6t1fas" path="res://scenes/entities/bat.tscn" id="1_4fu0f"]
 [ext_resource type="PackedScene" uid="uid://dbjsp834oej1w" path="res://scenes/entities/rat.tscn" id="2_e57lx"]
 [ext_resource type="PackedScene" uid="uid://d3cm7o4fnxde0" path="res://scenes/entities/Bone Knight.tscn" id="3_fy4v1"]
-[ext_resource type="PackedScene" uid="uid://dels3ovfdv1fu" path="res://scenes/entities/Bringer_of_death.tscn" id="4_lu7wt"]
+[ext_resource type="PackedScene" uid="uid://ronlvmte5fme" path="res://scenes/entities/Bringer_of_death.tscn" id="4_buan1"]
 
 [node name="undead_enemies" type="Node2D"]
 
@@ -32,11 +32,10 @@ position = Vector2(585, 208)
 [node name="Bone Knight2" parent="." instance=ExtResource("3_fy4v1")]
 position = Vector2(496, 381)
 
-[node name="Bringer_of_death" parent="." instance=ExtResource("4_lu7wt")]
-position = Vector2(666, 323)
-
 [node name="bat4" parent="." instance=ExtResource("1_4fu0f")]
 position = Vector2(194, 442)
 
 [node name="rat4" parent="." instance=ExtResource("2_e57lx")]
 position = Vector2(212, 302)
+
+[node name="Bringer_of_death" parent="." instance=ExtResource("4_buan1")]

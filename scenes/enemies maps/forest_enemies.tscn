@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://v5b1g1klykuk"]
 
 [ext_resource type="PackedScene" uid="uid://musweenqg21s" path="res://scenes/entities/mushroom.tscn" id="1_phoqn"]
-[ext_resource type="PackedScene" uid="uid://c3b6wa5044c8x" path="res://scenes/entities/bear.tscn" id="2_p5uo7"]
+[ext_resource type="PackedScene" uid="uid://denkhlrm7r76f" path="res://scenes/entities/bear.tscn" id="2_p5uo7"]
 [ext_resource type="PackedScene" uid="uid://cmf0qwvh3lsl" path="res://scenes/entities/slime.tscn" id="3_hnsxx"]
 [ext_resource type="PackedScene" uid="uid://dank6uyw6q7q8" path="res://scenes/entities/slime_king.tscn" id="4_fm1kf"]
 [ext_resource type="PackedScene" uid="uid://dg04wg4jxo6lb" path="res://scenes/entities/rock_giant.tscn" id="5_88ayl"]

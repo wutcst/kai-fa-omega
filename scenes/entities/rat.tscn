@@ -314,11 +314,13 @@ radius = 12.6491
 [node name="rat" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_ixfqb")
 monster_name = "rat"
-attack = 14
+max_hp = 130
+attack = 19
+defense = 9
 speed = 80.0
 attack_range = 35.0
 attack_cd = 0.8
-exp_reward = 25
+exp_reward = 35
 enemy_scene_path = "res://scenes/entities/rat.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

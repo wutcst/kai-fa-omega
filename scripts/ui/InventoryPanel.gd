@@ -280,9 +280,9 @@ func _build_equipment_section(parent: VBoxContainer):
 			"armor":     equip = GameData.armor
 			"accessory": equip = GameData.accessory
 			_:           equip = {}
-		var icon_path: String = equip.get("icon", "")
 		var name_str: String = equip.get("name", "无")
 		var is_empty: bool = (name_str == "无") or name_str == ""
+		var icon_path: String = equip.get("icon", "") if not is_empty else ""
 
 		# 图标
 		var icon_box = _make_icon_box(icon_path, 28)

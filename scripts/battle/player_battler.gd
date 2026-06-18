@@ -64,12 +64,10 @@ func consume_mp(cost: int):
 	set_current_mp(GameData.current_mp - cost)
 
 func _ready():
-	# 用 global_position 记录初始站位（玩家和怪物在不同父节点，局部坐标不可直接相减
 	_original_position = global_position
 	# 应用脚对齐：自动计算 offset，让角色脚底对齐节点原点
 	_apply_foot_alignment()
 	create_bars()
-	_create_attack_variants()
 	play_anim("idle")
 
 # ============================================================
@@ -158,51 +156,6 @@ func create_bars():
 	set_current_mp(get_current_mp())
 
 # ============================================================
-# 动态创建 swordsman_heavyhit 动画
-# 普通攻击 = swordsman_hit 前 1/3 帧
-# 强力攻击 = swordsman_hit 全部帧
-# 必杀技 = swordsman_attack 全部帧
-# ============================================================
-func _create_attack_variants():
-	var sf = animated_sprite.sprite_frames
-	var prefix = "swordsman"
-	var src = prefix + "_hit"
-	if not sf.has_animation(src):
-		return
-
-	# 防止重复调用导致动画帧逐次被截断
-	var heavy_name = prefix + "_heavyhit"
-	if sf.has_animation(heavy_name):
-		return
-
-	var total_hit = sf.get_frame_count(src)
-
-	# 先把原始 swordsman_hit 的帧数据全提取出来，防止后续裁剪导致丢失
-	var original_textures: Array = []
-	var original_durations: Array = []
-	for i in range(total_hit):
-		original_textures.append(sf.get_frame_texture(src, i))
-		original_durations.append(sf.get_frame_duration(src, i))
-
-	# swordsman_hit：裁剪为前 1/3 帧，快速斩击
-	var hit_name = prefix + "_hit"
-	var count = max(1, int(ceil(total_hit / 3.0)))
-	sf.remove_animation(hit_name)
-	sf.add_animation(hit_name)
-	sf.set_animation_speed(hit_name, 14.0)
-	sf.set_animation_loop(hit_name, false)
-	for i in range(min(count, original_textures.size())):
-		sf.add_frame(hit_name, original_textures[i], original_durations[i])
-
-	# swordsman_heavyhit：使用 swordsman_hit 的全部帧，中等速度蓄力斩
-	if not sf.has_animation(heavy_name):
-		sf.add_animation(heavy_name)
-		sf.set_animation_speed(heavy_name, 8.0)
-		sf.set_animation_loop(heavy_name, false)
-		for i in range(original_textures.size()):
-			sf.add_frame(heavy_name, original_textures[i], original_durations[i])
-
-# ============================================================
 # 三种攻击 — 纯动画，无特效
 # ============================================================
 func attack_enemy(target: Node2D):
@@ -215,11 +168,11 @@ func heavy_attack_enemy(target: Node2D):
 
 func ultimate_attack_enemy(target: Node2D):
 	if in_attack or is_dead: return
-	await _execute_attack(target, "attack")
+	await _execute_attack(target, "Sky Cleave")
 
 func armor_pierce_attack_enemy(target: Node2D):
 	if in_attack or is_dead: return
-	await _execute_attack(target, "heavyhit", true)
+	await _execute_attack(target, "Armor Break Slash")
 
 func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false):
 	in_attack = true
@@ -251,12 +204,8 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 	)
 
 	# 播放 walk 动画
-	var walk_anim = "swordsman" + "_walk"
-	var has_walk = animated_sprite.sprite_frames.has_animation(walk_anim)
-	if has_walk:
-		animated_sprite.play(walk_anim)
-	else:
-		play_anim("idle")
+	play_anim("walk")
+	var has_walk = animated_sprite.sprite_frames.has_animation(animated_sprite.animation)
 
 	# 逐帧移动到 target_glob（global 坐标）
 	await _move_to_global(target_glob)
@@ -271,7 +220,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 	# ------------------------------------------------------------
 	play_anim(action)
 
-	var attack_anim = "swordsman" + "_" + action
+	var attack_anim = action
 	tree = get_tree()
 	if tree and animated_sprite.sprite_frames.has_animation(attack_anim):
 		var fc = animated_sprite.sprite_frames.get_frame_count(attack_anim)
@@ -295,7 +244,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 		var multiplier: float = 1.0
 		if action == "heavyhit":
 			multiplier = 1.7
-		elif action == "attack":
+		elif action == "Sky Cleave":
 			multiplier = 2.1
 		
 		var damage: int
@@ -344,7 +293,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 
 	if not enemy_died:
 		if has_walk:
-			animated_sprite.play(walk_anim)
+			play_anim("walk")
 		await _move_to_global(home_pos)
 		if not is_instance_valid(self) or not get_tree():
 			in_attack = false
@@ -358,7 +307,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 		return
 
 	play_anim("idle")
-	BattleManager._after_player_attack()
+
 
 
 # 把玩家水平移动到目标 global 位置（匀速
@@ -396,9 +345,8 @@ func take_damage(damage: int):
 func play_anim(action_name: String):
 	if is_dead and action_name != "death":
 		return
-	var anim_name = "swordsman" + "_" + action_name
-	if animated_sprite.sprite_frames.has_animation(anim_name):
-		animated_sprite.play(anim_name)
+	if animated_sprite.sprite_frames.has_animation(action_name):
+		animated_sprite.play(action_name)
 
 func get_battle_crit() -> int:
 	return GameData.crit
