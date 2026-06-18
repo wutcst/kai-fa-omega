@@ -1,0 +1,57 @@
+[gd_scene load_steps=9 format=3 uid="uid://dq0yebcviughd"]
+
+[ext_resource type="Script" path="res://scripts/npc/npc_dialogue.gd" id="2_npcsc"]
+[ext_resource type="Texture2D" uid="uid://47uu7geymmsm" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/009 (1).png" id="2_udkxj"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cugpu"]
+atlas = ExtResource("2_udkxj")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_k7ipn"]
+atlas = ExtResource("2_udkxj")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_gd4th"]
+atlas = ExtResource("2_udkxj")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j5i51"]
+atlas = ExtResource("2_udkxj")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_npc9"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cugpu")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_k7ipn")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_gd4th")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j5i51")
+}],
+"loop": true,
+"name": &"new_animation",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_npc9"]
+size = Vector2(20, 29)
+
+[node name="npc9" type="CharacterBody2D"]
+script = ExtResource("2_npcsc")
+npc_name = "村姑"
+dialogue_text = "村里的庄稼最近被怪物踩坏了不少，唉。"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_npc9")
+animation = &"new_animation"
+autoplay = "new_animation"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_npc9")

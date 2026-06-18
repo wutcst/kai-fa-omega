@@ -1,0 +1,58 @@
+[gd_scene load_steps=9 format=3 uid="uid://co8ltmulysvne"]
+
+[ext_resource type="Texture2D" uid="uid://bmrh1nf5pe8lp" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/006 (1).png" id="2_kl1xr"]
+[ext_resource type="Script" path="res://scripts/npc/npc_dialogue.gd" id="2_npcsc"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5m68t"]
+atlas = ExtResource("2_kl1xr")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_svcn8"]
+atlas = ExtResource("2_kl1xr")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_goy3n"]
+atlas = ExtResource("2_kl1xr")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4qptr"]
+atlas = ExtResource("2_kl1xr")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_npc6"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5m68t")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_svcn8")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_goy3n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4qptr")
+}],
+"loop": true,
+"name": &"npc6",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_npc6"]
+size = Vector2(20, 29)
+
+[node name="npc6" type="CharacterBody2D"]
+script = ExtResource("2_npcsc")
+npc_name = "铁匠"
+dialogue_text = "需要修理装备吗？我的铁锤可是最好的。"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_npc6")
+animation = &"npc6"
+autoplay = "npc6"
+frame_progress = 0.989826
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -0.5)
+shape = SubResource("RectangleShape2D_npc6")

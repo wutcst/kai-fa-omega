@@ -15,14 +15,14 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="RPG-603game"
-run/main_scene="res://scenes/start.tscn"
+run/main_scene="res://scenes/maps/start.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-GameData="*res://scripts/GameData.gd"
-BattleManager="*res://scripts/BattleManager.gd"
+GameData="*res://scripts/core/GameData.gd"
+BattleManager="*res://scripts/core/BattleManager.gd"
 
 [claude_assistant]
 

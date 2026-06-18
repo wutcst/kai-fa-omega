@@ -1,0 +1,55 @@
+[gd_scene load_steps=9 format=3 uid="uid://dfs1c2032aw5w"]
+
+[ext_resource type="Texture2D" uid="uid://cffflon1mx2rk" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/003 (1).png" id="2_lbrja"]
+[ext_resource type="Script" path="res://scripts/npc/hotel_owner.gd" id="2_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_64y5n"]
+atlas = ExtResource("2_lbrja")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2v416"]
+atlas = ExtResource("2_lbrja")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ruos0"]
+atlas = ExtResource("2_lbrja")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hgpnd"]
+atlas = ExtResource("2_lbrja")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_merchant"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_64y5n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2v416")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ruos0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hgpnd")
+}],
+"loop": true,
+"name": &"hotel_owner_idle",
+"speed": 4.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_merchant"]
+size = Vector2(16, 25)
+
+[node name="hotel_owner" type="CharacterBody2D" groups=["merchant"]]
+script = ExtResource("2_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_merchant")
+animation = &"hotel_owner_idle"
+frame_progress = 0.103649
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, 1.5)
+shape = SubResource("RectangleShape2D_merchant")
