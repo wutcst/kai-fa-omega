@@ -202,6 +202,12 @@ var inventory_items: Array = [
 # 已击败的怪物位置列表（主场景用）
 var defeated_monster_positions: Array = []
 
+# 已击败的首领位置列表（不清除，持久保留）
+var defeated_boss_positions: Array = []
+
+# 已击败的首领名称列表（用于解锁场景切换条件）
+var defeated_boss_names: Array = []
+
 # 战斗逃跑/结束后返回地图时的玩家位置
 var returning_from_battle: bool = false
 var player_return_position: Vector2 = Vector2.ZERO
@@ -433,3 +439,248 @@ func consume_potion(potion_name: String) -> bool:
 			print("→ 使用药水：", potion_name, "（剩余 x", remaining, "）")
 			return true
 	return false
+
+# ============================================================
+# 存档系统
+# ============================================================
+const SAVE_SLOT_COUNT := 3
+const SAVE_DIR := "user://saves/"
+
+func _get_save_path(slot: int) -> String:
+	return SAVE_DIR + "save_slot_" + str(slot) + ".json"
+
+func save_game(slot: int) -> bool:
+	if slot < 0 or slot >= SAVE_SLOT_COUNT:
+		return false
+
+	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+
+	var data := {}
+
+	# 玩家基础属性
+	data["max_hp"] = max_hp
+	data["current_hp"] = current_hp
+	data["max_mp"] = max_mp
+	data["current_mp"] = current_mp
+	data["attack"] = attack
+	data["defense"] = defense
+	data["base_speed"] = base_speed
+	data["current_speed"] = current_speed
+	data["level"] = level
+	data["current_exp"] = current_exp
+	data["exp_to_next_level"] = exp_to_next_level
+	data["crit"] = crit
+	data["gold"] = gold
+
+	# 装备
+	data["weapon"] = weapon.duplicate(true)
+	data["armor"] = armor.duplicate(true)
+	data["accessory"] = accessory.duplicate(true)
+
+	# 背包
+	data["exclusive_backpack"] = _deep_copy_array(exclusive_backpack)
+	data["inventory_items"] = _deep_copy_array(inventory_items)
+
+	# 玩家位置和场景
+	var players = Engine.get_main_loop().get_root().get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		data["player_position"] = {"x": players[0].global_position.x, "y": players[0].global_position.y}
+	else:
+		data["player_position"] = {"x": 0, "y": 0}
+
+	var current_scene = Engine.get_main_loop().get_root().get_tree().current_scene
+	if current_scene:
+		data["last_scene"] = current_scene.scene_file_path
+	else:
+		data["last_scene"] = ""
+
+	# 已击败怪物位置
+	data["defeated_monster_positions"] = []
+	for pos in defeated_monster_positions:
+		if pos is Vector2:
+			data["defeated_monster_positions"].append({"x": pos.x, "y": pos.y})
+
+	# 已击败首领位置
+	data["defeated_boss_positions"] = []
+	for pos in defeated_boss_positions:
+		if pos is Vector2:
+			data["defeated_boss_positions"].append({"x": pos.x, "y": pos.y})
+
+	# 已击败首领名称
+	data["defeated_boss_names"] = defeated_boss_names.duplicate()
+
+	# 时间戳
+	data["timestamp"] = Time.get_unix_time_from_system()
+	data["play_time"] = Time.get_ticks_msec() / 1000.0
+
+	var file = FileAccess.open(_get_save_path(slot), FileAccess.WRITE)
+	if not file:
+		print("[存档] 无法写入存档文件：", _get_save_path(slot))
+		return false
+
+	file.store_string(JSON.stringify(data, "\t"))
+	file.close()
+	print("[存档] 存档成功！槽位：", slot + 1, "  场景：", data["last_scene"])
+	return true
+
+func load_game(slot: int) -> bool:
+	if slot < 0 or slot >= SAVE_SLOT_COUNT:
+		return false
+
+	var path = _get_save_path(slot)
+	if not FileAccess.file_exists(path):
+		print("[读档] 存档文件不存在：", path)
+		return false
+
+	var file = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		print("[读档] 无法读取存档文件：", path)
+		return false
+
+	var json_text = file.get_as_text()
+	file.close()
+
+	var json = JSON.new()
+	var error = json.parse(json_text)
+	if error != OK:
+		print("[读档] JSON 解析失败：", json.get_error_message())
+		return false
+
+	var data = json.get_data()
+	if not data is Dictionary:
+		print("[读档] 存档数据格式错误")
+		return false
+
+	# 恢复玩家基础属性
+	max_hp = data.get("max_hp", 120)
+	current_hp = data.get("current_hp", 120)
+	max_mp = data.get("max_mp", 60)
+	current_mp = data.get("current_mp", 60)
+	attack = data.get("attack", 15)
+	defense = data.get("defense", 5)
+	base_speed = data.get("base_speed", 200)
+	current_speed = data.get("current_speed", 200)
+	level = data.get("level", 1)
+	current_exp = data.get("current_exp", 0)
+	exp_to_next_level = data.get("exp_to_next_level", 50)
+	crit = data.get("crit", 5)
+	gold = data.get("gold", 50)
+
+	# 恢复装备
+	var w = data.get("weapon", {})
+	if w is Dictionary:
+		weapon = w.duplicate(true)
+	var a = data.get("armor", {})
+	if a is Dictionary:
+		armor = a.duplicate(true)
+	var acc = data.get("accessory", {})
+	if acc is Dictionary:
+		accessory = acc.duplicate(true)
+
+	# 恢复背包
+	exclusive_backpack.clear()
+	var eb = data.get("exclusive_backpack", [])
+	if eb is Array:
+		for item in eb:
+			if item is Dictionary:
+				exclusive_backpack.append(item.duplicate(true))
+
+	inventory_items.clear()
+	var inv = data.get("inventory_items", [])
+	if inv is Array:
+		for item in inv:
+			if item is Dictionary:
+				inventory_items.append(item.duplicate(true))
+
+	# 恢复已击败怪物位置
+	defeated_monster_positions.clear()
+	var dmp = data.get("defeated_monster_positions", [])
+	if dmp is Array:
+		for pos in dmp:
+			if pos is Dictionary:
+				defeated_monster_positions.append(Vector2(pos.get("x", 0), pos.get("y", 0)))
+
+	# 恢复已击败首领位置
+	defeated_boss_positions.clear()
+	var dbp = data.get("defeated_boss_positions", [])
+	if dbp is Array:
+		for pos in dbp:
+			if pos is Dictionary:
+				defeated_boss_positions.append(Vector2(pos.get("x", 0), pos.get("y", 0)))
+
+	# 恢复已击败首领名称
+	defeated_boss_names.clear()
+	var dbn = data.get("defeated_boss_names", [])
+	if dbn is Array:
+		defeated_boss_names = dbn.duplicate()
+
+	# 恢复玩家位置
+	var pp = data.get("player_position", {})
+	if pp is Dictionary:
+		player_return_position = Vector2(pp.get("x", 0), pp.get("y", 0))
+		returning_from_battle = true
+
+	print("[读档] 读档成功！槽位：", slot + 1, "  等级：Lv.", level)
+	return true
+
+func get_save_slot_info(slot: int) -> Dictionary:
+	if slot < 0 or slot >= SAVE_SLOT_COUNT:
+		return {"exists": false}
+
+	var path = _get_save_path(slot)
+	if not FileAccess.file_exists(path):
+		return {"exists": false, "slot": slot}
+
+	var file = FileAccess.open(path, FileAccess.READ)
+	if not file:
+		return {"exists": false, "slot": slot}
+
+	var json_text = file.get_as_text()
+	file.close()
+
+	var json = JSON.new()
+	var error = json.parse(json_text)
+	if error != OK:
+		return {"exists": false, "slot": slot}
+
+	var data = json.get_data()
+	if not data is Dictionary:
+		return {"exists": false, "slot": slot}
+
+	var scene_name = ""
+	var scene_path = data.get("last_scene", "")
+	if scene_path != "":
+		scene_name = scene_path.get_file().trim_suffix(".tscn")
+
+	return {
+		"exists": true,
+		"slot": slot,
+		"level": data.get("level", 1),
+		"scene": scene_name,
+		"gold": data.get("gold", 0),
+		"timestamp": data.get("timestamp", 0),
+		"last_scene": data.get("last_scene", ""),
+	}
+
+func delete_save(slot: int) -> bool:
+	if slot < 0 or slot >= SAVE_SLOT_COUNT:
+		return false
+
+	var path = _get_save_path(slot)
+	if not FileAccess.file_exists(path):
+		return false
+
+	DirAccess.remove_absolute(path)
+	print("[存档] 删除存档！槽位：", slot + 1)
+	return true
+
+func _deep_copy_array(arr: Array) -> Array:
+	var result: Array = []
+	for item in arr:
+		if item is Dictionary:
+			result.append(item.duplicate(true))
+		elif item is Array:
+			result.append(_deep_copy_array(item))
+		else:
+			result.append(item)
+	return result

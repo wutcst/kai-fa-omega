@@ -3,7 +3,7 @@ extends CharacterBody2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 @export var monster_name: String = "necromancer"
-@export var max_hp: int = 350
+@export var max_hp: int = 263
 @export var attack: int = 28
 @export var defense: int = 10
 @export var exp_reward: int = 300
@@ -45,6 +45,16 @@ func _ready():
 	_apply_foot_alignment()
 	create_bars()
 	# 信号已在 necromancer.tscn 中通过编辑器连接，此处不再重复连接
+
+	# 检查是否已被击败（地图重载后自动清除）
+	for pos in GameData.defeated_boss_positions:
+		if pos is Vector2:
+			if spawn_position.distance_to(pos) < chase_range:
+				print("→ 首领已被击败，自动清除：", monster_name, " at ", spawn_position)
+				is_dead = true
+				queue_free()
+				return
+
 	play_anim("idle")
 
 # ============================================================
@@ -199,7 +209,7 @@ func _physics_process(_delta: float) -> void:
 		if attack_timer <= 0 and not is_attacking:
 			perform_attack()
 
-	if get_world_2d() != null:
+	if is_inside_tree():
 		move_and_slide()
 
 func perform_attack():

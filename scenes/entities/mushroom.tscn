@@ -356,7 +356,7 @@ animations = [{
 [node name="mushroom" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_0vs2k")
 monster_name = "mushroom"
-max_hp = 140
+max_hp = 105
 attack = 17
 defense = 11
 speed = 75.0

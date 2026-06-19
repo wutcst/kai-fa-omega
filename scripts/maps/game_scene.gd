@@ -2,10 +2,8 @@ extends Node2D
 
 # ============================================================
 # 通用场景脚本：gamescene / ground1 / ground2 / ground3 共用
-# 在 scene 文件中配置 next_scene_path 即可让"下一关"按钮跳转到不同场景
 # ============================================================
 
-@export var next_scene_path: String = ""          # 为空则不显示跳转按钮（比如 gamescene 主场景）
 @export var scene_title: String = ""              # 场景标题（可选）
 @export var bgm_path: String = ""                 # 背景音乐文件路径
 @export var is_village_scene: bool = false            # 是否是村庄场景（在场景文件中勾选）
@@ -14,9 +12,9 @@ extends Node2D
 var _btn_level_up: Button = null
 var _level_up_hint_label: Label = null
 var _level_up_info_label: Label = null
-var _btn_next_scene: Button = null
 var _bgm_player: AudioStreamPlayer = null
 var _welcome_canvas: CanvasLayer = null
+var _save_load_ui: CanvasLayer = null
 
 # 当前场景缓存标志，避免重复解析路径
 var _is_village: bool = false
@@ -24,12 +22,13 @@ var _is_village: bool = false
 func _ready():
 	# 通过 scene_file_path 或显式标志判断当前场景
 	_is_village = _check_is_village_scene()
-	# 村庄场景自动配置跳转路径
+	# 村庄场景配置标题
 	if _is_village:
-		if next_scene_path == "":
-			next_scene_path = "res://scenes/maps/forest.tscn"
 		if scene_title == "":
 			scene_title = "🏘️ 村庄"
+	
+	# 进入战斗地图时，刷新所有普通怪物（Boss 除外）
+	_refresh_regular_monsters()
 	
 	_setup_scene_nodes()
 	
@@ -38,8 +37,6 @@ func _ready():
 	get_tree().root.size_changed.connect(_fit_camera_to_limits)
 	
 	_create_level_up_button()
-	if next_scene_path != "":
-		_create_next_scene_button()
 	_update_level_up_info()
 	_play_bgm()
 
@@ -60,6 +57,25 @@ func _check_is_village_scene() -> bool:
 		return false
 	# 大小写不敏感比较，避免不同平台路径分隔符问题
 	return "village" in path.to_lower()
+
+# 判断是否是战斗地图（forest / undead / finalbattle）
+func _is_battle_map_scene() -> bool:
+	if get_tree() == null:
+		return false
+	var current = get_tree().current_scene
+	if current == null:
+		return false
+	var path: String = current.scene_file_path
+	if path == "":
+		return false
+	var lower = path.to_lower()
+	return "forest" in lower or "undead" in lower or "finalbattle" in lower
+
+# 进入战斗地图时，清除普通怪物击败记录（Boss 保留）
+func _refresh_regular_monsters():
+	if _is_battle_map_scene() and GameData.defeated_monster_positions.size() > 0:
+		print("→ 进入战斗地图，刷新所有普通怪物（清除 ", GameData.defeated_monster_positions.size(), " 条击败记录）")
+		GameData.defeated_monster_positions.clear()
 
 func _setup_scene_nodes():
 	var is_village = _is_village
@@ -278,71 +294,41 @@ func _create_level_up_button():
 	_level_up_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 	container.add_child(_level_up_hint_label)
 
+	# 分隔间距
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 8)
+	container.add_child(spacer)
+
+	# 存档按钮
+	var btn_save = Button.new()
+	btn_save.name = "BtnSave"
+	btn_save.text = "💾 存档"
+	btn_save.custom_minimum_size = Vector2(btn_width, 38)
+	btn_save.add_theme_font_size_override("font_size", 14)
+
+	var save_style_normal = StyleBoxFlat.new()
+	save_style_normal.bg_color = Color(0.2, 0.5, 0.7)
+	save_style_normal.set_corner_radius_all(8)
+	save_style_normal.border_width_left = 2
+	save_style_normal.border_width_right = 2
+	save_style_normal.border_width_top = 2
+	save_style_normal.border_width_bottom = 2
+	save_style_normal.border_color = Color(0.4, 0.7, 1.0)
+
+	var save_style_hover = save_style_normal.duplicate()
+	save_style_hover.bg_color = Color(0.3, 0.6, 0.85)
+
+	var save_style_pressed = save_style_normal.duplicate()
+	save_style_pressed.bg_color = Color(0.15, 0.35, 0.5)
+
+	btn_save.add_theme_stylebox_override("normal", save_style_normal)
+	btn_save.add_theme_stylebox_override("hover", save_style_hover)
+	btn_save.add_theme_stylebox_override("pressed", save_style_pressed)
+	btn_save.add_theme_color_override("font_color", Color(1, 1, 1))
+	btn_save.pressed.connect(_on_save_pressed)
+	container.add_child(btn_save)
+
 	_btn_level_up.pressed.connect(_on_level_up_pressed)
-
-# 创建左上角"下一关"按钮
-func _create_next_scene_button():
-	var canvas = get_node_or_null("LevelUpCanvas")
-	if canvas == null:
-		canvas = CanvasLayer.new()
-		canvas.name = "LevelUpCanvas"
-		add_child(canvas)
-
-	var container = VBoxContainer.new()
-	container.name = "NextSceneContainer"
-	container.add_theme_constant_override("separation", 4)
-	canvas.add_child(container)
-	container.position = Vector2(20, 20)
-
-	var btn_width = 170
-
-	# 标题标签（显示场景名）
-	if scene_title != "":
-		var title = Label.new()
-		title.name = "SceneTitle"
-		title.text = scene_title
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		title.custom_minimum_size = Vector2(btn_width, 0)
-		title.add_theme_font_size_override("font_size", 14)
-		title.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))
-		container.add_child(title)
-
-	# 跳转按钮
-	_btn_next_scene = Button.new()
-	_btn_next_scene.name = "BtnNextScene"
-	_btn_next_scene.text = "→ 前往下一关"
-	_btn_next_scene.custom_minimum_size = Vector2(btn_width, 44)
-	_btn_next_scene.add_theme_font_size_override("font_size", 16)
-
-	var style_normal = StyleBoxFlat.new()
-	style_normal.bg_color = Color(0.15, 0.5, 0.78)
-	style_normal.set_corner_radius_all(8)
-	style_normal.border_width_left = 2
-	style_normal.border_width_right = 2
-	style_normal.border_width_top = 2
-	style_normal.border_width_bottom = 2
-	style_normal.border_color = Color(0.5, 0.85, 1.0)
-
-	var style_hover = style_normal.duplicate()
-	style_hover.bg_color = Color(0.25, 0.65, 0.95)
-
-	var style_pressed = style_normal.duplicate()
-	style_pressed.bg_color = Color(0.1, 0.35, 0.6)
-
-	_btn_next_scene.add_theme_stylebox_override("normal", style_normal)
-	_btn_next_scene.add_theme_stylebox_override("hover", style_hover)
-	_btn_next_scene.add_theme_stylebox_override("pressed", style_pressed)
-	_btn_next_scene.add_theme_color_override("font_color", Color(1, 1, 1))
-
-	container.add_child(_btn_next_scene)
-
-	_btn_next_scene.pressed.connect(_on_next_scene_pressed)
-
-func _on_next_scene_pressed():
-	if next_scene_path == "":
-		return
-	print("→ 跳转到下一关：", next_scene_path)
-	get_tree().change_scene_to_file(next_scene_path)
 
 func _on_level_up_pressed():
 	GameData.level_up()
@@ -426,3 +412,35 @@ func _input(event):
 			if event.keycode == KEY_E:
 				get_viewport().set_input_as_handled()
 				_dismiss_welcome()
+	elif _save_load_ui and is_instance_valid(_save_load_ui):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_save_load_ui.queue_free()
+				_save_load_ui = null
+
+# 存档按钮回调
+func _on_save_pressed():
+	if _save_load_ui and is_instance_valid(_save_load_ui):
+		return
+
+	# 先同步玩家数据到全局
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		var player_node = players[0]
+		if player_node.has_method("save_data_to_global"):
+			player_node.save_data_to_global()
+
+	var save_ui = load("res://scripts/ui/SaveLoadUI.gd").new()
+	save_ui.mode = "save"
+	save_ui.name = "SaveLoadUI"
+	add_child(save_ui)
+	_save_load_ui = save_ui
+	save_ui.back_pressed.connect(_on_save_ui_back)
+	save_ui.save_completed.connect(_on_save_ui_save_completed)
+
+func _on_save_ui_back():
+	_save_load_ui = null
+
+func _on_save_ui_save_completed(slot: int):
+	_save_load_ui = null

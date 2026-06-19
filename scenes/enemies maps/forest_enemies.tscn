@@ -11,60 +11,134 @@ position = Vector2(5, 15)
 
 [node name="mushroom" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(213, 105)
+max_hp = 60
+attack = 15
+defense = 4
 
 [node name="mushroom2" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(534, 259)
+max_hp = 60
+attack = 15
+defense = 4
 
 [node name="mushroom3" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(225, 466)
+max_hp = 60
+attack = 15
+defense = 4
 
 [node name="mushroom4" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(962, 99)
+max_hp = 60
+attack = 15
+defense = 4
 
 [node name="mushroom5" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(954, 483)
+max_hp = 60
+attack = 15
+defense = 4
 
 [node name="bear" parent="." instance=ExtResource("2_p5uo7")]
 position = Vector2(1825, 122)
+max_hp = 105
+attack = 22
+defense = 6
+exp_reward = 70
 
 [node name="bear2" parent="." instance=ExtResource("2_p5uo7")]
 position = Vector2(1907, 459)
+max_hp = 105
+attack = 22
+defense = 6
+exp_reward = 70
 
 [node name="bear3" parent="." instance=ExtResource("2_p5uo7")]
 position = Vector2(1444, 512)
+max_hp = 105
+attack = 22
+defense = 6
+exp_reward = 70
 
 [node name="bear4" parent="." instance=ExtResource("2_p5uo7")]
 position = Vector2(2299, 100)
+max_hp = 105
+attack = 22
+defense = 6
+exp_reward = 70
 
 [node name="bear5" parent="." instance=ExtResource("2_p5uo7")]
 position = Vector2(2301, 516)
+max_hp = 105
+attack = 22
+defense = 6
+exp_reward = 70
 
 [node name="slime" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1465, 880)
+max_hp = 63
+attack = 13
+defense = 4
+exp_reward = 30
 
 [node name="slime2" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2031, 1213)
+max_hp = 63
+attack = 13
+defense = 4
+exp_reward = 30
 
 [node name="slime3" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1482, 1313)
+max_hp = 63
+attack = 13
+defense = 4
+exp_reward = 30
 
 [node name="slime4" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2319, 908)
+max_hp = 63
+attack = 13
+defense = 4
+exp_reward = 30
 
 [node name="slime5" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2340, 1320)
+max_hp = 63
+attack = 13
+defense = 4
+exp_reward = 30
 
 [node name="slime6" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1862, 1001)
+max_hp = 63
+attack = 13
+defense = 4
+exp_reward = 30
 
 [node name="Rock Giant" parent="." instance=ExtResource("5_88ayl")]
 position = Vector2(367, 1103)
+max_hp = 135
+attack = 28
+defense = 11
+exp_reward = 100
 
 [node name="Rock Giant2" parent="." instance=ExtResource("5_88ayl")]
 position = Vector2(885, 1080)
+max_hp = 135
+attack = 28
+defense = 11
+exp_reward = 100
 
 [node name="mushroom6" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(642, 447)
+max_hp = 60
+attack = 15
+defense = 4
 
 [node name="slime_king" parent="." instance=ExtResource("4_fm1kf")]
 position = Vector2(627, 1051)
+max_hp = 165
+attack = 26
+defense = 9
+exp_reward = 130

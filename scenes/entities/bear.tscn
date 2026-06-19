@@ -191,7 +191,7 @@ animations = [{
 [node name="bear" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_n2b7l")
 monster_name = "bear"
-max_hp = 190
+max_hp = 143
 attack = 24
 defense = 11
 speed = 80.0

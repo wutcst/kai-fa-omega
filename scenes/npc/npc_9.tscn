@@ -44,8 +44,21 @@ size = Vector2(20, 29)
 
 [node name="npc9" type="CharacterBody2D"]
 script = ExtResource("2_npcsc")
-npc_name = "村姑"
-dialogue_text = "村里的庄稼最近被怪物踩坏了不少，唉。"
+npc_name = "图鉴专家"
+dialogue_text = "怪物图鉴：
+
+level	HP	attack	defense	exp
+slime	1	55	10	3	12
+rat	3	130	19	9	35
+mushroom	3	140	17	11	40
+bat	4	100	21	6	55
+bear	4	190	24	11	75
+rock_giant	5	270	27	17	110
+bone_knight	6	240	30  16	130
+slime_king	6	340	32	15	200
+Bringer	8	480	40	21	320
+necromancer	10 620 45 24	450
+"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_npc9")

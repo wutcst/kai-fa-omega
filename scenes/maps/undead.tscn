@@ -8023,6 +8023,8 @@ accept_text = "✅ 我无所畏惧，迎接终局之战！"
 title_color = Color(0.9, 0.5, 0.4, 1)
 panel_bg_color = Color(0.2, 0.1, 0.15, 1)
 panel_border_color = Color(0.7, 0.4, 0.5, 1)
+required_boss = "Bringer"
+locked_hint = "🔒 需要先击败 Bringer of Death"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnterPortal"]
 position = Vector2(-158.875, 685)
