@@ -6,13 +6,13 @@ extends Node2D
 # 相机自动缩放以完整显示背景图
 # ============================================================
 
-const SAVE_FILE_PATH := "user://rpg_savegame.save"
-
 @onready var bg: Sprite2D = $Background
 @onready var camera: Camera2D = $Camera2D
 @onready var btn_start: Button = $UI/MenuPanel/MenuContent/btn_start
 @onready var btn_load: Button = $UI/MenuPanel/MenuContent/btn_load
 @onready var music: AudioStreamPlayer = $Music
+
+var _save_load_ui: CanvasLayer = null
 
 func _ready():
 	# 延迟调用确保 viewport 尺寸已正确（特别是全屏启动时）
@@ -61,23 +61,31 @@ func _on_start_pressed():
 	get_tree().change_scene_to_file("res://scenes/maps/intro.tscn")
 
 func _on_load_pressed():
-	if not FileAccess.file_exists(SAVE_FILE_PATH):
-		print("[开始界面] 未找到存档文件：", SAVE_FILE_PATH)
+	if _save_load_ui and is_instance_valid(_save_load_ui):
 		return
 
-	# 【存档系统接入点】
-	# 未来实现：
-	# 1. var file = FileAccess.open(SAVE_FILE_PATH, FileAccess.READ)
-	# 2. GameData.load_from_file(file)
-	# 3. 根据存档记录的 last_scene 跳转
+	var save_ui = load("res://scripts/ui/SaveLoadUI.gd").new()
+	save_ui.mode = "load"
+	save_ui.name = "SaveLoadUI"
+	add_child(save_ui)
+	_save_load_ui = save_ui
+	save_ui.back_pressed.connect(_on_save_ui_back)
+	save_ui.load_selected.connect(_on_save_ui_load_selected)
 
-	print("[开始界面] 读取存档成功（占位逻辑）")
+func _on_save_ui_back():
+	_save_load_ui = null
+
+func _on_save_ui_load_selected(slot: int):
+	_save_load_ui = null
 	if music:
 		music.stop()
-	get_tree().change_scene_to_file("res://scenes/maps/village.tscn")
 
 func _update_load_button_state():
-	var has_save: bool = FileAccess.file_exists(SAVE_FILE_PATH)
+	var has_save: bool = false
+	for i in range(GameData.SAVE_SLOT_COUNT):
+		if GameData.get_save_slot_info(i).get("exists", false):
+			has_save = true
+			break
 	btn_load.disabled = not has_save
 	if not has_save:
 		btn_load.modulate.a = 0.5
@@ -85,3 +93,11 @@ func _update_load_button_state():
 	else:
 		btn_load.modulate.a = 1.0
 		print("[开始界面] 检测到存档，加载按钮已启用")
+
+func _input(event):
+	if _save_load_ui and is_instance_valid(_save_load_ui):
+		if event is InputEventKey and event.pressed and not event.echo:
+			if event.keycode == KEY_ESCAPE:
+				get_viewport().set_input_as_handled()
+				_save_load_ui.queue_free()
+				_save_load_ui = null

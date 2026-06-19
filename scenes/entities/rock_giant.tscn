@@ -363,7 +363,7 @@ animations = [{
 [node name="Rock Giant" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_b3b2h")
 monster_name = "rock_giant"
-max_hp = 270
+max_hp = 203
 attack = 27
 defense = 17
 speed = 60.0

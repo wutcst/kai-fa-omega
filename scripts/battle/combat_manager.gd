@@ -133,6 +133,9 @@ func _ready():
 	combat_ui.update_exp_bar()
 	_play_bgm()
 
+	# 自动设置角色朝向（必须在 _fit_background 之前，因为 _fit_background 用 m_sprite.position.x 补偿）
+	_auto_face_targets()
+
 	# 初始适配
 	_fit_background()
 
@@ -150,9 +153,6 @@ func _ready():
 
 	# 战斗开始时同步玩家当前等级属性到血条UI
 	_sync_player_battler_stats()
-
-	# 自动设置角色朝向
-	_auto_face_targets()
 
 	# 监听窗口大小变化
 	var tree = get_tree()
@@ -281,11 +281,11 @@ func _auto_face_targets():
 			_monster_original_offset = m_sprite.offset
 
 		m_sprite.flip_h = new_flip
-		# 对于帧内水平不居中的特殊角色，调整 position.x 补偿翻转
+		# 记录原始 position.x（首次调用时），然后始终根据朝向设置 position.x
 		if is_nan(_monster_original_sprite_pos_x):
-			# 优先读取 Boss 脚本记录的原始 position.x（比当前值更可靠）
 			var boss_orig = _current_monster.get("_original_sprite_pos_x")
 			_monster_original_sprite_pos_x = boss_orig if boss_orig != null else m_sprite.position.x
+		# 每次调用都根据朝向重新设置 position.x
 		if new_flip:
 			m_sprite.position.x = -_monster_original_sprite_pos_x
 		else:

@@ -8,6 +8,8 @@ extends Area2D
 @export var title_color: Color = Color(0.4, 0.9, 0.5)
 @export var panel_bg_color: Color = Color(0.1, 0.2, 0.15)
 @export var panel_border_color: Color = Color(0.4, 0.7, 0.5)
+@export var required_boss: String = ""  # 需要击败的首领名称，留空则无限制
+@export var locked_hint: String = ""    # 未击败首领时的提示文字
 
 var hint_label: Label = null
 var player_nearby: bool = false
@@ -110,13 +112,24 @@ func open_dialog_panel():
 
 	var btn_accept = Button.new()
 	btn_accept.name = "BtnAccept"
-	btn_accept.text = accept_text
 	btn_accept.custom_minimum_size = Vector2(230, 44)
 	btn_accept.add_theme_font_size_override("font_size", 14)
-	btn_accept.add_theme_stylebox_override("normal", _create_button_style(Color(0.2, 0.6, 0.3)))
-	btn_accept.add_theme_stylebox_override("hover", _create_button_style(Color(0.25, 0.7, 0.35)))
-	btn_accept.add_theme_stylebox_override("pressed", _create_button_style(Color(0.15, 0.45, 0.25)))
-	btn_accept.add_theme_color_override("font_color", Color(1, 1, 1))
+
+	# 检查是否需要击败特定首领
+	var boss_defeated = _is_required_boss_defeated()
+	if required_boss != "" and not boss_defeated:
+		btn_accept.text = locked_hint if locked_hint != "" else "🔒 需要先击败 " + required_boss
+		btn_accept.disabled = true
+		btn_accept.add_theme_stylebox_override("normal", _create_button_style(Color(0.3, 0.3, 0.3)))
+		btn_accept.add_theme_stylebox_override("hover", _create_button_style(Color(0.3, 0.3, 0.3)))
+		btn_accept.add_theme_stylebox_override("pressed", _create_button_style(Color(0.25, 0.25, 0.25)))
+		btn_accept.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	else:
+		btn_accept.text = accept_text
+		btn_accept.add_theme_stylebox_override("normal", _create_button_style(Color(0.2, 0.6, 0.3)))
+		btn_accept.add_theme_stylebox_override("hover", _create_button_style(Color(0.25, 0.7, 0.35)))
+		btn_accept.add_theme_stylebox_override("pressed", _create_button_style(Color(0.15, 0.45, 0.25)))
+		btn_accept.add_theme_color_override("font_color", Color(1, 1, 1))
 	btn_accept.pressed.connect(_on_accept_quest)
 	hbox.add_child(btn_accept)
 
@@ -165,6 +178,8 @@ func _create_button_style(color: Color) -> StyleBoxFlat:
 	return style
 
 func _on_accept_quest():
+	if required_boss != "" and not _is_required_boss_defeated():
+		return
 	close_dialog_panel()
 	if target_scene != "":
 		get_tree().call_deferred("change_scene_to_file", target_scene)
@@ -179,3 +194,8 @@ func close_dialog_panel():
 	panel_open = false
 	if player_nearby and hint_label:
 		hint_label.visible = true
+
+func _is_required_boss_defeated() -> bool:
+	if required_boss == "":
+		return true
+	return required_boss in GameData.defeated_boss_names

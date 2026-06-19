@@ -4,7 +4,7 @@ extends CharacterBody2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 @export var monster_name: String = "slime"
-@export var max_hp: int = 60
+@export var max_hp: int = 45
 @export var attack: int = 12
 @export var defense: int = 3
 @export var speed: float = 70.0
@@ -41,15 +41,16 @@ func _ready():
 	current_hp = max_hp
 	spawn_position = global_position
 	
-	# 应用脚对齐：自动计算 offset，让角色脚底对齐节点原点
-	_apply_foot_alignment()
-	
+	# 保持编辑器中配置的原始位置，让精灵中心在绿圈（attack_range）内
+	_original_sprite_offset = animated_sprite.offset
+
 	# 战斗中 Boss 实例：创建 HUD，不检查击败记录
 	if in_battle and is_boss:
 		_create_boss_hud()
 	else:
 		# 检查是否已被击败（地图重载后自动清除）
-		for pos in GameData.defeated_monster_positions:
+		var check_positions = GameData.defeated_boss_positions if is_boss else GameData.defeated_monster_positions
+		for pos in check_positions:
 			if pos is Vector2:
 				if spawn_position.distance_to(pos) < chase_range:
 					print("→ 怪物已被击败，自动清除：", monster_name, " at ", spawn_position)
@@ -86,10 +87,9 @@ func _apply_foot_alignment():
 	if frame_size == Vector2.ZERO:
 		_original_sprite_offset = animated_sprite.offset
 		return
-	animated_sprite.position = Vector2(animated_sprite.position.x, 0)
-	# 脚对齐：在 Godot 4 中，AnimatedSprite2D 将帧渲染在节点位置+offset处，帧为居中绘制
-	# 帧底部 = offset.y + frame_height/2，想要帧底部（角色脚底）在节点原点 → offset.y = -frame_height/2
-	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
+	# 脚对齐：让精灵底部（y = position.y + offset.y + frame_size.y * scale.y / 2）对齐节点原点 y=0
+	# 推导：offset.y = -position.y - frame_size.y * scale.y / 2
+	animated_sprite.offset = Vector2(0, -animated_sprite.position.y - frame_size.y * animated_sprite.scale.y / 2.0)
 	_original_sprite_offset = animated_sprite.offset
 
 func safe_move_and_slide():

@@ -9,7 +9,7 @@ var hp_fill: ColorRect
 var hp_label: Label
 
 @export var monster_name: String = "slime"
-@export var max_hp: int = 80
+@export var max_hp: int = 60
 @export var attack: int = 15
 @export var defense: int = 3
 
@@ -62,8 +62,10 @@ func _apply_foot_alignment():
 	if frame_size == Vector2.ZERO:
 		_original_sprite_offset = animated_sprite.offset
 		return
-	animated_sprite.position = Vector2(animated_sprite.position.x, 0)
-	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
+	# 脚对齐：只调整 offset.y 实现脚对齐，不改变 position.y
+	# 目的：让精灵底部（y = position.y + offset.y + frame_size.y/2）对齐节点原点 y=0
+	# 推导：offset.y = -position.y - frame_size.y/2
+	animated_sprite.offset = Vector2(0, -animated_sprite.position.y - frame_size.y / 2.0)
 	_original_sprite_offset = animated_sprite.offset
 
 func setup_from_monster(monster_node):

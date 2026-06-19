@@ -9917,7 +9917,6 @@ size = Vector2(99, 153.5)
 
 [node name="Forest" type="Node2D"]
 script = ExtResource("1_714mf")
-next_scene_path = "res://scenes/maps/undead.tscn"
 scene_title = "🌲 森林"
 bgm_path = "res://Asset Bundle/musicforest/save.mp3"
 min_zoom = 1.5
@@ -9954,6 +9953,8 @@ shape = SubResource("RectangleShape2D_qwapk")
 [node name="EnterPortal" type="Area2D" parent="." groups=["return_portal"]]
 position = Vector2(1331, -89)
 script = ExtResource("14_enter")
+required_boss = "slime_king"
+locked_hint = "🔒 需要先击败 slime_king"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EnterPortal"]
 position = Vector2(-180, 837)

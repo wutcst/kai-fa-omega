@@ -7,35 +7,50 @@
 
 [node name="undead_enemies" type="Node2D"]
 
-[node name="bat" parent="." instance=ExtResource("1_4fu0f")]
-position = Vector2(256, 114)
+[node name="bat1" parent="." instance=ExtResource("1_4fu0f")]
+position = Vector2(490, 113)
+max_hp = 56
+attack = 16
+defense = 5
+exp_reward = 45
 
 [node name="bat2" parent="." instance=ExtResource("1_4fu0f")]
-position = Vector2(378, 316)
-
-[node name="bat3" parent="." instance=ExtResource("1_4fu0f")]
-position = Vector2(402, 184)
+position = Vector2(410, 281)
+max_hp = 56
+attack = 16
+defense = 5
+exp_reward = 45
 
 [node name="rat" parent="." instance=ExtResource("2_e57lx")]
 z_index = 4
-position = Vector2(46, 175)
+position = Vector2(111, 185)
+max_hp = 45
+attack = 14
+defense = 3
+exp_reward = 25
 
 [node name="rat2" parent="." instance=ExtResource("2_e57lx")]
-position = Vector2(27, 324)
-
-[node name="rat3" parent="." instance=ExtResource("2_e57lx")]
-position = Vector2(75, 39)
+position = Vector2(69, 465)
+max_hp = 45
+attack = 14
+defense = 3
+exp_reward = 25
 
 [node name="Bone Knight" parent="." instance=ExtResource("3_fy4v1")]
-position = Vector2(585, 208)
+position = Vector2(618, 283)
 
 [node name="Bone Knight2" parent="." instance=ExtResource("3_fy4v1")]
-position = Vector2(496, 381)
-
-[node name="bat4" parent="." instance=ExtResource("1_4fu0f")]
-position = Vector2(194, 442)
+position = Vector2(496, 453)
 
 [node name="rat4" parent="." instance=ExtResource("2_e57lx")]
-position = Vector2(212, 302)
+position = Vector2(189, 331)
+max_hp = 45
+attack = 14
+defense = 3
+exp_reward = 25
 
 [node name="Bringer_of_death" parent="." instance=ExtResource("4_buan1")]
+max_hp = 225
+attack = 34
+defense = 14
+exp_reward = 200

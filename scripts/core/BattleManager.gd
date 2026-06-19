@@ -93,7 +93,7 @@ func _on_enter_battle(attacking_monster):
 
 	enemy_data = {
 		"monster_name": attacking_monster.get("monster_name") if attacking_monster.get("monster_name") else "bat",
-		"max_hp": attacking_monster.get("max_hp") if attacking_monster.get("max_hp") else 80,
+		"max_hp": attacking_monster.get("max_hp") if attacking_monster.get("max_hp") else 60,
 		"attack": attacking_monster.get("attack") if attacking_monster.get("attack") else 15,
 		"defense": attacking_monster.get("defense") if attacking_monster.get("defense") else 3,
 		"exp_reward": attacking_monster.get("exp_reward") if attacking_monster.get("exp_reward") else 20,
@@ -184,7 +184,7 @@ func _setup_monster_battler(battler):
 		return
 
 	battler.monster_name = enemy_data.get("monster_name", "bat")
-	battler.max_hp = enemy_data.get("max_hp", 80)
+	battler.max_hp = enemy_data.get("max_hp", 60)
 	battler.attack = enemy_data.get("attack", 15)
 	battler.defense = enemy_data.get("defense", 3)
 	battler.current_hp = battler.max_hp
@@ -497,8 +497,15 @@ func _end_battle(player_won: bool):
 		await _wait_reward_panel_done()
 		# 记录击败怪物位置
 		if enemy_position != Vector2.ZERO:
-			GameData.defeated_monster_positions.append(enemy_position)
-			print("→ 记录击败怪物位置：", enemy_position)
+			if enemy_data.get("is_boss", false):
+				GameData.defeated_boss_positions.append(enemy_position)
+				var boss_name = enemy_data.get("monster_name", "")
+				if boss_name != "" and boss_name not in GameData.defeated_boss_names:
+					GameData.defeated_boss_names.append(boss_name)
+				print("→ 记录击败首领位置：", enemy_position, "  名称：", boss_name)
+			else:
+				GameData.defeated_monster_positions.append(enemy_position)
+				print("→ 记录击败怪物位置：", enemy_position)
 	else:
 		print("战斗失败！")
 
@@ -996,7 +1003,7 @@ func _on_angel_rescue_clicked():
 
 	# 4. 执行战斗退出流程（切回 village 场景）
 	_battle_exiting = true
-	battle_state = STATE_END
+	battle_state = STATE_IDLE
 
 	# 清空怪物节点引用
 	for enemy_node in get_tree().get_nodes_in_group("enemy"):

@@ -314,7 +314,7 @@ radius = 12.6491
 [node name="rat" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_ixfqb")
 monster_name = "rat"
-max_hp = 130
+max_hp = 98
 attack = 19
 defense = 9
 speed = 80.0
