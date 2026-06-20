@@ -123,21 +123,36 @@ func _ready():
 	combat_ui.mana_pressed.connect(_on_use_mana_potion)
 
 	# ============================================================
-	# 【重要】在任何修改前记录原始状态
+	# 【重要】以 spawn point 为基准，设置角色位置与原始状态
 	# ============================================================
 	if bg_sprite:
 		_original_bg_scale = bg_sprite.scale
-	if is_instance_valid(player_battler):
+	
+	var sp_player = get_node_or_null("SpawnPoint")
+	var sp_monster = get_node_or_null("SpawnPoint2")
+	
+	if sp_player and is_instance_valid(player_battler):
+		player_battler.position = sp_player.position
+		_original_player_pos = sp_player.position
+		print("[combat] 玩家生成点: ", sp_player.position)
+	elif is_instance_valid(player_battler):
 		_original_player_pos = player_battler.position
-	if is_instance_valid(monster_battler):
+		print("[combat] 玩家生成点未找到，使用默认位置: ", player_battler.position)
+	
+	if sp_monster and is_instance_valid(monster_battler):
+		monster_battler.position = sp_monster.position
+		_original_monster_pos = sp_monster.position
+		print("[combat] 怪物生成点: ", sp_monster.position)
+	elif is_instance_valid(monster_battler):
 		_original_monster_pos = monster_battler.position
+		print("[combat] 怪物生成点未找到，使用默认位置: ", monster_battler.position)
 
 	_update_skill_buttons()
 	combat_ui.refresh_skill_locks()
 	combat_ui.update_exp_bar()
 	_play_bgm()
 
-	# 自动设置角色朝向（必须在 _fit_background 之前，因为 _fit_background 用 m_sprite.position.x 补偿）
+	# 自动设置角色朝向（spawn point 为锚点，不受朝向影响）
 	_auto_face_targets()
 
 	# 初始适配
@@ -219,8 +234,13 @@ func _fit_background():
 		player_battler.position = _original_player_pos * scale_factor
 		if player_battler.has_node("AnimatedSprite2D"):
 			var p_sprite = player_battler.get_node("AnimatedSprite2D")
-			p_sprite.scale = _calc_battle_scale(p_sprite, PLAYER_TARGET_HEIGHT, scale_factor)
-			player_base_scale = p_sprite.scale
+			var new_scale = _calc_battle_scale(p_sprite, PLAYER_TARGET_HEIGHT, scale_factor)
+			p_sprite.scale = new_scale
+			player_base_scale = new_scale
+			# 重新计算脚对齐（scale 改变后 offset.y 需要重新计算）
+			var p_info = _get_sprite_info(p_sprite)
+			if p_info["has_anim"] and p_info["size"].y > 0:
+				p_sprite.offset = Vector2(0, -p_sprite.position.y - p_info["size"].y / 2.0 * new_scale.y)
 		_position_hud(player_battler)
 
 	# ============================================================
@@ -243,10 +263,12 @@ func _fit_background():
 				monster_scale = Vector2(capped, capped)
 
 		if actual_monster == monster_battler:
-			# a) 默认怪物
+			# a) 默认怪物：直接以 spawn point 为锚点，脚对齐负责垂直
 			m_sprite.scale = monster_scale
-			var player_y = _original_player_pos.y * scale_factor
-			actual_monster.position = Vector2(_original_monster_pos.x * scale_factor - m_sprite.position.x, player_y + MONSTER_Y_OFFSET)
+			if m_info["has_anim"] and m_info["size"].y > 0:
+				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
+			actual_monster.position = _original_monster_pos * scale_factor
+			print("[fit] 默认怪物 pos=", actual_monster.position, " orig=", _original_monster_pos, " sf=", scale_factor)
 			_position_hud(actual_monster)
 		else:
 			# b) 动态怪物（如 Bone Knight、Boss 实例）
@@ -254,19 +276,21 @@ func _fit_background():
 				_dynamic_monster_original_pos[mid] = actual_monster.global_position
 
 			m_sprite.scale = monster_scale
+			if m_info["has_anim"] and m_info["size"].y > 0:
+				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
 
 			var orig_pos: Vector2 = _dynamic_monster_original_pos[mid]
-			var player_y_scaled = _original_player_pos.y * scale_factor
 			var parent_node = actual_monster.get_parent()
 			var sprite_comp_x = -m_sprite.position.x
 			if parent_node and parent_node != self:
 				var parent_glob = parent_node.global_position
 				actual_monster.position = Vector2(
 					(orig_pos.x - parent_glob.x) * scale_factor + sprite_comp_x,
-					(_original_player_pos.y) * scale_factor + MONSTER_Y_OFFSET
+					(orig_pos.y - parent_glob.y) * scale_factor
 				)
 			else:
-				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, player_y_scaled + MONSTER_Y_OFFSET)
+				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, orig_pos.y * scale_factor)
+			print("[fit] 动态怪物 pos=", actual_monster.position, " orig=", orig_pos, " sf=", scale_factor)
 			_position_hud(actual_monster)
 
 const MONSTERS_NO_FLIP := ["skull", "slime_king", "Bringer"]
