@@ -1,7 +1,8 @@
-[gd_scene load_steps=27 format=3 uid="uid://denkhlrm7r76f"]
+[gd_scene load_steps=28 format=3 uid="uid://denkhlrm7r76f"]
 
 [ext_resource type="Script" path="res://scripts/entities/monster.gd" id="1_n2b7l"]
 [ext_resource type="Texture2D" uid="uid://c6chy1f16erxq" path="res://Asset Bundle/sprites/MinifolksForestAnimals/Outline/MiniBear.png" id="2_78cag"]
+[ext_resource type="Texture2D" uid="uid://cbmkh6jxx5864" path="res://Asset Bundle/sprites/MinifolksForestAnimals/Without outline/MiniBear.png" id="3_2c1k8"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_cv6p6"]
 radius = 25.4951
@@ -54,21 +55,21 @@ region = Rect2(0, 192, 32, 32)
 atlas = ExtResource("2_78cag")
 region = Rect2(32, 192, 32, 32)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_344ju"]
-atlas = ExtResource("2_78cag")
-region = Rect2(0, 0, 32, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_2eauh"]
+atlas = ExtResource("3_2c1k8")
+region = Rect2(0, 10, 33, 30)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_bk5n2"]
-atlas = ExtResource("2_78cag")
-region = Rect2(32, 0, 32, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_xwxto"]
+atlas = ExtResource("3_2c1k8")
+region = Rect2(33, 10, 33, 30)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_d3rw6"]
-atlas = ExtResource("2_78cag")
-region = Rect2(64, 0, 32, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_5lm5u"]
+atlas = ExtResource("3_2c1k8")
+region = Rect2(66, 10, 33, 30)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_ekag2"]
-atlas = ExtResource("2_78cag")
-region = Rect2(96, 0, 32, 32)
+[sub_resource type="AtlasTexture" id="AtlasTexture_6cxx5"]
+atlas = ExtResource("3_2c1k8")
+region = Rect2(99, 10, 33, 30)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_v6aeb"]
 atlas = ExtResource("2_78cag")
@@ -149,16 +150,16 @@ animations = [{
 }, {
 "frames": [{
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_344ju")
+"texture": SubResource("AtlasTexture_2eauh")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_bk5n2")
+"texture": SubResource("AtlasTexture_xwxto")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_d3rw6")
+"texture": SubResource("AtlasTexture_5lm5u")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_ekag2")
+"texture": SubResource("AtlasTexture_6cxx5")
 }],
 "loop": true,
 "name": &"bear_idle",
@@ -204,7 +205,6 @@ position = Vector2(-1, 3)
 shape = SubResource("CircleShape2D_cv6p6")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -23)
 scale = Vector2(2.90625, 2.6914)
 sprite_frames = SubResource("SpriteFrames_66tbw")
 animation = &"bear_idle"
