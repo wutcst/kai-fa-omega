@@ -10,9 +10,13 @@ const DESIGN_HEIGHT = 648.0
 # 战斗场景中玩家的目标像素高度（设计分辨率内）
 const PLAYER_TARGET_HEIGHT = 130.0
 # 怪物比玩家大的基础比例（小怪如 bear 帧很小，需要更高比例才显大）
-const MONSTER_SIZE_RATIO = 1.35
+const MONSTER_SIZE_RATIO = 1.3
 # 怪物视觉高度上限（玩家高度的倍数，防止 Boss 过大）
-const MONSTER_MAX_VISUAL_RATIO = 2.0
+const MONSTER_MAX_VISUAL_RATIO = 1.5
+
+# 怪物在战斗场景中的 Y 轴偏移（正值=下移，负值=上移，单位：像素）
+# 调节此值可以统一调整所有怪物（包括 Boss）相对于玩家的垂直位置
+const MONSTER_Y_OFFSET = 0.0
 
 func _get_sprite_info(sprite: AnimatedSprite2D) -> Dictionary:
 	var result = {"size": Vector2.ZERO, "has_anim": false}
@@ -242,7 +246,7 @@ func _fit_background():
 			# a) 默认怪物
 			m_sprite.scale = monster_scale
 			var player_y = _original_player_pos.y * scale_factor
-			actual_monster.position = Vector2(_original_monster_pos.x * scale_factor - m_sprite.position.x, player_y)
+			actual_monster.position = Vector2(_original_monster_pos.x * scale_factor - m_sprite.position.x, player_y + MONSTER_Y_OFFSET)
 			_position_hud(actual_monster)
 		else:
 			# b) 动态怪物（如 Bone Knight、Boss 实例）
@@ -259,10 +263,10 @@ func _fit_background():
 				var parent_glob = parent_node.global_position
 				actual_monster.position = Vector2(
 					(orig_pos.x - parent_glob.x) * scale_factor + sprite_comp_x,
-					(_original_player_pos.y) * scale_factor
+					(_original_player_pos.y) * scale_factor + MONSTER_Y_OFFSET
 				)
 			else:
-				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, player_y_scaled)
+				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, player_y_scaled + MONSTER_Y_OFFSET)
 			_position_hud(actual_monster)
 
 const MONSTERS_NO_FLIP := ["skull", "slime_king", "Bringer"]

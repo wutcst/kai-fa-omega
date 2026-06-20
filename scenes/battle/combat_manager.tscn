@@ -23,7 +23,7 @@ position = Vector2(278, 349)
 [node name="EnemyTeam" type="Node2D" parent="."]
 
 [node name="Monster-Battler" parent="EnemyTeam" instance=ExtResource("3_monster")]
-position = Vector2(833, 363)
+position = Vector2(826, 332)
 
 [node name="CombatUI" type="CanvasLayer" parent="."]
 script = ExtResource("4_dttib")
