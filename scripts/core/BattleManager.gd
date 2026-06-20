@@ -193,9 +193,10 @@ func _setup_monster_battler(battler):
 		battler.set_current_hp(battler.current_hp)
 
 	# ============================================================
-	# 复制精灵帧 + 脚对齐重算（关键修复）
+	# 复制精灵帧 + position + scale（关键修复：确保脚对齐和翻转计算正确）
 	# ============================================================
 	var source_scale: Vector2 = Vector2.ONE
+	var source_position: Vector2 = Vector2.ZERO
 	if enemy_scene != "":
 		var enemy_resource = load(enemy_scene)
 		if enemy_resource:
@@ -204,6 +205,10 @@ func _setup_monster_battler(battler):
 				var source_sprite = temp_instance.get_node("AnimatedSprite2D")
 				if source_sprite and source_sprite.sprite_frames:
 					battler.animated_sprite.sprite_frames = source_sprite.sprite_frames.duplicate()
+					# 同步源精灵的 position：确保 reapply_foot_alignment 用正确的 position.y 计算 offset
+					# 同时确保 _auto_face_targets 记录的 _monster_original_sprite_pos_x 是正确的
+					battler.animated_sprite.position = source_sprite.position
+					source_position = source_sprite.position
 					# 记录源精灵的原始 scale，用于后续缩放计算
 					source_scale = source_sprite.scale
 			temp_instance.queue_free()
@@ -223,7 +228,8 @@ func _setup_monster_battler(battler):
 				if bsprite.sprite_frames.get_frame_count(first_anim) > 0:
 					var tex = bsprite.sprite_frames.get_frame_texture(first_anim, 0)
 					if tex:
-						bsprite.offset = Vector2(0, -tex.get_size().y / 2.0)
+						var bscale = bsprite.scale.y if bsprite else 1.0
+						bsprite.offset = Vector2(0, -tex.get_size().y / 2.0 * bscale)
 
 	# ============================================================
 	# 重置 monster offset，确保新怪物翻转时重新计算
@@ -693,11 +699,15 @@ func try_escape():
 	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
 
+	var ui = combat_scene.get_node_or_null("CombatUI") if is_instance_valid(combat_scene) else null
+	if ui:
+		ui.set_buttons_enabled(false)
+
 	battle_state = STATE_END
 	print("尝试逃跑...")
 	if randf() < 0.5:
 		print("逃跑成功！")
-		_end_battle(false)
+		call_deferred("_exit_battle")
 	else:
 		print("逃跑失败！")
 		battle_state = STATE_PLAYER

@@ -63,9 +63,10 @@ func _apply_foot_alignment():
 		_original_sprite_offset = animated_sprite.offset
 		return
 	# 脚对齐：只调整 offset.y 实现脚对齐，不改变 position.y
-	# 目的：让精灵底部（y = position.y + offset.y + frame_size.y/2）对齐节点原点 y=0
-	# 推导：offset.y = -position.y - frame_size.y/2
-	animated_sprite.offset = Vector2(0, -animated_sprite.position.y - frame_size.y / 2.0)
+	# 目的：让精灵底部（y = position.y + offset.y + frame_size.y/2 * scale.y）对齐节点原点 y=0
+	# 推导：offset.y = -position.y - frame_size.y/2 * scale.y
+	var current_scale = animated_sprite.scale.y if animated_sprite else 1.0
+	animated_sprite.offset = Vector2(0, -animated_sprite.position.y - frame_size.y / 2.0 * current_scale)
 	_original_sprite_offset = animated_sprite.offset
 
 func setup_from_monster(monster_node):
