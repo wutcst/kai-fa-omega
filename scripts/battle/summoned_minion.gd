@@ -41,7 +41,8 @@ func _apply_foot_alignment():
 		_original_sprite_offset = animated_sprite.offset
 		return
 	animated_sprite.position = Vector2(0, 0)
-	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0)
+	var current_scale = animated_sprite.scale.y if animated_sprite else 1.0
+	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0 * current_scale)
 	_original_sprite_offset = animated_sprite.offset
 
 func create_bars():

@@ -10,6 +10,7 @@ extends Node2D
 @onready var camera: Camera2D = $Camera2D
 @onready var btn_start: Button = $UI/MenuPanel/MenuContent/btn_start
 @onready var btn_load: Button = $UI/MenuPanel/MenuContent/btn_load
+@onready var btn_exit: Button = $UI/MenuPanel/MenuContent/btn_exit
 @onready var music: AudioStreamPlayer = $Music
 
 var _save_load_ui: CanvasLayer = null
@@ -29,6 +30,7 @@ func _ready():
 
 	btn_start.pressed.connect(_on_start_pressed)
 	btn_load.pressed.connect(_on_load_pressed)
+	btn_exit.pressed.connect(_on_exit_pressed)
 
 # 将背景图缩放以填满整个视口（裁剪多余部分，不留空白）
 func _fit_camera_to_background():
@@ -59,6 +61,13 @@ func _on_start_pressed():
 	if music:
 		music.stop()
 	get_tree().change_scene_to_file("res://scenes/maps/intro.tscn")
+
+func _on_exit_pressed():
+	# 保存存档（如果有需要）
+	# 直接退出游戏
+	if music:
+		music.stop()
+	get_tree().quit()
 
 func _on_load_pressed():
 	if _save_load_ui and is_instance_valid(_save_load_ui):
