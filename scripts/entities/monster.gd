@@ -9,7 +9,7 @@ extends CharacterBody2D
 @export var defense: int = 3
 @export var speed: float = 70.0
 @export var chase_range: float = 200.0
-@export var attack_range: float = 40.0
+@export var attack_range: float = 60
 @export var attack_cd: float = 1.0
 @export var exp_reward: int = 20
 @export var enemy_scene_path: String = ""
@@ -46,6 +46,7 @@ func _ready():
 
 	# 战斗中 Boss 实例：创建 HUD，不检查击败记录
 	if in_battle and is_boss:
+		_apply_foot_alignment()
 		_create_boss_hud()
 	else:
 		# 检查是否已被击败（地图重载后自动清除）
