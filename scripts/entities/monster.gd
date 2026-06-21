@@ -103,8 +103,7 @@ func connect_signals():
 	animated_sprite.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
 func _draw():
-	draw_circle(Vector2.ZERO, chase_range, Color(1, 0, 0, 0.3))
-	draw_circle(Vector2.ZERO, attack_range, Color(0, 1, 0, 0.3))
+	return
 
 func _set_flip_h(new_flip: bool):
 	if animated_sprite.flip_h == new_flip:

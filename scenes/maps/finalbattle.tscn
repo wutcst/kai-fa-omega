@@ -4189,4 +4189,4 @@ shape = SubResource("RectangleShape2D_eoym7")
 
 [node name="Necromancer" parent="." instance=ExtResource("12_at6r3")]
 z_index = 2
-position = Vector2(319, 329)
+position = Vector2(410, 253)

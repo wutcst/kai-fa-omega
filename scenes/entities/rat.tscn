@@ -312,6 +312,7 @@ animations = [{
 radius = 12.6491
 
 [node name="rat" type="CharacterBody2D" groups=["enemy"]]
+position = Vector2(0, 1)
 script = ExtResource("1_ixfqb")
 monster_name = "rat"
 max_hp = 98
