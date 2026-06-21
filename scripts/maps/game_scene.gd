@@ -9,8 +9,6 @@ extends Node2D
 @export var is_village_scene: bool = false            # 是否是村庄场景（在场景文件中勾选）
 @export var min_zoom: float = 1.0                 # 相机最小缩放值，防止视角过大（越大视野越小）
 
-var _btn_level_up: Button = null
-var _level_up_hint_label: Label = null
 var _level_up_info_label: Label = null
 var _bgm_player: AudioStreamPlayer = null
 var _welcome_canvas: CanvasLayer = null
@@ -18,6 +16,15 @@ var _save_load_ui: CanvasLayer = null
 
 # 当前场景缓存标志，避免重复解析路径
 var _is_village: bool = false
+
+func _enter_tree():
+	# 必须在 _enter_tree 中清除，因为子节点（如 Necromancer）的 _ready() 比父节点 _ready() 先执行
+	var current = get_tree().current_scene
+	if current and "finalbattle" in current.scene_file_path.to_lower():
+		if GameData.defeated_boss_positions.size() > 0 or GameData.defeated_boss_names.size() > 0:
+			print("→ 进入最终决战，清除 Boss 击败记录（_enter_tree）")
+			GameData.defeated_boss_positions.clear()
+			GameData.defeated_boss_names.clear()
 
 func _ready():
 	# 通过 scene_file_path 或显式标志判断当前场景
@@ -71,11 +78,20 @@ func _is_battle_map_scene() -> bool:
 	var lower = path.to_lower()
 	return "forest" in lower or "undead" in lower or "finalbattle" in lower
 
-# 进入战斗地图时，清除普通怪物击败记录（Boss 保留）
+# 进入战斗地图时，清除普通怪物击败记录，finalbattle 场景同时清除 Boss 记录（确保最终 Boss 登场）
 func _refresh_regular_monsters():
-	if _is_battle_map_scene() and GameData.defeated_monster_positions.size() > 0:
+	if not _is_battle_map_scene():
+		return
+	if GameData.defeated_monster_positions.size() > 0:
 		print("→ 进入战斗地图，刷新所有普通怪物（清除 ", GameData.defeated_monster_positions.size(), " 条击败记录）")
 		GameData.defeated_monster_positions.clear()
+	# 进入 finalbattle 时，清除 Boss 击败记录，确保 Necromancer 每次都登场
+	var current = get_tree().current_scene
+	if current and "finalbattle" in current.scene_file_path.to_lower():
+		if GameData.defeated_boss_positions.size() > 0:
+			print("→ 进入最终决战，清除 ", GameData.defeated_boss_positions.size(), " 条 Boss 击败记录")
+			GameData.defeated_boss_positions.clear()
+			GameData.defeated_boss_names.clear()
 
 func _setup_scene_nodes():
 	var is_village = _is_village
@@ -255,45 +271,6 @@ func _create_level_up_button():
 	_level_up_info_label.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
 	container.add_child(_level_up_info_label)
 
-	# 升级按钮
-	_btn_level_up = Button.new()
-	_btn_level_up.name = "BtnLevelUp"
-	_btn_level_up.text = "⬆ 自动升级"
-	_btn_level_up.custom_minimum_size = Vector2(btn_width, 44)
-	_btn_level_up.add_theme_font_size_override("font_size", 16)
-
-	var style_normal = StyleBoxFlat.new()
-	style_normal.bg_color = Color(0.78, 0.5, 0.15)
-	style_normal.set_corner_radius_all(8)
-	style_normal.border_width_left = 2
-	style_normal.border_width_right = 2
-	style_normal.border_width_top = 2
-	style_normal.border_width_bottom = 2
-	style_normal.border_color = Color(1.0, 0.85, 0.3)
-
-	var style_hover = style_normal.duplicate()
-	style_hover.bg_color = Color(0.95, 0.65, 0.2)
-
-	var style_pressed = style_normal.duplicate()
-	style_pressed.bg_color = Color(0.6, 0.35, 0.1)
-
-	_btn_level_up.add_theme_stylebox_override("normal", style_normal)
-	_btn_level_up.add_theme_stylebox_override("hover", style_hover)
-	_btn_level_up.add_theme_stylebox_override("pressed", style_pressed)
-	_btn_level_up.add_theme_color_override("font_color", Color(1, 1, 1))
-
-	container.add_child(_btn_level_up)
-
-	# 提示标签
-	_level_up_hint_label = Label.new()
-	_level_up_hint_label.name = "LevelHintLabel"
-	_level_up_hint_label.text = "按一次直接升一级"
-	_level_up_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_level_up_hint_label.custom_minimum_size = Vector2(btn_width, 0)
-	_level_up_hint_label.add_theme_font_size_override("font_size", 10)
-	_level_up_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	container.add_child(_level_up_hint_label)
-
 	# 分隔间距
 	var spacer = Control.new()
 	spacer.custom_minimum_size = Vector2(0, 8)
@@ -328,31 +305,9 @@ func _create_level_up_button():
 	btn_save.pressed.connect(_on_save_pressed)
 	container.add_child(btn_save)
 
-	_btn_level_up.pressed.connect(_on_level_up_pressed)
-
-func _on_level_up_pressed():
-	GameData.level_up()
-	# 同步玩家节点本地属性，防止进入战斗时 save_data_to_global 覆盖升级后的数据
-	var players = get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		var player_node = players[0]
-		if player_node.has_method("load_data_from_global"):
-			player_node.load_data_from_global()
-	_update_level_up_info()
-	_show_level_up_flash()
-
 func _update_level_up_info():
 	if is_instance_valid(_level_up_info_label):
 		_level_up_info_label.text = "Lv." + str(GameData.level) + "  升级自动回满血蓝"
-
-# 升级时的缩放反馈动画
-func _show_level_up_flash():
-	if not is_instance_valid(_btn_level_up):
-		return
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(_btn_level_up, "scale", Vector2(1.15, 1.15), 0.1)
-	tween.chain().tween_property(_btn_level_up, "scale", Vector2(1.0, 1.0), 0.15)
 
 func _play_bgm():
 	if bgm_path == "":

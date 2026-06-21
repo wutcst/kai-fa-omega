@@ -14,9 +14,29 @@ const MONSTER_SIZE_RATIO = 1.3
 # 怪物视觉高度上限（玩家高度的倍数，防止 Boss 过大）
 const MONSTER_MAX_VISUAL_RATIO = 1.5
 
-# 怪物在战斗场景中的 Y 轴偏移（正值=下移，负值=上移，单位：像素）
-# 调节此值可以统一调整所有怪物（包括 Boss）相对于玩家的垂直位置
-const MONSTER_Y_OFFSET = 0.0
+# ============================================================
+# ★ 战斗场景角色位置（设计分辨率下的坐标，修改这里即可调整位置）
+# ============================================================
+const PLAYER_BATTLE_X = 278.0       # 玩家 X 坐标
+const PLAYER_BATTLE_Y = 349.0       # 玩家 Y 坐标（越大越靠下）
+const MONSTER_BATTLE_X = 820.0      # 怪物 X 坐标
+const MONSTER_BATTLE_Y = 349.0   # 怪物 Y 坐标（越大越靠下）
+
+# ============================================================
+# ★ 每个怪物的 Y 轴微调偏移（正值=下移，负值=上移，单位：像素）
+# ============================================================
+const MONSTER_Y_OFFSETS = {
+	"slime": 0.0,
+	"bat": -30.0,
+	"rat": -40.0,
+	"bear": 0.0,
+	"mushroom": -70.0,
+	"rock_giant": -60.0,
+	"slime_king": -50.0,
+	"Bringer": -50.0,
+	"bone_knight": -40.0,
+	"necromancer": 0.0,
+}
 
 func _get_sprite_info(sprite: AnimatedSprite2D) -> Dictionary:
 	var result = {"size": Vector2.ZERO, "has_anim": false}
@@ -95,8 +115,6 @@ var _current_monster: Node2D:
 # 原始状态记录（在任何缩放前保存，用于窗口变化时重新计算）
 # ============================================================
 var _original_bg_scale: Vector2 = Vector2.ONE
-var _original_player_pos: Vector2 = Vector2.ZERO
-var _original_monster_pos: Vector2 = Vector2.ZERO      # 默认怪物的原始位置
 # 动态怪物专用：记录每个动态怪物的原始 global_position
 var _dynamic_monster_original_pos: Dictionary = {}        # key: instance_id -> Vector2
 
@@ -113,6 +131,9 @@ var _monster_original_sprite_pos_x: float = NAN
 var _fx_layer: Node2D = null
 var _bgm_player: AudioStreamPlayer = null
 
+# 当前执行中的技能ID（用于特效守卫，0=无技能，3=破甲斩，4=怒斩苍穹）
+var _current_skill_id: int = 0
+
 func _ready():
 	combat_ui.skill1_pressed.connect(_on_skill1)
 	combat_ui.skill2_pressed.connect(_on_skill2)
@@ -123,29 +144,17 @@ func _ready():
 	combat_ui.mana_pressed.connect(_on_use_mana_potion)
 
 	# ============================================================
-	# 【重要】以 spawn point 为基准，设置角色位置与原始状态
+	# ★ 设置角色位置（直接使用常量，修改文件顶部常量即可调整）
 	# ============================================================
 	if bg_sprite:
 		_original_bg_scale = bg_sprite.scale
 	
-	var sp_player = get_node_or_null("SpawnPoint")
-	var sp_monster = get_node_or_null("SpawnPoint2")
-	
-	if sp_player and is_instance_valid(player_battler):
-		player_battler.position = sp_player.position
-		_original_player_pos = sp_player.position
-		print("[combat] 玩家生成点: ", sp_player.position)
-	elif is_instance_valid(player_battler):
-		_original_player_pos = player_battler.position
-		print("[combat] 玩家生成点未找到，使用默认位置: ", player_battler.position)
-	
-	if sp_monster and is_instance_valid(monster_battler):
-		monster_battler.position = sp_monster.position
-		_original_monster_pos = sp_monster.position
-		print("[combat] 怪物生成点: ", sp_monster.position)
-	elif is_instance_valid(monster_battler):
-		_original_monster_pos = monster_battler.position
-		print("[combat] 怪物生成点未找到，使用默认位置: ", monster_battler.position)
+	# 玩家位置：直接应用常量
+	if is_instance_valid(player_battler):
+		player_battler.position = Vector2(PLAYER_BATTLE_X, PLAYER_BATTLE_Y)
+	# 怪物位置：直接应用常量
+	if is_instance_valid(monster_battler):
+		monster_battler.position = Vector2(MONSTER_BATTLE_X, MONSTER_BATTLE_Y)
 
 	_update_skill_buttons()
 	combat_ui.refresh_skill_locks()
@@ -200,7 +209,7 @@ func refit():
 		_monster_origin = _current_monster.position
 
 func get_original_monster_pos() -> Vector2:
-	return _original_monster_pos
+	return Vector2(MONSTER_BATTLE_X, MONSTER_BATTLE_Y)
 
 func reset_monster_offset():
 	_monster_original_offset = Vector2.ZERO
@@ -231,7 +240,7 @@ func _fit_background():
 	# ============================================================
 	var player_base_scale = Vector2.ONE * scale_factor
 	if is_instance_valid(player_battler):
-		player_battler.position = _original_player_pos * scale_factor
+		player_battler.position = Vector2(PLAYER_BATTLE_X * scale_factor, PLAYER_BATTLE_Y * scale_factor)
 		if player_battler.has_node("AnimatedSprite2D"):
 			var p_sprite = player_battler.get_node("AnimatedSprite2D")
 			var new_scale = _calc_battle_scale(p_sprite, PLAYER_TARGET_HEIGHT, scale_factor)
@@ -251,6 +260,9 @@ func _fit_background():
 		var m_sprite = actual_monster.get_node("AnimatedSprite2D")
 		var mid = actual_monster.get_instance_id()
 
+		# 获取当前怪物的 Y 偏移（查表，未在表中则默认 0）
+		var monster_y_offset = MONSTER_Y_OFFSETS.get(actual_monster.monster_name, 0.0)
+
 		# 计算怪物缩放（带上限）
 		var monster_scale = player_base_scale * MONSTER_SIZE_RATIO
 		var m_info = _get_sprite_info(m_sprite)
@@ -263,12 +275,11 @@ func _fit_background():
 				monster_scale = Vector2(capped, capped)
 
 		if actual_monster == monster_battler:
-			# a) 默认怪物：直接以 spawn point 为锚点，脚对齐负责垂直
+			# a) 默认怪物：直接使用常量位置
 			m_sprite.scale = monster_scale
 			if m_info["has_anim"] and m_info["size"].y > 0:
-				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
-			actual_monster.position = _original_monster_pos * scale_factor
-			print("[fit] 默认怪物 pos=", actual_monster.position, " orig=", _original_monster_pos, " sf=", scale_factor)
+				m_sprite.offset = Vector2(0, -m_sprite.position.y / m_sprite.scale.y - m_info["size"].y / 2.0)
+			actual_monster.position = Vector2(MONSTER_BATTLE_X * scale_factor, (MONSTER_BATTLE_Y + monster_y_offset) * scale_factor)
 			_position_hud(actual_monster)
 		else:
 			# b) 动态怪物（如 Bone Knight、Boss 实例）
@@ -277,7 +288,7 @@ func _fit_background():
 
 			m_sprite.scale = monster_scale
 			if m_info["has_anim"] and m_info["size"].y > 0:
-				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
+				m_sprite.offset = Vector2(0, -m_sprite.position.y / m_sprite.scale.y - m_info["size"].y / 2.0)
 
 			var orig_pos: Vector2 = _dynamic_monster_original_pos[mid]
 			var parent_node = actual_monster.get_parent()
@@ -286,10 +297,10 @@ func _fit_background():
 				var parent_glob = parent_node.global_position
 				actual_monster.position = Vector2(
 					(orig_pos.x - parent_glob.x) * scale_factor + sprite_comp_x,
-					(orig_pos.y - parent_glob.y) * scale_factor
+					(orig_pos.y - parent_glob.y + monster_y_offset) * scale_factor
 				)
 			else:
-				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, orig_pos.y * scale_factor)
+				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, (orig_pos.y + monster_y_offset) * scale_factor)
 			print("[fit] 动态怪物 pos=", actual_monster.position, " orig=", orig_pos, " sf=", scale_factor)
 			_position_hud(actual_monster)
 
@@ -366,6 +377,7 @@ func _on_skill2():
 	BattleManager._after_player_attack()
 
 func _on_skill3():
+	_current_skill_id = 3
 	print("→ 玩家点击了【技能3：破甲斩】")
 	BattleManager.use_skill(3)
 	var monster_alive = await _wait_for_attack_done()
@@ -388,6 +400,7 @@ func _on_skill3():
 	BattleManager._after_player_attack()
 
 func _on_skill4():
+	_current_skill_id = 4
 	print("→ 玩家点击了【技能4：怒斩苍穹】 - 攻击动画后播放大招特效")
 	BattleManager.use_skill(4)
 	var monster_alive = await _wait_for_attack_done()
@@ -470,6 +483,8 @@ func _tween_shake(target: Node2D, intensity: float, duration: float):
 
 # ===================== 特效：破甲图标 =====================
 func _spawn_armor_break_icon():
+	if _current_skill_id != 3:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	# 用 Label 模拟"破甲"图标（大字，金色）
@@ -527,6 +542,8 @@ func _spawn_slash_fx(col: Color, scale_val: float):
 
 # ===================== 破甲斩：短距离弧形重劈 =====================
 func _spawn_armor_break_slash():
+	if _current_skill_id != 3:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -572,6 +589,8 @@ func _spawn_armor_break_slash():
 
 # ===================== 破甲斩：盔甲碎裂白光（破碎的盾） =====================
 func _spawn_armor_shatter_flash():
+	if _current_skill_id != 3:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -664,6 +683,8 @@ func _spawn_armor_shatter_flash():
 
 # ===================== 破甲斩：金属碎片飞散 =====================
 func _spawn_metal_sparks():
+	if _current_skill_id != 3:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -724,6 +745,8 @@ func _spawn_sparks():
 
 # ===================== 特效：冲击波（圆圈扩散）=====================
 func _spawn_shockwave_fx():
+	if _current_skill_id != 4:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -776,6 +799,8 @@ func _spawn_flash_overlay():
 
 # ===================== 怒斩苍穹：3条弧形斜斩（80ms） =====================
 func _spawn_sky_cleave_main():
+	if _current_skill_id != 4:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -802,6 +827,8 @@ func _spawn_sky_cleave_main():
 
 # ===================== 怒斩苍穹：十字交叉弧形斩（200ms） =====================
 func _spawn_sky_cleave_cross():
+	if _current_skill_id != 4:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -910,6 +937,8 @@ func _make_blade_gradient(edge_color: Color, hot_color: Color) -> Gradient:
 
 # ===================== 怒斩苍穹：金/橙火焰流光 =====================
 func _spawn_flame_streaks():
+	if _current_skill_id != 4:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -965,6 +994,8 @@ func _spawn_flame_streaks():
 
 # ===================== 怒斩苍穹：天空劈下弧形气刃（30ms） =====================
 func _spawn_sky_slash():
+	if _current_skill_id != 4:
+		return
 	if not is_instance_valid(_current_monster) or not is_instance_valid(_fx_layer):
 		return
 	var center = _current_monster.global_position
@@ -1015,6 +1046,8 @@ func _spawn_sky_slash():
 
 # ===================== 怒斩苍穹：全屏强光（0ms 白 / 60ms 金 / 120ms 橙） =====================
 func _spawn_intense_flash():
+	if _current_skill_id != 4:
+		return
 	if not is_instance_valid(_fx_layer):
 		return
 

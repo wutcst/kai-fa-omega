@@ -421,7 +421,7 @@ exp_reward = 12
 enemy_scene_path = "res://scenes/entities/slime.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
-position = Vector2(3, 1)
+position = Vector2(3, 5)
 sprite_frames = SubResource("SpriteFrames_pqe08")
 animation = &"slime_idle"
 autoplay = "slime_idle"

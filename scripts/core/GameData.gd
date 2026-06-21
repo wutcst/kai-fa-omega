@@ -269,6 +269,9 @@ func unequip_accessory():
 # 升级
 # ============================================================
 func level_up():
+	if level >= 16:
+		print("→ 已达最高等级 Lv.16，无法继续升级")
+		return
 	level += 1
 	max_hp += 10
 	max_mp += 5

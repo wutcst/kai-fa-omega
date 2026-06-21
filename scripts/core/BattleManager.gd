@@ -22,6 +22,8 @@ var enemy_data: Dictionary = {}
 var enemy_sprite_scale: Vector2 = Vector2.ONE
 var player_sprite_scale: Vector2 = Vector2.ONE
 var combat_scene: Node2D = null
+var _escape_cooldown_active: bool = false
+var _escape_cooldown_end: int = 0
 
 # 退出战斗标志：战斗结束/逃跑时设为 true，防止异步代码继续执行
 var _battle_exiting: bool = false
@@ -63,6 +65,19 @@ func _connect_to_enemies():
 func _on_enter_battle(attacking_monster):
 	if battle_state != STATE_IDLE:
 		return
+	if _escape_cooldown_active:
+		if Time.get_ticks_msec() < _escape_cooldown_end:
+			var remaining = (_escape_cooldown_end - Time.get_ticks_msec()) / 1000.0
+			print("→ 逃跑后冷却中（剩余 %.1f 秒），无法进入战斗" % remaining)
+			# 重置怪物状态，否则怪物 in_battle=true 后不会再尝试进入战斗
+			if attacking_monster.get("in_battle") != null:
+				attacking_monster.in_battle = false
+			if attacking_monster.get("is_attacking") != null:
+				attacking_monster.is_attacking = false
+			if attacking_monster.get("attack_timer") != null:
+				attacking_monster.attack_timer = 0
+			return
+		_escape_cooldown_active = false
 
 	# 重置战斗状态标志
 	_battle_exiting = false
@@ -541,15 +556,19 @@ func _reward_player():
 	var exp_gain = enemy_data.get("exp_reward", 30)
 	if exp_gain is not int:
 		exp_gain = 30
-	GameData.current_exp += exp_gain
-	print("→ 获得经验：", exp_gain)
 
-	while GameData.current_exp >= GameData.exp_to_next_level:
-		GameData.current_exp -= GameData.exp_to_next_level
-		GameData.level_up()
-		print("升级！当前等级: ", GameData.level)
+	if GameData.level >= 16:
+		print("→ 已满级，不再获得经验")
+	else:
+		GameData.current_exp += exp_gain
+		print("→ 获得经验：", exp_gain)
 
-	print("→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level)
+		while GameData.current_exp >= GameData.exp_to_next_level:
+			GameData.current_exp -= GameData.exp_to_next_level
+			GameData.level_up()
+			print("升级！当前等级: ", GameData.level)
+
+		print("→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level)
 
 	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
@@ -707,6 +726,8 @@ func try_escape():
 	print("尝试逃跑...")
 	if randf() < 0.5:
 		print("逃跑成功！")
+		_escape_cooldown_active = true
+		_escape_cooldown_end = Time.get_ticks_msec() + 1500
 		call_deferred("_exit_battle")
 	else:
 		print("逃跑失败！")
@@ -788,7 +809,10 @@ func _show_reward_panel(drop: Dictionary):
 	# 经验奖励
 	var exp_gain: int = enemy_data.get("exp_reward", 20)
 	var exp_label = Label.new()
-	exp_label.text = "  ✨ 经验：+%d" % exp_gain
+	if GameData.level >= 16:
+		exp_label.text = "  ✨ 经验：已满级（不再获得）"
+	else:
+		exp_label.text = "  ✨ 经验：+%d" % exp_gain
 	exp_label.add_theme_font_size_override("font_size", 18)
 	exp_label.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0))
 	exp_label.custom_minimum_size = Vector2(480, 30)

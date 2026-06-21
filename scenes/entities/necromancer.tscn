@@ -411,6 +411,7 @@ animations = [{
 
 [node name="Necromancer" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_boss_script")
+attack_range = 150.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(3.5, 10)
