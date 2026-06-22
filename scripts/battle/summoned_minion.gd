@@ -6,18 +6,12 @@ extends CharacterBody2D
 
 var is_dead: bool = false
 var _original_sprite_offset: Vector2 = Vector2.ZERO
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func _ready():
 	call_deferred("_setup_visuals")
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _setup_visuals():
 	_apply_foot_alignment()
 	play_anim("appear")
@@ -50,10 +44,7 @@ func _apply_foot_alignment():
 	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0 * current_scale)
 	_original_sprite_offset = animated_sprite.offset
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
@@ -69,20 +60,14 @@ func play_anim(anim: String):
 			animated_sprite.play(a)
 			return
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 # 抵挡一次攻击（任意技能），直接死亡
 func take_damage(_dmg: int):
 	if is_dead:
 		return
 	is_dead = true
 	die()
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func die():
 	play_anim("death")

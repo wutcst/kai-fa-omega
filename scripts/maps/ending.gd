@@ -17,10 +17,7 @@ var _hint_label: Label = null
 var _bg: ColorRect = null
 var _bgm_player: AudioStreamPlayer = null
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _ready():
 	var viewport_size = get_viewport().get_visible_rect().size
 
@@ -50,10 +47,7 @@ func _ready():
 
 	_play_bgm()
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_E:
@@ -69,10 +63,7 @@ func _input(event):
 					_bgm_player.stop()
 				get_tree().change_scene_to_file("res://scenes/maps/start.tscn")
 
-<<<<<<< HEAD
 
-=======
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _play_bgm():
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.name = "EndingBGM"
@@ -82,8 +73,4 @@ func _play_bgm():
 	var stream = load(BGM_PATH)
 	if stream and stream is AudioStream:
 		_bgm_player.stream = stream
-<<<<<<< HEAD
 		_bgm_player.play()
-=======
-		_bgm_player.play()
->>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
