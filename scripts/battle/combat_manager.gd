@@ -16,10 +16,17 @@ const MONSTER_MAX_VISUAL_RATIO = 1.5
 # ============================================================
 # ★ 战斗场景角色位置（设计分辨率下的坐标，修改这里即可调整位置）
 # ============================================================
+<<<<<<< HEAD
 const PLAYER_BATTLE_X = 378.0  # 玩家 X 坐标
 const PLAYER_BATTLE_Y = 649.0  # 玩家 Y 坐标（越大越靠上）
 const MONSTER_BATTLE_X = 800.0  # 怪物 X 坐标
 const MONSTER_BATTLE_Y = 649.0  # 怪物 Y 坐标（越大越靠上）
+=======
+const PLAYER_BATTLE_X = 378.0       # 玩家 X 坐标
+const PLAYER_BATTLE_Y = 649.0       # 玩家 Y 坐标（越大越靠上）
+const MONSTER_BATTLE_X = 800.0      # 怪物 X 坐标
+const MONSTER_BATTLE_Y = 649.0   # 怪物 Y 坐标（越大越靠上）
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 # ============================================================
 # ★ 每个怪物的 Y 轴微调偏移（正值=下移，负值=上移，单位：像素）
@@ -36,7 +43,10 @@ const MONSTER_Y_OFFSETS = {
 	"necromancer": 250.0,
 	"summoned_minion": -300.0
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func _get_sprite_info(sprite: AnimatedSprite2D) -> Dictionary:
 	var result = {"size": Vector2.ZERO, "has_anim": false}
@@ -139,7 +149,10 @@ var _bgm_player: AudioStreamPlayer = null
 # 当前执行中的技能ID（用于特效守卫，0=无技能，3=破甲斩，4=怒斩苍穹）
 var _current_skill_id: int = 0
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _ready():
 	combat_ui.skill1_pressed.connect(_on_skill1)
 	combat_ui.skill2_pressed.connect(_on_skill2)
@@ -154,7 +167,11 @@ func _ready():
 	# ============================================================
 	if bg_sprite:
 		_original_bg_scale = bg_sprite.scale
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 	# 玩家位置：直接应用常量
 	if is_instance_valid(player_battler):
 		player_battler.position = Vector2(PLAYER_BATTLE_X, PLAYER_BATTLE_Y)
@@ -227,7 +244,10 @@ func refit():
 
 func get_original_monster_pos() -> Vector2:
 	return Vector2(MONSTER_BATTLE_X, MONSTER_BATTLE_Y)
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func reset_monster_offset():
 	_monster_original_offset = Vector2.ZERO
@@ -259,9 +279,13 @@ func _fit_background():
 	# ============================================================
 	var player_base_scale = Vector2.ONE * scale_factor
 	if is_instance_valid(player_battler):
+<<<<<<< HEAD
 		player_battler.position = Vector2(
 			PLAYER_BATTLE_X * scale_factor, PLAYER_BATTLE_Y * scale_factor
 		)
+=======
+		player_battler.position = Vector2(PLAYER_BATTLE_X * scale_factor, PLAYER_BATTLE_Y * scale_factor)
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 		if player_battler.has_node("AnimatedSprite2D"):
 			var p_sprite = player_battler.get_node("AnimatedSprite2D")
 			var new_scale = _calc_battle_scale(p_sprite, PLAYER_TARGET_HEIGHT, scale_factor)
@@ -301,6 +325,7 @@ func _fit_background():
 			# a) 默认怪物：直接使用常量位置
 			m_sprite.scale = monster_scale
 			if m_info["has_anim"] and m_info["size"].y > 0:
+<<<<<<< HEAD
 				m_sprite.offset = Vector2(
 					0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y
 				)
@@ -308,6 +333,10 @@ func _fit_background():
 				MONSTER_BATTLE_X * scale_factor,
 				(MONSTER_BATTLE_Y + monster_y_offset) * scale_factor
 			)
+=======
+				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
+			actual_monster.position = Vector2(MONSTER_BATTLE_X * scale_factor, (MONSTER_BATTLE_Y + monster_y_offset) * scale_factor)
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 			_position_hud(actual_monster)
 		else:
 			# b) 动态怪物（如 Bone Knight、Boss 实例）
@@ -330,6 +359,7 @@ func _fit_background():
 					(orig_pos.y - parent_glob.y + monster_y_offset) * scale_factor
 				)
 			else:
+<<<<<<< HEAD
 				actual_monster.position = Vector2(
 					orig_pos.x * scale_factor + sprite_comp_x,
 					(orig_pos.y + monster_y_offset) * scale_factor
@@ -337,6 +367,10 @@ func _fit_background():
 			print(
 				"[fit] 动态怪物 pos=", actual_monster.position, " orig=", orig_pos, " sf=", scale_factor
 			)
+=======
+				actual_monster.position = Vector2(orig_pos.x * scale_factor + sprite_comp_x, (orig_pos.y + monster_y_offset) * scale_factor)
+			print("[fit] 动态怪物 pos=", actual_monster.position, " orig=", orig_pos, " sf=", scale_factor)
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 			_position_hud(actual_monster)
 
 

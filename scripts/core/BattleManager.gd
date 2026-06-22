@@ -616,9 +616,13 @@ func _reward_player():
 			GameData.level_up()
 			print("升级！当前等级: ", GameData.level)
 
+<<<<<<< HEAD
 		print(
 			"→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level
 		)
+=======
+		print("→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level)
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
@@ -652,9 +656,13 @@ func _exit_battle():
 		if enemy_data.get("monster_name", "") == "necromancer":
 			tree.change_scene_to_file("res://scenes/maps/ending.tscn")
 			return
+<<<<<<< HEAD
 		var return_scene = (
 			previous_scene if previous_scene != "" else "res://scenes/maps/village.tscn"
 		)
+=======
+		var return_scene = previous_scene if previous_scene != "" else "res://scenes/maps/village.tscn"
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 		tree.change_scene_to_file(return_scene)
 
 
@@ -814,7 +822,10 @@ func try_escape():
 		if not _battle_exiting and battle_state == STATE_PLAYER:
 			_end_player_turn()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 # 最终 Boss 战逃跑提示面板
 func _show_no_escape_panel():
 	if not is_instance_valid(combat_scene):
@@ -860,7 +871,10 @@ func _show_no_escape_panel():
 	if not _battle_exiting and battle_state == STATE_PLAYER:
 		_end_player_turn()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _wait_for_e_key():
 	while true:
 		await get_tree().process_frame
@@ -870,7 +884,10 @@ func _wait_for_e_key():
 				await get_tree().process_frame
 			return
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _process(_delta):
 	if battle_state != STATE_STARTING:
 		return

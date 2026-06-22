@@ -586,7 +586,10 @@ func _get_monster_config(name: String) -> Dictionary:
 		return _MONSTER_CONFIG[name]
 	return _DEFAULT_MONSTER_CONFIG
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func generate_drop(monster_name: String, _exp_reward: int, is_boss: bool = false) -> Dictionary:
 	var result = {"gold": 0, "items": []}
 	var cfg = _get_monster_config(monster_name)

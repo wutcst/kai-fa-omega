@@ -114,7 +114,10 @@ func connect_signals():
 
 func _draw():
 	return
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func _set_flip_h(new_flip: bool):
 	if animated_sprite.flip_h == new_flip:

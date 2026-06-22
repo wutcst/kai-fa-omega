@@ -17,7 +17,10 @@ var _save_load_ui: CanvasLayer = null
 # 当前场景缓存标志，避免重复解析路径
 var _is_village: bool = false
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _enter_tree():
 	# 必须在 _enter_tree 中清除，因为子节点（如 Necromancer）的 _ready() 比父节点 _ready() 先执行
 	var current = get_tree().current_scene
@@ -27,7 +30,10 @@ func _enter_tree():
 			GameData.defeated_boss_positions.clear()
 			GameData.defeated_boss_names.clear()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _ready():
 	# 通过 scene_file_path 或显式标志判断当前场景
 	_is_village = _check_is_village_scene()
@@ -82,7 +88,10 @@ func _is_battle_map_scene() -> bool:
 	var lower = path.to_lower()
 	return "forest" in lower or "undead" in lower or "finalbattle" in lower
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 # 进入战斗地图时，清除普通怪物击败记录，finalbattle 场景同时清除 Boss 记录（确保最终 Boss 登场）
 func _refresh_regular_monsters():
 	if not _is_battle_map_scene():
@@ -97,7 +106,10 @@ func _refresh_regular_monsters():
 			print("→ 进入最终决战，清除 ", GameData.defeated_boss_positions.size(), " 条 Boss 击败记录")
 			GameData.defeated_boss_positions.clear()
 			GameData.defeated_boss_names.clear()
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func _setup_scene_nodes():
 	var is_village = _is_village
@@ -333,6 +345,7 @@ func _create_level_up_button():
 	btn_levelup.text = "⬆ 升级测试"
 	btn_levelup.custom_minimum_size = Vector2(btn_width, 38)
 	btn_levelup.add_theme_font_size_override("font_size", 14)
+<<<<<<< HEAD
 
 	var lvl_style_normal = StyleBoxFlat.new()
 	lvl_style_normal.bg_color = Color(0.6, 0.45, 0.1)
@@ -356,12 +369,39 @@ func _create_level_up_button():
 	btn_levelup.pressed.connect(_on_levelup_test_pressed)
 	container.add_child(btn_levelup)
 
+=======
+
+	var lvl_style_normal = StyleBoxFlat.new()
+	lvl_style_normal.bg_color = Color(0.6, 0.45, 0.1)
+	lvl_style_normal.set_corner_radius_all(8)
+	lvl_style_normal.border_width_left = 2
+	lvl_style_normal.border_width_right = 2
+	lvl_style_normal.border_width_top = 2
+	lvl_style_normal.border_width_bottom = 2
+	lvl_style_normal.border_color = Color(0.9, 0.7, 0.2)
+
+	var lvl_style_hover = lvl_style_normal.duplicate()
+	lvl_style_hover.bg_color = Color(0.75, 0.55, 0.15)
+
+	var lvl_style_pressed = lvl_style_normal.duplicate()
+	lvl_style_pressed.bg_color = Color(0.4, 0.3, 0.05)
+
+	btn_levelup.add_theme_stylebox_override("normal", lvl_style_normal)
+	btn_levelup.add_theme_stylebox_override("hover", lvl_style_hover)
+	btn_levelup.add_theme_stylebox_override("pressed", lvl_style_pressed)
+	btn_levelup.add_theme_color_override("font_color", Color(1, 0.95, 0.5))
+	btn_levelup.pressed.connect(_on_levelup_test_pressed)
+	container.add_child(btn_levelup)
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 
 func _update_level_up_info():
 	if is_instance_valid(_level_up_info_label):
 		_level_up_info_label.text = "Lv." + str(GameData.level) + "  升级自动回满血蓝"
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _play_bgm():
 	if bgm_path == "":
 		return
@@ -459,7 +499,10 @@ func _on_save_ui_back():
 func _on_save_ui_save_completed(slot: int):
 	_save_load_ui = null
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 func _on_levelup_test_pressed():
 	if GameData.level >= 16:
 		print("→ 已达最高等级 Lv.16")

@@ -263,6 +263,10 @@ func _apply_button_style(btn: Button, bg_color: Color):
 
 func _format_timestamp(ts: int) -> String:
 	var dt = Time.get_datetime_dict_from_unix_time(ts)
+<<<<<<< HEAD
 	return (
 		"%d-%02d-%02d %02d:%02d:%02d" % [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
 	)
+=======
+	return "%d-%02d-%02d %02d:%02d:%02d" % [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d

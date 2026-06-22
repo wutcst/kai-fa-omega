@@ -266,7 +266,10 @@ func die():
 			minion.queue_free()
 	minions.clear()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 # 应用 combat_manager 的 MONSTER_Y_OFFSETS 表中 summon_minion 的 Y 偏移
 func _apply_minion_y_offset(minion: Node2D):
 	if not is_instance_valid(minion):
@@ -284,7 +287,10 @@ func _apply_minion_y_offset(minion: Node2D):
 	var scale_factor: float = global_position.y / orig_y if orig_y != 0 else 1.0
 	minion.global_position.y += y_off * scale_factor
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> e778e1ded3599e055186e99169eb653c2066e49d
 # ============================================================
 # 3 回合 1 个周期的动作循环：
 #   回合 1：召唤随从 (Necromancer_summon)
