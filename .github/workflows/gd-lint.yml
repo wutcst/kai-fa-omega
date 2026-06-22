@@ -12,7 +12,7 @@ jobs:
       - uses: Scony/godot-gdscript-toolkit@master
       # 3.检查所有gd脚本格式（--check只检查，不自动修改，失败则流水线标红）
       - name: 格式化规范检查 gdformat
-        run: gdlint scripts/ --disable class-definitions-order,max-file-lines,unused-argument,max-returns,no-elif-return,no-else-return,function-variable-name
+        run: gdlint scripts/ --disable class-definitions-order --disable max-file-lines --disable unused-argument --disable max-returns --disable no-elif-return --disable no-else-return --disable function-variable-name
       # 4.代码规范、质量静态检测
       - name: 代码规范校验 gdlint
         run: gdlint scripts/
