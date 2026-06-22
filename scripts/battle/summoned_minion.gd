@@ -2,25 +2,20 @@ extends CharacterBody2D
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
-@export var max_hp: int = 30
+@export var monster_name: String = "summoned_minion"
 
-var current_hp: int
 var is_dead: bool = false
-var _original_sprite_offset: Vector2 = Vector2.ZERO   # 脚对齐后的原始 offset
-
-# HUD
-var hud: Control
-var hp_bar: ColorRect
-var hp_fill: ColorRect
+var _original_sprite_offset: Vector2 = Vector2.ZERO
 
 func _ready():
-	current_hp = max_hp
+	call_deferred("_setup_visuals")
+
+func _setup_visuals():
 	_apply_foot_alignment()
-	create_bars()
 	play_anim("appear")
 
 # ============================================================
-# 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
+# 脚对齐
 # ============================================================
 func _get_first_frame_size() -> Vector2:
 	if not animated_sprite or not animated_sprite.sprite_frames:
@@ -45,31 +40,6 @@ func _apply_foot_alignment():
 	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0 * current_scale)
 	_original_sprite_offset = animated_sprite.offset
 
-func create_bars():
-	hud = Control.new()
-	hud.name = "MinionHUD"
-	hud.position = Vector2(-25, -40)
-	add_child(hud)
-
-	hp_bar = ColorRect.new()
-	hp_bar.name = "HPBarBg"
-	hp_bar.size = Vector2(50, 8)
-	hp_bar.position = Vector2(0, 0)
-	hp_bar.color = Color(0.1, 0.1, 0.1)
-	hud.add_child(hp_bar)
-
-	hp_fill = ColorRect.new()
-	hp_fill.name = "HPFill"
-	hp_fill.size = Vector2(50, 8)
-	hp_fill.position = Vector2(0, 0)
-	hp_fill.color = Color(0.5, 0.3, 0.7)
-	hud.add_child(hp_fill)
-
-func update_hp_bar():
-	if hp_fill:
-		var ratio = float(current_hp) / float(max_hp)
-		hp_fill.size.x = hp_bar.size.x * ratio
-
 func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
@@ -85,26 +55,19 @@ func play_anim(anim: String):
 			animated_sprite.play(a)
 			return
 
-func take_damage(dmg: int):
+# 抵挡一次攻击（任意技能），直接死亡
+func take_damage(_dmg: int):
 	if is_dead:
 		return
-	current_hp -= dmg
-	update_hp_bar()
-
-	if current_hp <= 0:
-		current_hp = 0
-		is_dead = true
-		die()
-	else:
-		play_anim("hurt")
+	is_dead = true
+	die()
 
 func die():
 	play_anim("death")
-	# 等待死亡动画后自动清除
 	var duration: float = 0.5
 	if animated_sprite.sprite_frames.has_animation("Summoned Minion_death"):
 		var fc = animated_sprite.sprite_frames.get_frame_count("Summoned Minion_death")
 		var spd = max(1.0, animated_sprite.sprite_frames.get_animation_speed("Summoned Minion_death"))
 		duration = fc / spd
-	await get_tree().create_timer(duration).timeout
+	await get_tree().create_timer(duration + 0.2).timeout
 	queue_free()

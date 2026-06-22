@@ -291,16 +291,16 @@ func level_up():
 # ============================================================
 # 怪物掉落配置表：每个怪物有自己的金币区间和掉落装备层级
 const _MONSTER_CONFIG := {
-	"rat": {"gold_min": 3, "gold_max": 10, "tier_min": 1, "tier_max": 2},
-	"slime": {"gold_min": 3, "gold_max": 10, "tier_min": 1, "tier_max": 1},
-	"bat": {"gold_min": 8, "gold_max": 20, "tier_min": 1, "tier_max": 2},
-	"mushroom": {"gold_min": 10, "gold_max": 25, "tier_min": 1, "tier_max": 2},
+	"rat": {"gold_min": 5, "gold_max": 12, "tier_min": 1, "tier_max": 2},
+	"slime": {"gold_min": 3, "gold_max": 8, "tier_min": 1, "tier_max": 1},
+	"bat": {"gold_min": 5, "gold_max": 12, "tier_min": 1, "tier_max": 2},
+	"mushroom": {"gold_min": 2, "gold_max": 6, "tier_min": 1, "tier_max": 1},
 	"goblin": {"gold_min": 15, "gold_max": 35, "tier_min": 2, "tier_max": 3},
-	"bear": {"gold_min": 18, "gold_max": 45, "tier_min": 2, "tier_max": 3},
 	"skull": {"gold_min": 20, "gold_max": 45, "tier_min": 3, "tier_max": 4},
-	"rock_giant": {"gold_min": 25, "gold_max": 55, "tier_min": 3, "tier_max": 4},
-	"bone_knight": {"gold_min": 70, "gold_max": 140, "tier_min": 4, "tier_max": 5},
-	"slime_king": {"gold_min": 35, "gold_max": 70, "tier_min": 3, "tier_max": 4},
+	"rock_giant": {"gold_min": 8, "gold_max": 20, "tier_min": 1, "tier_max": 2},
+	"bone_knight": {"gold_min": 12, "gold_max": 28, "tier_min": 2, "tier_max": 3},
+	"slime_king": {"gold_min": 15, "gold_max": 35, "tier_min": 2, "tier_max": 2},
+	"Bringer": {"gold_min": 30, "gold_max": 60, "tier_min": 3, "tier_max": 4},
 	"dragon": {"gold_min": 80, "gold_max": 150, "tier_min": 4, "tier_max": 5},
 	"necromancer": {"gold_min": 150, "gold_max": 300, "tier_min": 5, "tier_max": 5},
 }
@@ -315,7 +315,7 @@ func _get_monster_config(name: String) -> Dictionary:
 		return _MONSTER_CONFIG[name]
 	return _DEFAULT_MONSTER_CONFIG
 
-func generate_drop(monster_name: String, _exp_reward: int) -> Dictionary:
+func generate_drop(monster_name: String, _exp_reward: int, is_boss: bool = false) -> Dictionary:
 	var result = {"gold": 0, "items": []}
 	var cfg = _get_monster_config(monster_name)
 	
@@ -324,7 +324,14 @@ func generate_drop(monster_name: String, _exp_reward: int) -> Dictionary:
 	var max_tier = int(cfg.get("tier_max", 3))
 
 	# --- 装备掉落 ---
-	if randf() < _EQUIP_CHANCE:
+	# Boss 保证必掉一件装备，还有 50% 概率再掉一件
+	var equip_rolls := 1 if is_boss else 0
+	if is_boss:
+		pass  # boss 强制掉落
+	elif randf() < _EQUIP_CHANCE:
+		equip_rolls = 1
+
+	for _i in range(equip_rolls):
 		var slot: String
 		var roll = randf()
 		if roll < 0.45:
@@ -336,6 +343,20 @@ func generate_drop(monster_name: String, _exp_reward: int) -> Dictionary:
 		var picked = _pick_equip_from_set(slot, min_tier, max_tier)
 		if picked != null:
 			result["items"].append(picked.duplicate(true))
+
+	# Boss 额外 50% 概率再掉一件（不同部位的）
+	if is_boss and randf() < 0.5:
+		var slot2: String
+		var r2 = randf()
+		if r2 < 0.45:
+			slot2 = "weapon"
+		elif r2 < 0.8:
+			slot2 = "armor"
+		else:
+			slot2 = "accessory"
+		var picked2 = _pick_equip_from_set(slot2, min_tier, max_tier)
+		if picked2 != null:
+			result["items"].append(picked2.duplicate(true))
 
 	# --- 药水掉落 ---
 	if randf() < _POTION_CHANCE:

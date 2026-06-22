@@ -305,6 +305,35 @@ func _create_level_up_button():
 	btn_save.pressed.connect(_on_save_pressed)
 	container.add_child(btn_save)
 
+	# 升级测试按钮
+	var btn_levelup = Button.new()
+	btn_levelup.name = "BtnLevelUp"
+	btn_levelup.text = "⬆ 升级测试"
+	btn_levelup.custom_minimum_size = Vector2(btn_width, 38)
+	btn_levelup.add_theme_font_size_override("font_size", 14)
+
+	var lvl_style_normal = StyleBoxFlat.new()
+	lvl_style_normal.bg_color = Color(0.6, 0.45, 0.1)
+	lvl_style_normal.set_corner_radius_all(8)
+	lvl_style_normal.border_width_left = 2
+	lvl_style_normal.border_width_right = 2
+	lvl_style_normal.border_width_top = 2
+	lvl_style_normal.border_width_bottom = 2
+	lvl_style_normal.border_color = Color(0.9, 0.7, 0.2)
+
+	var lvl_style_hover = lvl_style_normal.duplicate()
+	lvl_style_hover.bg_color = Color(0.75, 0.55, 0.15)
+
+	var lvl_style_pressed = lvl_style_normal.duplicate()
+	lvl_style_pressed.bg_color = Color(0.4, 0.3, 0.05)
+
+	btn_levelup.add_theme_stylebox_override("normal", lvl_style_normal)
+	btn_levelup.add_theme_stylebox_override("hover", lvl_style_hover)
+	btn_levelup.add_theme_stylebox_override("pressed", lvl_style_pressed)
+	btn_levelup.add_theme_color_override("font_color", Color(1, 0.95, 0.5))
+	btn_levelup.pressed.connect(_on_levelup_test_pressed)
+	container.add_child(btn_levelup)
+
 func _update_level_up_info():
 	if is_instance_valid(_level_up_info_label):
 		_level_up_info_label.text = "Lv." + str(GameData.level) + "  升级自动回满血蓝"
@@ -399,3 +428,23 @@ func _on_save_ui_back():
 
 func _on_save_ui_save_completed(slot: int):
 	_save_load_ui = null
+
+func _on_levelup_test_pressed():
+	if GameData.level >= 16:
+		print("→ 已达最高等级 Lv.16")
+		return
+	# 先同步玩家数据到全局，调用升级，再同步回玩家节点
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		var player_node = players[0]
+		if player_node.has_method("save_data_to_global"):
+			player_node.save_data_to_global()
+	GameData.level_up()
+	_update_level_up_info()
+	# 升级后刷新数据回玩家节点
+	var players2 = get_tree().get_nodes_in_group("player")
+	if players2.size() > 0:
+		var player_node2 = players2[0]
+		if player_node2.has_method("load_data_from_global"):
+			player_node2.load_data_from_global()
+	print("→ 升级完成，当前等级 Lv.", GameData.level)
