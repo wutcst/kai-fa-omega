@@ -14,10 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 安装下载工具 &amp; 下载导出模板
+      - name: 安装下载工具 & 下载导出模板
         run: |
           echo "=== 安装 wget ==="
-          apt-get update -qq &amp;&amp; apt-get install -y -qq wget
+          apt-get update -qq && apt-get install -y -qq wget
           echo "=== 创建导出模板目录 ==="
           mkdir -p /root/.local/share/godot/export_templates/4.3.stable
           mkdir -p /home/runner/.local/share/godot/export_templates/4.3.stable
