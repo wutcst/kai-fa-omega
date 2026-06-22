@@ -39,7 +39,7 @@ jobs:
       - name: Build Linux
         run: |
           mkdir -p build/linux
-          godot --headless --export-release "Linux/X11" build/linux/RPG-Game.x86_64
+          godot --headless --export-release "Linux" build/linux/RPG-Game.x86_64
 
       - name: Upload Linux Artifact
         uses: actions/upload-artifact@v4
@@ -59,7 +59,7 @@ jobs:
       - name: Build HTML5
         run: |
           mkdir -p build/web
-          godot --headless --export-release "HTML5" build/web/index.html
+          godot --headless --export-release "Web" build/web/index.html
 
       - name: Upload Web Artifact
         uses: actions/upload-artifact@v4
