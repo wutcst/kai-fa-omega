@@ -1,0 +1,55 @@
+[gd_scene load_steps=9 format=3 uid="uid://mh36wh60adf6"]
+
+[ext_resource type="Texture2D" uid="uid://c6v2wb0s2mmij" path="res://Asset Bundle/sprites/MemaoCharacterFantasySpritePack/002.png" id="2_iofts"]
+[ext_resource type="Script" path="res://scripts/npc/merchant.gd" id="2_merchant_script"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_68nck"]
+atlas = ExtResource("2_iofts")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h1tln"]
+atlas = ExtResource("2_iofts")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_18ou3"]
+atlas = ExtResource("2_iofts")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_eybon"]
+atlas = ExtResource("2_iofts")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_merchant"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_68nck")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h1tln")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_18ou3")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_eybon")
+}],
+"loop": true,
+"name": &"merchant_idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_merchant"]
+size = Vector2(16, 25)
+
+[node name="merchant" type="CharacterBody2D" groups=["merchant"]]
+script = ExtResource("2_merchant_script")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_merchant")
+animation = &"merchant_idle"
+frame_progress = 0.427736
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(1, 1.5)
+shape = SubResource("RectangleShape2D_merchant")

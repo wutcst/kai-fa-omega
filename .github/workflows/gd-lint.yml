@@ -1,0 +1,12 @@
+name: GDScript 规范校验
+on: [pull_request, push]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Scony/godot-gdscript-toolkit@master
+
+      - name: 格式化规范检查 gdformat
+        run: gdformat --check scripts/
