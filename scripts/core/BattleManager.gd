@@ -4,7 +4,7 @@ extends Node
 # 战斗管理器：处理战斗开始 / 回合 / 结束 / 掉落
 # ============================================================
 
-var battle_state: int = 0          # 0=idle, 1=starting, 2=player turn, 3=enemy turn, 4=end
+var battle_state: int = 0  # 0=idle, 1=starting, 2=player turn, 3=enemy turn, 4=end
 const STATE_IDLE := 0
 const STATE_STARTING := 1
 const STATE_PLAYER := 2
@@ -22,9 +22,14 @@ var enemy_data: Dictionary = {}
 var enemy_sprite_scale: Vector2 = Vector2.ONE
 var player_sprite_scale: Vector2 = Vector2.ONE
 var combat_scene: Node2D = null
+var _escape_cooldown_active: bool = false
+var _escape_cooldown_end: int = 0
 
 # 退出战斗标志：战斗结束/逃跑时设为 true，防止异步代码继续执行
 var _battle_exiting: bool = false
+
+# 玩家是否击败了敌人（用于区分逃跑和胜利）
+var _player_won_battle: bool = false
 
 # 最近一次掉落（供 UI 显示）
 var last_drop: Dictionary = {"gold": 0, "items": []}
@@ -34,15 +39,18 @@ var _reward_panel: CanvasLayer = null
 # 天使拯救面板节点（玩家死亡时显示）
 var _angel_panel: CanvasLayer = null
 
+
 func _ready():
 	_connect_to_enemies()
 	if not get_tree().node_added.is_connected(_on_node_added):
 		get_tree().node_added.connect(_on_node_added)
 
+
 func _on_node_added(node):
 	if not is_instance_valid(node):
 		return
 	call_deferred("_try_connect_enemy", node)
+
 
 func _try_connect_enemy(node):
 	if not is_instance_valid(node):
@@ -56,13 +64,28 @@ func _try_connect_enemy(node):
 		if not node.monster_died.is_connected(_on_monster_died):
 			node.monster_died.connect(_on_monster_died)
 
+
 func _connect_to_enemies():
 	for enemy in get_tree().get_nodes_in_group("enemy"):
 		_try_connect_enemy(enemy)
 
+
 func _on_enter_battle(attacking_monster):
 	if battle_state != STATE_IDLE:
 		return
+	if _escape_cooldown_active:
+		if Time.get_ticks_msec() < _escape_cooldown_end:
+			var remaining = (_escape_cooldown_end - Time.get_ticks_msec()) / 1000.0
+			print("→ 逃跑后冷却中（剩余 %.1f 秒），无法进入战斗" % remaining)
+			# 重置怪物状态，否则怪物 in_battle=true 后不会再尝试进入战斗
+			if attacking_monster.get("in_battle") != null:
+				attacking_monster.in_battle = false
+			if attacking_monster.get("is_attacking") != null:
+				attacking_monster.is_attacking = false
+			if attacking_monster.get("attack_timer") != null:
+				attacking_monster.attack_timer = 0
+			return
+		_escape_cooldown_active = false
 
 	# 重置战斗状态标志
 	_battle_exiting = false
@@ -85,24 +108,29 @@ func _on_enter_battle(attacking_monster):
 	var scene_path = attacking_monster.get("enemy_scene_path")
 	enemy_scene = scene_path if scene_path is String else ""
 	var sp = attacking_monster.get("spawn_position")
-	enemy_position = sp if sp is Vector2 and sp != Vector2.ZERO else attacking_monster.global_position
+	enemy_position = (
+		sp if sp is Vector2 and sp != Vector2.ZERO else attacking_monster.global_position
+	)
 
 	if attacking_monster.has_node("AnimatedSprite2D"):
 		var enemy_sprite = attacking_monster.get_node("AnimatedSprite2D")
 		enemy_sprite_scale = enemy_sprite.scale
 
 	enemy_data = {
-		"monster_name": attacking_monster.get("monster_name") if attacking_monster.get("monster_name") else "bat",
+		"monster_name":
+		attacking_monster.get("monster_name") if attacking_monster.get("monster_name") else "bat",
 		"max_hp": attacking_monster.get("max_hp") if attacking_monster.get("max_hp") else 60,
 		"attack": attacking_monster.get("attack") if attacking_monster.get("attack") else 15,
 		"defense": attacking_monster.get("defense") if attacking_monster.get("defense") else 3,
-		"exp_reward": attacking_monster.get("exp_reward") if attacking_monster.get("exp_reward") else 20,
+		"exp_reward":
+		attacking_monster.get("exp_reward") if attacking_monster.get("exp_reward") else 20,
 		"is_boss": attacking_monster.get("is_boss") if attacking_monster.get("is_boss") else false,
 	}
 
 	previous_scene = get_tree().current_scene.scene_file_path if get_tree().current_scene else ""
 
 	get_tree().change_scene_to_file("res://scenes/battle/combat_manager.tscn")
+
 
 func _on_scene_change():
 	combat_scene = get_tree().current_scene
@@ -114,7 +142,11 @@ func _on_scene_change():
 	var battlers = get_tree().get_nodes_in_group("player")
 	if battlers.size() > 0:
 		player_battler = battlers[0]
-		if enemy_sprite_scale != Vector2.ONE and is_instance_valid(player_battler) and player_battler.has_node("AnimatedSprite2D"):
+		if (
+			enemy_sprite_scale != Vector2.ONE
+			and is_instance_valid(player_battler)
+			and player_battler.has_node("AnimatedSprite2D")
+		):
 			var player_battler_sprite = player_battler.get_node("AnimatedSprite2D")
 			player_battler_sprite.scale = player_sprite_scale
 
@@ -125,7 +157,11 @@ func _on_scene_change():
 			var enemy_team = combat_scene.get_node_or_null("EnemyTeam")
 			if enemy_team:
 				# 保存默认怪物位置，Boss 使用相同位置
-				var boss_position = combat_scene.get_original_monster_pos() if combat_scene.has_method("get_original_monster_pos") else Vector2(833, 363)
+				var boss_position = (
+					combat_scene.get_original_monster_pos()
+					if combat_scene.has_method("get_original_monster_pos")
+					else Vector2(833, 363)
+				)
 				# 移除默认的 Monster-Battler
 				for child in enemy_team.get_children():
 					child.queue_free()
@@ -159,7 +195,9 @@ func _on_scene_change():
 			# 骷髅默认朝左，不需要翻转
 			if is_instance_valid(enemy_node) and enemy_node.has_node("AnimatedSprite2D"):
 				var m_sprite = enemy_node.get_node("AnimatedSprite2D")
-				m_sprite.flip_h = enemy_node.monster_name != "skull" and enemy_node.monster_name != "slime_king"
+				m_sprite.flip_h = (
+					enemy_node.monster_name != "skull" and enemy_node.monster_name != "slime_king"
+				)
 			enemies.append(enemy_node)
 
 		if enemies.size() == 0 and enemy_scene != "":
@@ -178,6 +216,7 @@ func _on_scene_change():
 	if is_instance_valid(combat_scene) and combat_scene.has_method("refit"):
 		combat_scene.refit()
 	_start_player_turn()
+
 
 func _setup_monster_battler(battler):
 	if not is_instance_valid(battler):
@@ -245,6 +284,7 @@ func _setup_monster_battler(battler):
 	battler.play_anim("idle")
 	current_enemy = battler
 
+
 func _start_player_turn():
 	if _battle_exiting:
 		return
@@ -257,6 +297,7 @@ func _start_player_turn():
 			ui.set_buttons_enabled(true)
 	print("玩家回合开始")
 
+
 func _end_player_turn():
 	if _battle_exiting:
 		return
@@ -268,6 +309,7 @@ func _end_player_turn():
 			ui.set_buttons_enabled(false)
 	battle_state = STATE_ENEMY
 	_start_enemy_turn()
+
 
 func _start_enemy_turn():
 	if _battle_exiting:
@@ -292,6 +334,7 @@ func _start_enemy_turn():
 		if not _battle_exiting:
 			_end_battle(true)
 
+
 # ============================================================
 # 工具函数：在 sprite_frames 中模糊匹配动画名
 #   - 先尝试精确匹配 monster_name + "_" + anim
@@ -311,6 +354,7 @@ func _find_animation_name(sprite: AnimatedSprite2D, monster_name: String, anim: 
 			return a
 	return ""
 
+
 func _wait_for_animation(sprite: AnimatedSprite2D, anim_name: String, max_duration: float = 0.8):
 	var duration: float = 0.5
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation(anim_name):
@@ -319,6 +363,7 @@ func _wait_for_animation(sprite: AnimatedSprite2D, anim_name: String, max_durati
 		duration = fc / spd
 	duration = min(duration, max_duration)
 	await get_tree().create_timer(duration).timeout
+
 
 func _execute_enemy_attack(enemy):
 	if _battle_exiting or battle_state != STATE_ENEMY:
@@ -336,12 +381,11 @@ func _execute_enemy_attack(enemy):
 	var player_glob: Vector2 = player_battler.global_position
 	# 计算怪物朝玩家的方向（只取水平方向）
 	var dir_to_player: Vector2 = Vector2(player_glob.x - enemy.global_position.x, 0)
-	var dir_norm: Vector2 = dir_to_player.normalized() if dir_to_player.length() > 0.1 else Vector2.LEFT
-	# 目标位置：在玩家前方保持一小段距离，y 保持原值
-	var target_glob: Vector2 = Vector2(
-		player_glob.x - dir_norm.x * 150.0,
-		enemy.global_position.y
+	var dir_norm: Vector2 = (
+		dir_to_player.normalized() if dir_to_player.length() > 0.1 else Vector2.LEFT
 	)
+	# 目标位置：在玩家前方保持一小段距离，y 保持原值
+	var target_glob: Vector2 = Vector2(player_glob.x - dir_norm.x * 150.0, enemy.global_position.y)
 
 	# 播放 walk 动画（如果存在的话）
 	if enemy.has_method("play_anim"):
@@ -388,7 +432,10 @@ func _execute_enemy_attack(enemy):
 		if enemy.has_node("AnimatedSprite2D"):
 			var chk_sprite: AnimatedSprite2D = enemy.get_node("AnimatedSprite2D")
 			if chk_sprite and not chk_sprite.is_playing():
-				if chk_sprite.frame >= chk_sprite.sprite_frames.get_frame_count(chk_sprite.animation) - 1:
+				if (
+					chk_sprite.frame
+					>= chk_sprite.sprite_frames.get_frame_count(chk_sprite.animation) - 1
+				):
 					break
 
 	if _battle_exiting:
@@ -398,7 +445,9 @@ func _execute_enemy_attack(enemy):
 	# 阶段 3：造成伤害 + 玩家 hurt 动画
 	# ------------------------------------------------------------
 	if is_instance_valid(player_battler) and not player_battler.is_dead:
-		var defense = player_battler.get_defense() if player_battler.has_method("get_defense") else 0
+		var defense = (
+			player_battler.get_defense() if player_battler.has_method("get_defense") else 0
+		)
 		var damage = max(1, enemy.attack - defense / 2)
 		player_battler.take_damage(damage)
 
@@ -406,7 +455,9 @@ func _execute_enemy_attack(enemy):
 		var hurt_anim = "hurt"
 		if player_battler.animated_sprite.sprite_frames.has_animation(hurt_anim):
 			var hfc = player_battler.animated_sprite.sprite_frames.get_frame_count(hurt_anim)
-			var hspd = max(1.0, player_battler.animated_sprite.sprite_frames.get_animation_speed(hurt_anim))
+			var hspd = max(
+				1.0, player_battler.animated_sprite.sprite_frames.get_animation_speed(hurt_anim)
+			)
 			hurt_duration = hfc / hspd
 		# 提高上限，让受伤动画完整播放
 		hurt_duration = min(hurt_duration, 0.6)
@@ -432,11 +483,17 @@ func _execute_enemy_attack(enemy):
 					e_sprite2.play(walk_name2)
 		await _move_monster_to(enemy, enemy_home)
 
-	if not _battle_exiting and is_instance_valid(enemy) and enemy.has_method("play_anim") and not enemy.is_dead:
+	if (
+		not _battle_exiting
+		and is_instance_valid(enemy)
+		and enemy.has_method("play_anim")
+		and not enemy.is_dead
+	):
 		enemy.play_anim("idle")
 
 	if not _battle_exiting:
 		call_deferred("_check_battle_after_enemy_attack")
+
 
 func _move_monster_to(monster: Node2D, target_glob: Vector2):
 	# 让怪物水平移动到目标 global 位置
@@ -459,6 +516,7 @@ func _move_monster_to(monster: Node2D, target_glob: Vector2):
 	if is_instance_valid(monster):
 		monster.global_position = Vector2(target_glob.x, start_glob.y)
 
+
 func _check_battle_after_enemy_attack():
 	if _battle_exiting:
 		return
@@ -467,6 +525,7 @@ func _check_battle_after_enemy_attack():
 	else:
 		battle_state = STATE_PLAYER
 		_start_player_turn()
+
 
 func _on_monster_died(monster):
 	if monster in enemies:
@@ -480,6 +539,7 @@ func _on_monster_died(monster):
 
 	if enemies.size() == 0:
 		_end_battle(true)
+
 
 # ============================================================
 # 战斗结束：发放奖励 + 掉落
@@ -495,7 +555,8 @@ func _end_battle(player_won: bool):
 		# --- 怪物掉落 ---
 		var mname: String = enemy_data.get("monster_name", "slime")
 		var exp_r: int = enemy_data.get("exp_reward", 20)
-		last_drop = GameData.generate_drop(mname, exp_r)
+		var is_boss: bool = enemy_data.get("is_boss", false)
+		last_drop = GameData.generate_drop(mname, exp_r, is_boss)
 		GameData.apply_drop(last_drop)
 
 		# --- 显示掉落提示面板，等面板消失后再退出 ---
@@ -535,21 +596,29 @@ func _end_battle(player_won: bool):
 		# 等待面板上的按钮被点击（由 _on_angel_rescue_clicked 触发场景切换）
 		return
 
+	_player_won_battle = true
 	call_deferred("_exit_battle")
+
 
 func _reward_player():
 	var exp_gain = enemy_data.get("exp_reward", 30)
 	if exp_gain is not int:
 		exp_gain = 30
-	GameData.current_exp += exp_gain
-	print("→ 获得经验：", exp_gain)
 
-	while GameData.current_exp >= GameData.exp_to_next_level:
-		GameData.current_exp -= GameData.exp_to_next_level
-		GameData.level_up()
-		print("升级！当前等级: ", GameData.level)
+	if GameData.level >= 16:
+		print("→ 已满级，不再获得经验")
+	else:
+		GameData.current_exp += exp_gain
+		print("→ 获得经验：", exp_gain)
 
-	print("→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level)
+		while GameData.current_exp >= GameData.exp_to_next_level:
+			GameData.current_exp -= GameData.exp_to_next_level
+			GameData.level_up()
+			print("升级！当前等级: ", GameData.level)
+
+		print(
+			"→ 经验：", GameData.current_exp, "/", GameData.exp_to_next_level, " | 等级：", GameData.level
+		)
 
 	if is_instance_valid(combat_scene):
 		var ui = combat_scene.get_node_or_null("CombatUI")
@@ -557,12 +626,17 @@ func _reward_player():
 			ui.update_exp_bar()
 			ui.refresh_skill_locks()
 
+
 func _exit_battle():
 	battle_state = STATE_IDLE
 	_battle_exiting = true
 
 	for enemy_node in get_tree().get_nodes_in_group("enemy"):
-		if is_instance_valid(enemy_node) and not enemy_node.is_dead and enemy_node.has_method("exit_battle"):
+		if (
+			is_instance_valid(enemy_node)
+			and not enemy_node.is_dead
+			and enemy_node.has_method("exit_battle")
+		):
 			enemy_node.exit_battle()
 
 	# 清空所有节点引用，防止访问已释放节点
@@ -574,8 +648,15 @@ func _exit_battle():
 	print("战斗结束，返回主界面")
 	var tree = get_tree()
 	if tree:
-		var return_scene = previous_scene if previous_scene != "" else "res://scenes/maps/village.tscn"
+		# 击败亡灵法师（最终 Boss）后跳转到结局场景
+		if enemy_data.get("monster_name", "") == "necromancer":
+			tree.change_scene_to_file("res://scenes/maps/ending.tscn")
+			return
+		var return_scene = (
+			previous_scene if previous_scene != "" else "res://scenes/maps/village.tscn"
+		)
 		tree.change_scene_to_file(return_scene)
+
 
 func _after_player_attack():
 	if _battle_exiting or battle_state == STATE_END:
@@ -591,6 +672,7 @@ func _after_player_attack():
 
 	_end_player_turn()
 
+
 # ============================================================
 # 技能：使用
 # ============================================================
@@ -598,7 +680,11 @@ func use_skill(skill_index: int):
 	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
 
-	if not is_instance_valid(player_battler) or player_battler.is_dead or not is_instance_valid(current_enemy):
+	if (
+		not is_instance_valid(player_battler)
+		or player_battler.is_dead
+		or not is_instance_valid(current_enemy)
+	):
 		return
 
 	var skill_idx: int = skill_index - 1
@@ -643,20 +729,24 @@ func use_skill(skill_index: int):
 			print("使用技能4：怒斩苍穹")
 			_skill_ultimate()
 
+
 func _skill_power_attack():
 	if not is_instance_valid(player_battler) or not is_instance_valid(current_enemy):
 		return
 	player_battler.heavy_attack_enemy(current_enemy)
+
 
 func _skill_armor_pierce():
 	if not is_instance_valid(player_battler) or not is_instance_valid(current_enemy):
 		return
 	player_battler.armor_pierce_attack_enemy(current_enemy)
 
+
 func _skill_ultimate():
 	if not is_instance_valid(player_battler) or not is_instance_valid(current_enemy):
 		return
 	player_battler.ultimate_attack_enemy(current_enemy)
+
 
 # ============================================================
 # 药水 / 逃跑
@@ -678,6 +768,7 @@ func use_heal_potion():
 	else:
 		print("→ 没有可用的血瓶")
 
+
 func use_mana_potion():
 	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
@@ -695,8 +786,14 @@ func use_mana_potion():
 	else:
 		print("→ 没有可用的蓝瓶")
 
+
 func try_escape():
 	if _battle_exiting or battle_state != STATE_PLAYER:
+		return
+
+	# 最终 Boss 战（亡灵法师）：禁止逃跑，显示提示面板
+	if enemy_data.get("is_boss", false):
+		_show_no_escape_panel()
 		return
 
 	var ui = combat_scene.get_node_or_null("CombatUI") if is_instance_valid(combat_scene) else null
@@ -707,6 +804,8 @@ func try_escape():
 	print("尝试逃跑...")
 	if randf() < 0.5:
 		print("逃跑成功！")
+		_escape_cooldown_active = true
+		_escape_cooldown_end = Time.get_ticks_msec() + 1500
 		call_deferred("_exit_battle")
 	else:
 		print("逃跑失败！")
@@ -715,6 +814,63 @@ func try_escape():
 		if not _battle_exiting and battle_state == STATE_PLAYER:
 			_end_player_turn()
 
+
+# 最终 Boss 战逃跑提示面板
+func _show_no_escape_panel():
+	if not is_instance_valid(combat_scene):
+		return
+	var ui = combat_scene.get_node_or_null("CombatUI")
+	if ui:
+		ui.set_buttons_enabled(false)
+
+	var canvas = CanvasLayer.new()
+	canvas.name = "NoEscapePanel"
+	canvas.layer = 100
+	combat_scene.add_child(canvas)
+
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.7)
+	bg.size = get_viewport().get_visible_rect().size
+	canvas.add_child(bg)
+
+	var label = Label.new()
+	label.text = "勇者，此地凶险，无法逃离"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 28)
+	label.add_theme_color_override("font_color", Color(1, 0.85, 0.7))
+	label.size = bg.size
+	canvas.add_child(label)
+
+	var hint = Label.new()
+	hint.text = "按 E 退出"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 16)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	hint.position = Vector2(0, bg.size.y - 80)
+	hint.size = Vector2(bg.size.x, 40)
+	canvas.add_child(hint)
+
+	# 等待玩家按 E 关闭面板，然后视为逃跑失败
+	await _wait_for_e_key()
+	canvas.queue_free()
+
+	if ui:
+		ui.set_buttons_enabled(true)
+	if not _battle_exiting and battle_state == STATE_PLAYER:
+		_end_player_turn()
+
+
+func _wait_for_e_key():
+	while true:
+		await get_tree().process_frame
+		if Input.is_key_pressed(KEY_E):
+			await get_tree().process_frame
+			while Input.is_key_pressed(KEY_E):
+				await get_tree().process_frame
+			return
+
+
 func _process(_delta):
 	if battle_state != STATE_STARTING:
 		return
@@ -722,6 +878,7 @@ func _process(_delta):
 		return
 	if get_tree().current_scene.scene_file_path == "res://scenes/battle/combat_manager.tscn":
 		_on_scene_change()
+
 
 # ============================================================
 # 掉落提示面板：战斗胜利后显示获得的金币 + 装备
@@ -749,8 +906,7 @@ func _show_reward_panel(drop: Dictionary):
 	panel.custom_minimum_size = Vector2(520, 180 + item_count * 36)
 	panel.size = Vector2(520, 180 + item_count * 36)
 	panel.position = Vector2(
-		(tree.root.size.x - panel.custom_minimum_size.x) / 2.0,
-		tree.root.size.y / 4.0
+		(tree.root.size.x - panel.custom_minimum_size.x) / 2.0, tree.root.size.y / 4.0
 	)
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.10, 0.08, 0.18, 0.95)
@@ -788,7 +944,10 @@ func _show_reward_panel(drop: Dictionary):
 	# 经验奖励
 	var exp_gain: int = enemy_data.get("exp_reward", 20)
 	var exp_label = Label.new()
-	exp_label.text = "  ✨ 经验：+%d" % exp_gain
+	if GameData.level >= 16:
+		exp_label.text = "  ✨ 经验：已满级（不再获得）"
+	else:
+		exp_label.text = "  ✨ 经验：+%d" % exp_gain
 	exp_label.add_theme_font_size_override("font_size", 18)
 	exp_label.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0))
 	exp_label.custom_minimum_size = Vector2(480, 30)
@@ -818,9 +977,12 @@ func _show_reward_panel(drop: Dictionary):
 					var atk = it.get("attack_bonus", 0)
 					var defv = it.get("defense_bonus", 0)
 					var hpv = it.get("hp_bonus", 0)
-					if atk > 0: ibonus = "（+%d 攻击）" % atk
-					elif defv > 0: ibonus = "（+%d 防御）" % defv
-					elif hpv > 0: ibonus = "（+%d 生命）" % hpv
+					if atk > 0:
+						ibonus = "（+%d 攻击）" % atk
+					elif defv > 0:
+						ibonus = "（+%d 防御）" % defv
+					elif hpv > 0:
+						ibonus = "（+%d 生命）" % hpv
 
 				var item_lbl = Label.new()
 				item_lbl.text = "        · %s  %s" % [iname, ibonus]
@@ -851,14 +1013,17 @@ func _show_reward_panel(drop: Dictionary):
 	hint.position = Vector2(20, gold_y)
 	panel.add_child(hint)
 
+
 func _wait_reward_panel_done():
 	await get_tree().create_timer(3.0).timeout
 	_hide_reward_panel()
+
 
 func _hide_reward_panel():
 	if is_instance_valid(_reward_panel):
 		_reward_panel.queue_free()
 	_reward_panel = null
+
 
 # ============================================================
 # 天使拯救面板：玩家死亡后显示
@@ -988,6 +1153,7 @@ func _show_angel_panel():
 	rescue_btn.pressed.connect(_on_angel_rescue_clicked)
 	panel.add_child(rescue_btn)
 
+
 # ------------------------------------------------------------
 # 天使拯救面板按钮点击回调
 # - 回满 HP/MP（不改变等级、经验、攻击、防御等属性）
@@ -999,12 +1165,21 @@ func _on_angel_rescue_clicked():
 	GameData.current_mp = GameData.max_mp
 	print("→ 天使拯救！HP 恢复至满值：", GameData.current_hp, "/", GameData.get_total_max_hp())
 	print("→ MP 恢复至满值：", GameData.current_mp, "/", GameData.max_mp)
-	print("→ 当前等级：Lv.", GameData.level, " | 经验：", GameData.current_exp, "/", GameData.exp_to_next_level)
+	print(
+		"→ 当前等级：Lv.",
+		GameData.level,
+		" | 经验：",
+		GameData.current_exp,
+		"/",
+		GameData.exp_to_next_level
+	)
 
 	# 2. 设置复活位置：切回 village 后玩家出现在 (x:900, y:350)
 	GameData.player_return_position = Vector2(900, 350)
 	GameData.returning_from_battle = true
-	print("→ 复活位置：(", GameData.player_return_position.x, ", ", GameData.player_return_position.y, ")")
+	print(
+		"→ 复活位置：(", GameData.player_return_position.x, ", ", GameData.player_return_position.y, ")"
+	)
 
 	# 3. 清理天使面板
 	if is_instance_valid(_angel_panel):
@@ -1017,7 +1192,11 @@ func _on_angel_rescue_clicked():
 
 	# 清空怪物节点引用
 	for enemy_node in get_tree().get_nodes_in_group("enemy"):
-		if is_instance_valid(enemy_node) and not enemy_node.is_dead and enemy_node.has_method("exit_battle"):
+		if (
+			is_instance_valid(enemy_node)
+			and not enemy_node.is_dead
+			and enemy_node.has_method("exit_battle")
+		):
 			enemy_node.exit_battle()
 
 	player_battler = null

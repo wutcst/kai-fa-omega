@@ -15,6 +15,7 @@ extends Node2D
 
 var _save_load_ui: CanvasLayer = null
 
+
 func _ready():
 	# 延迟调用确保 viewport 尺寸已正确（特别是全屏启动时）
 	call_deferred("_fit_camera_to_background")
@@ -31,6 +32,7 @@ func _ready():
 	btn_start.pressed.connect(_on_start_pressed)
 	btn_load.pressed.connect(_on_load_pressed)
 	btn_exit.pressed.connect(_on_exit_pressed)
+
 
 # 将背景图缩放以填满整个视口（裁剪多余部分，不留空白）
 func _fit_camera_to_background():
@@ -57,10 +59,12 @@ func _fit_camera_to_background():
 	# 将相机对准图片中心
 	camera.position = img_size / 2.0
 
+
 func _on_start_pressed():
 	if music:
 		music.stop()
 	get_tree().change_scene_to_file("res://scenes/maps/intro.tscn")
+
 
 func _on_exit_pressed():
 	# 保存存档（如果有需要）
@@ -68,6 +72,7 @@ func _on_exit_pressed():
 	if music:
 		music.stop()
 	get_tree().quit()
+
 
 func _on_load_pressed():
 	if _save_load_ui and is_instance_valid(_save_load_ui):
@@ -81,13 +86,16 @@ func _on_load_pressed():
 	save_ui.back_pressed.connect(_on_save_ui_back)
 	save_ui.load_selected.connect(_on_save_ui_load_selected)
 
+
 func _on_save_ui_back():
 	_save_load_ui = null
+
 
 func _on_save_ui_load_selected(slot: int):
 	_save_load_ui = null
 	if music:
 		music.stop()
+
 
 func _update_load_button_state():
 	var has_save: bool = false
@@ -102,6 +110,7 @@ func _update_load_button_state():
 	else:
 		btn_load.modulate.a = 1.0
 		print("[开始界面] 检测到存档，加载按钮已启用")
+
 
 func _input(event):
 	if _save_load_ui and is_instance_valid(_save_load_ui):

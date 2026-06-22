@@ -23,13 +23,14 @@ var exp_label: Label
 var level_label: Label
 
 # 对外信号
-signal skill1_pressed()
-signal skill2_pressed()
-signal skill3_pressed()
-signal skill4_pressed()
-signal escape_pressed()
-signal heal_pressed()
-signal mana_pressed()
+signal skill1_pressed
+signal skill2_pressed
+signal skill3_pressed
+signal skill4_pressed
+signal escape_pressed
+signal heal_pressed
+signal mana_pressed
+
 
 func _ready():
 	btn_skill1.text = "斩击"
@@ -55,16 +56,20 @@ func _ready():
 	btn_heal.pressed.connect(_on_heal_clicked)
 	btn_mana.pressed.connect(_on_mana_clicked)
 
+
 func _toggle_item_bar():
 	item_bar.visible = !item_bar.visible
+
 
 func _on_heal_clicked():
 	heal_pressed.emit()
 	item_bar.visible = false
 
+
 func _on_mana_clicked():
 	mana_pressed.emit()
 	item_bar.visible = false
+
 
 func set_buttons_enabled(enabled: bool):
 	btn_skill1.disabled = not enabled or not GameData.is_skill_unlocked(0)
@@ -75,6 +80,7 @@ func set_buttons_enabled(enabled: bool):
 	btn_escape.disabled = not enabled
 	btn_heal.disabled = not enabled
 	btn_mana.disabled = not enabled
+
 
 # ===================== 经验条 =====================
 func _create_exp_bar():
@@ -120,13 +126,17 @@ func _create_exp_bar():
 
 	update_exp_bar()
 
+
 func update_exp_bar():
 	if not exp_bar_fill:
 		return
 	level_label.text = "Lv." + str(GameData.level)
-	var ratio: float = clamp(float(GameData.current_exp) / float(max(1, GameData.exp_to_next_level)), 0.0, 1.0)
+	var ratio: float = clamp(
+		float(GameData.current_exp) / float(max(1, GameData.exp_to_next_level)), 0.0, 1.0
+	)
 	exp_bar_fill.size.x = exp_bar_bg.size.x * ratio
 	exp_label.text = str(GameData.current_exp) + " / " + str(GameData.exp_to_next_level)
+
 
 # ===================== 技能锁定 =====================
 func refresh_skill_locks():
@@ -134,6 +144,7 @@ func refresh_skill_locks():
 	var btns = [btn_skill1, btn_skill2, btn_skill3, btn_skill4]
 	for i in range(4):
 		_apply_skill_lock(btns[i], i)
+
 
 func _apply_skill_lock(btn: Button, idx: int):
 	var unlocked = GameData.is_skill_unlocked(idx)
@@ -149,6 +160,7 @@ func _apply_skill_lock(btn: Button, idx: int):
 	btn.add_theme_stylebox_override("hover", locked_style)
 	btn.add_theme_stylebox_override("pressed", locked_style)
 	btn.add_theme_color_override("font_color", Color(0.35, 0.35, 0.4))
+
 
 func _set_button_colors():
 	var skill_colors = [
@@ -169,12 +181,13 @@ func _set_button_colors():
 	_set_btn_style(btn_item, action_color)
 	_set_btn_style(btn_escape, action_color)
 
+
 func _set_btn_style(btn: Button, bg_color: Color):
 	var normal = StyleBoxFlat.new()
 	normal.bg_color = bg_color
 	normal.set_corner_radius_all(6)  # 4.3 用这个方法
 
-	btn.custom_minimum_size = Vector2(150, 60)   # 调这里，数值越大按钮越大
+	btn.custom_minimum_size = Vector2(150, 60)  # 调这里，数值越大按钮越大
 	var hover = normal.duplicate()
 	hover.bg_color = bg_color.lightened(0.15)
 

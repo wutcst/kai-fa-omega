@@ -6,11 +6,13 @@ extends Area2D
 var hint_label: Label = null
 var player_nearby: bool = false
 
+
 func _ready():
 	add_to_group("return_portal")
 	z_index = 100
 	_setup_collision()
 	_setup_hint_label()
+
 
 func _setup_collision():
 	var shape = CollisionShape2D.new()
@@ -21,6 +23,7 @@ func _setup_collision():
 	add_child(shape)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+
 
 func _setup_hint_label():
 	hint_label = Label.new()
@@ -34,6 +37,7 @@ func _setup_hint_label():
 	add_child(hint_label)
 	_update_hint_position()
 
+
 func _update_hint_position():
 	if hint_label == null:
 		return
@@ -46,17 +50,20 @@ func _update_hint_position():
 	else:
 		hint_label.position = Vector2(-50, -30)
 
+
 func _on_body_entered(body):
 	if body.is_in_group("player"):
 		player_nearby = true
 		if hint_label:
 			hint_label.visible = true
 
+
 func _on_body_exited(body):
 	if body.is_in_group("player"):
 		player_nearby = false
 		if hint_label:
 			hint_label.visible = false
+
 
 func _process(_delta):
 	if player_nearby and Input.is_key_pressed(KEY_E):

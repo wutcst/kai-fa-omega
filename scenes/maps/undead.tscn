@@ -7982,7 +7982,7 @@ tile_set = SubResource("TileSet_eyaqu")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(568, 164)
-zoom = Vector2(1.5, 1.5)
+zoom = Vector2(2, 2)
 limit_left = 50
 limit_top = -10
 limit_right = 1500
@@ -8052,4 +8052,4 @@ polygon = PackedVector2Array(0, -2, 21, -20, 41, -41, 57, -47, 62, -60, 64, -68,
 
 [node name="undead_enemies" parent="." instance=ExtResource("17_dv3aj")]
 z_index = 4
-position = Vector2(319, 268)
+position = Vector2(310, 261)

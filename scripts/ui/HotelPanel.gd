@@ -14,16 +14,20 @@ var _mp_fill: ColorRect = null
 
 const REST_PRICE: int = 25
 
+
 func _ready():
 	_setup_ui()
+
 
 func _unhandled_input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_Z or event.keycode == KEY_ESCAPE:
 			_on_close_pressed()
 
+
 func set_close_callback(cb: Callable):
 	_close_callback = cb
+
 
 func _setup_ui():
 	# 背景半透明遮罩
@@ -166,12 +170,25 @@ func _setup_ui():
 	close_btn.pressed.connect(_on_close_pressed)
 	panel_bg.add_child(close_btn)
 
+
 func _make_stats_text() -> String:
-	return "HP: " + str(GameData.current_hp) + "/" + str(GameData.get_total_max_hp()) + \
-		"    MP: " + str(GameData.current_mp) + "/" + str(GameData.max_mp)
+	return (
+		"HP: "
+		+ str(GameData.current_hp)
+		+ "/"
+		+ str(GameData.get_total_max_hp())
+		+ "    MP: "
+		+ str(GameData.current_mp)
+		+ "/"
+		+ str(GameData.max_mp)
+	)
+
 
 func _on_rest_pressed():
-	if GameData.current_hp == GameData.get_total_max_hp() and GameData.current_mp == GameData.max_mp:
+	if (
+		GameData.current_hp == GameData.get_total_max_hp()
+		and GameData.current_mp == GameData.max_mp
+	):
 		if hint_label:
 			hint_label.text = "状态已满，无需休息"
 		return
@@ -187,6 +204,7 @@ func _on_rest_pressed():
 	if hint_label:
 		hint_label.text = "休息完毕！HP 和 MP 已完全恢复～"
 
+
 func _refresh_ui():
 	if is_instance_valid(gold_label):
 		gold_label.text = "当前金币: " + str(GameData.gold)
@@ -199,12 +217,14 @@ func _refresh_ui():
 		var mp_ratio: float = float(GameData.current_mp) / max(GameData.max_mp, 1)
 		_mp_fill.size.x = 300 * mp_ratio
 
+
 func _sync_player_stats():
 	var players = get_tree().get_nodes_in_group("player")
 	for p in players:
 		if is_instance_valid(p) and p.has_method("load_data_from_global"):
 			p.load_data_from_global()
 			break
+
 
 func _on_close_pressed():
 	if _close_callback.is_valid():

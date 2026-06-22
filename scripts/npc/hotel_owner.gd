@@ -11,11 +11,13 @@ var panel_open: bool = false
 var player_nearby: bool = false
 var hint_label: Label = null
 
+
 func _ready():
 	add_to_group("hotel_owner")
 	play_anim("idle")
 	_setup_interaction_area()
 	_setup_hint_label()
+
 
 func _setup_interaction_area():
 	var area = Area2D.new()
@@ -28,6 +30,7 @@ func _setup_interaction_area():
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)
 
+
 func _setup_hint_label():
 	hint_label = Label.new()
 	hint_label.text = "按 E 休息"
@@ -39,11 +42,13 @@ func _setup_hint_label():
 	hint_label.visible = false
 	add_child(hint_label)
 
+
 func _on_body_entered(body):
 	if body.is_in_group("player"):
 		player_nearby = true
 		if hint_label:
 			hint_label.visible = true
+
 
 func _on_body_exited(body):
 	if body.is_in_group("player"):
@@ -51,11 +56,13 @@ func _on_body_exited(body):
 		if hint_label:
 			hint_label.visible = false
 
+
 func _process(_delta):
 	if panel_open:
 		return
 	if player_nearby and Input.is_key_pressed(KEY_E):
 		open_hotel_panel()
+
 
 func open_hotel_panel():
 	if hotel_panel == null:
@@ -72,11 +79,13 @@ func open_hotel_panel():
 		if hotel_panel.has_method("set_close_callback"):
 			hotel_panel.set_close_callback(_on_panel_closed)
 
+
 func _on_panel_closed():
 	panel_open = false
 	hotel_panel = null
 	if player_nearby and hint_label:
 		hint_label.visible = true
+
 
 func play_anim(anim: String):
 	if not is_instance_valid(animated_sprite):

@@ -37,10 +37,11 @@ var hp_bar: ColorRect
 var hp_fill: ColorRect
 var hp_label: Label
 
+
 func _ready():
 	current_hp = max_hp
 	spawn_position = global_position
-	
+
 	# 保持编辑器中配置的原始位置，让精灵中心在绿圈（attack_range）内
 	_original_sprite_offset = animated_sprite.offset
 
@@ -50,7 +51,9 @@ func _ready():
 		_create_boss_hud()
 	else:
 		# 检查是否已被击败（地图重载后自动清除）
-		var check_positions = GameData.defeated_boss_positions if is_boss else GameData.defeated_monster_positions
+		var check_positions = (
+			GameData.defeated_boss_positions if is_boss else GameData.defeated_monster_positions
+		)
 		for pos in check_positions:
 			if pos is Vector2:
 				if spawn_position.distance_to(pos) < chase_range:
@@ -61,10 +64,11 @@ func _ready():
 						collision_shape.disabled = true
 					queue_free()
 					return
-	
+
 	play_anim("idle")
-	
+
 	connect_signals()
+
 
 # ============================================================
 # 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
@@ -83,6 +87,7 @@ func _get_first_frame_size() -> Vector2:
 		return Vector2.ZERO
 	return tex.get_size()
 
+
 func _apply_foot_alignment():
 	var frame_size = _get_first_frame_size()
 	if frame_size == Vector2.ZERO:
@@ -90,21 +95,26 @@ func _apply_foot_alignment():
 		return
 	# 脚对齐：让精灵底部（y = position.y + offset.y + frame_size.y * scale.y / 2）对齐节点原点 y=0
 	# 推导：offset.y = -position.y - frame_size.y * scale.y / 2
-	animated_sprite.offset = Vector2(0, -animated_sprite.position.y - frame_size.y * animated_sprite.scale.y / 2.0)
+	animated_sprite.offset = Vector2(
+		0, -animated_sprite.position.y - frame_size.y * animated_sprite.scale.y / 2.0
+	)
 	_original_sprite_offset = animated_sprite.offset
+
 
 func safe_move_and_slide():
 	if is_inside_tree() and is_instance_valid(collision_shape) and not collision_shape.disabled:
 		move_and_slide()
+
 
 func connect_signals():
 	if animated_sprite.animation_finished.is_connected(_on_animated_sprite_2d_animation_finished):
 		return
 	animated_sprite.animation_finished.connect(_on_animated_sprite_2d_animation_finished)
 
+
 func _draw():
-	draw_circle(Vector2.ZERO, chase_range, Color(1, 0, 0, 0.3))
-	draw_circle(Vector2.ZERO, attack_range, Color(0, 1, 0, 0.3))
+	return
+
 
 func _set_flip_h(new_flip: bool):
 	if animated_sprite.flip_h == new_flip:
@@ -116,11 +126,13 @@ func _set_flip_h(new_flip: bool):
 	if _original_sprite_offset.x != 0:
 		if new_flip:
 			var tex = animated_sprite.sprite_frames.get_frame_texture(
-				animated_sprite.sprite_frames.get_animation_names()[0], 0)
+				animated_sprite.sprite_frames.get_animation_names()[0], 0
+			)
 			if tex:
 				animated_sprite.offset.x = -(tex.get_size().x + _original_sprite_offset.x)
 		else:
 			animated_sprite.offset.x = _original_sprite_offset.x
+
 
 func _physics_process(_delta: float) -> void:
 	if not is_inside_tree():
@@ -160,10 +172,28 @@ func _physics_process(_delta: float) -> void:
 		play_anim("idle")
 		# 仍然面向玩家
 		var dir = (player.global_position - global_position).normalized()
-		_set_flip_h((dir.x < 0) != (monster_name == "skull" or monster_name == "slime_king" or monster_name == "Bringer"))
+		_set_flip_h(
+			(
+				(dir.x < 0)
+				!= (
+					monster_name == "skull"
+					or monster_name == "slime_king"
+					or monster_name == "Bringer"
+				)
+			)
+		)
 	elif dis > attack_range:
 		var dir = (player.global_position - global_position).normalized()
-		_set_flip_h((dir.x < 0) != (monster_name == "skull" or monster_name == "slime_king" or monster_name == "Bringer"))
+		_set_flip_h(
+			(
+				(dir.x < 0)
+				!= (
+					monster_name == "skull"
+					or monster_name == "slime_king"
+					or monster_name == "Bringer"
+				)
+			)
+		)
 		velocity = dir * speed
 		play_anim("walk")
 	else:
@@ -173,6 +203,7 @@ func _physics_process(_delta: float) -> void:
 
 	safe_move_and_slide()
 
+
 func perform_attack():
 	if is_dead or is_attacking or in_battle:
 		return
@@ -181,6 +212,7 @@ func perform_attack():
 	is_attacking = true
 	play_anim("attack")
 	emit_signal("enter_battle", self)
+
 
 # ============================================================
 # Boss HUD：战斗中 Boss 的血条创建和更新
@@ -226,6 +258,7 @@ func _create_boss_hud():
 	name_label.text = display_name if display_name != "" else monster_name
 	hud.add_child(name_label)
 
+
 func update_hp_bar():
 	if hp_fill:
 		var ratio = float(current_hp) / float(max_hp)
@@ -233,8 +266,10 @@ func update_hp_bar():
 	if hp_label:
 		hp_label.text = str(current_hp) + "/" + str(max_hp)
 
+
 func take_damage(dmg: int):
-	if is_dead: return
+	if is_dead:
+		return
 	current_hp -= dmg
 	if is_boss and in_battle:
 		update_hp_bar()
@@ -246,18 +281,23 @@ func take_damage(dmg: int):
 	else:
 		play_anim("hurt")
 
+
 func die():
-	if is_dead == false: return
+	if is_dead == false:
+		return
 	play_anim("death")
 	collision_shape.set_deferred("disabled", true)
 	velocity = Vector2.ZERO
 
+
 func exit_battle():
-	if is_dead: return
+	if is_dead:
+		return
 	in_battle = false
 	is_attacking = false
 	attack_timer = 0
 	play_anim("idle")
+
 
 func play_anim(anim: String):
 	if is_dead and anim != "death":
@@ -286,6 +326,7 @@ func play_anim(anim: String):
 			if a.ends_with("_walk"):
 				animated_sprite.play(a)
 				return
+
 
 func _on_animated_sprite_2d_animation_finished(_anim_name: String = ""):
 	if is_dead:

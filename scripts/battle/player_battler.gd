@@ -14,17 +14,19 @@ var is_turn: bool = false
 var is_dead: bool = false
 var in_attack: bool = false
 var current_attack_target: Node2D = null
-var _original_position: Vector2 = Vector2.ZERO   # 玩家在战斗场景的初始站位
-var _original_sprite_offset: Vector2 = Vector2.ZERO   # 脚对齐后的原始 offset
-const _APPROACH_SPEED: float = 1000.0              # 走向怪物的速度（像素/秒）
-const _STAND_OFF_DIST: float = 80.0               # 与怪物保持的距离（不重合）
+var _original_position: Vector2 = Vector2.ZERO  # 玩家在战斗场景的初始站位
+var _original_sprite_offset: Vector2 = Vector2.ZERO  # 脚对齐后的原始 offset
+const _APPROACH_SPEED: float = 1000.0  # 走向怪物的速度（像素/秒）
+const _STAND_OFF_DIST: float = 80.0  # 与怪物保持的距离（不重合）
 
 const MP_COST_HEAVY: int = 15
 const MP_COST_ARMOR_PIERCE: int = 20
 const MP_COST_ULTIMATE: int = 30
 
+
 func get_current_hp() -> int:
 	return GameData.current_hp
+
 
 func set_current_hp(value: int):
 	GameData.current_hp = max(0, int(min(float(value), float(get_max_hp()))))
@@ -34,11 +36,14 @@ func set_current_hp(value: int):
 	if hp_label:
 		hp_label.text = str(GameData.current_hp) + "/" + str(get_max_hp())
 
+
 func get_max_mp() -> int:
 	return GameData.max_mp
 
+
 func get_current_mp() -> int:
 	return GameData.current_mp
+
 
 func set_current_mp(value: int):
 	GameData.current_mp = max(0, int(min(float(value), float(get_max_mp()))))
@@ -48,20 +53,26 @@ func set_current_mp(value: int):
 	if mp_label:
 		mp_label.text = str(GameData.current_mp) + "/" + str(get_max_mp())
 
+
 func get_attack() -> int:
 	return GameData.get_total_attack()
+
 
 func get_defense() -> int:
 	return GameData.get_total_defense()
 
+
 func get_max_hp() -> int:
 	return GameData.get_total_max_hp()
+
 
 func has_enough_mp(cost: int) -> bool:
 	return GameData.current_mp >= cost
 
+
 func consume_mp(cost: int):
 	set_current_mp(GameData.current_mp - cost)
+
 
 func _ready():
 	_original_position = global_position
@@ -69,6 +80,7 @@ func _ready():
 	_apply_foot_alignment()
 	create_bars()
 	play_anim("idle")
+
 
 # ============================================================
 # 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
@@ -87,6 +99,7 @@ func _get_first_frame_size() -> Vector2:
 		return Vector2.ZERO
 	return tex.get_size()
 
+
 func _apply_foot_alignment():
 	var frame_size = _get_first_frame_size()
 	if frame_size == Vector2.ZERO:
@@ -96,6 +109,7 @@ func _apply_foot_alignment():
 	var current_scale = animated_sprite.scale.y if animated_sprite else 1.0
 	animated_sprite.offset = Vector2(0, -frame_size.y / 2.0 * current_scale)
 	_original_sprite_offset = animated_sprite.offset
+
 
 func create_bars():
 	hud = Control.new()
@@ -156,24 +170,33 @@ func create_bars():
 	set_current_hp(get_current_hp())
 	set_current_mp(get_current_mp())
 
+
 # ============================================================
 # 三种攻击 — 纯动画，无特效
 # ============================================================
 func attack_enemy(target: Node2D):
-	if in_attack or is_dead: return
+	if in_attack or is_dead:
+		return
 	await _execute_attack(target, "hit")
 
+
 func heavy_attack_enemy(target: Node2D):
-	if in_attack or is_dead: return
+	if in_attack or is_dead:
+		return
 	await _execute_attack(target, "heavyhit")
 
+
 func ultimate_attack_enemy(target: Node2D):
-	if in_attack or is_dead: return
+	if in_attack or is_dead:
+		return
 	await _execute_attack(target, "Sky Cleave")
 
+
 func armor_pierce_attack_enemy(target: Node2D):
-	if in_attack or is_dead: return
+	if in_attack or is_dead:
+		return
 	await _execute_attack(target, "Armor Break Slash")
+
 
 func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false):
 	in_attack = true
@@ -191,7 +214,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 		in_attack = false
 		return
 
-	var home_pos: Vector2 = _original_position   # global
+	var home_pos: Vector2 = _original_position  # global
 	var enemy_glob: Vector2 = target.global_position
 	# 计算玩家朝怪物的方向（只取水平方向，传统回合制只水平移动）
 	var dir_to_enemy: Vector2 = Vector2(enemy_glob.x - global_position.x, 0)
@@ -200,8 +223,7 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 	var dir_norm: Vector2 = dir_to_enemy.normalized()
 	# 目标位置：在怪物前方 _STAND_OFF_DIST 像素处，y 保持原值
 	var target_glob: Vector2 = Vector2(
-		enemy_glob.x - dir_norm.x * _STAND_OFF_DIST,
-		global_position.y
+		enemy_glob.x - dir_norm.x * _STAND_OFF_DIST, global_position.y
 	)
 
 	# 播放 walk 动画
@@ -241,20 +263,20 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 	if is_instance_valid(current_attack_target):
 		var defense_val = current_attack_target.get("defense")
 		var defense: int = defense_val if defense_val is int else 0
-		
+
 		var multiplier: float = 1.0
 		if action == "heavyhit":
 			multiplier = 1.7
 		elif action == "Sky Cleave":
 			multiplier = 2.1
-		
+
 		var damage: int
 		if armor_pierce:
 			damage = max(1, int(get_attack() * 1.8))
 			damage -= defense / 2
 		else:
 			damage = max(1, int(get_attack() * multiplier) - defense)
-		
+
 		current_attack_target.take_damage(damage)
 
 		if not is_instance_valid(current_attack_target) or current_attack_target.is_dead:
@@ -310,7 +332,6 @@ func _execute_attack(target: Node2D, action: String, armor_pierce: bool = false)
 	play_anim("idle")
 
 
-
 # 把玩家水平移动到目标 global 位置（匀速
 # 使用 get_process_delta_time()（Node 的方法），不依赖 SceneTree 的错误 API
 func _move_to_global(target_glob: Vector2):
@@ -334,8 +355,10 @@ func _move_to_global(target_glob: Vector2):
 	if is_instance_valid(self):
 		global_position = Vector2(target_glob.x, start_glob.y)
 
+
 func take_damage(damage: int):
-	if is_dead: return
+	if is_dead:
+		return
 	set_current_hp(get_current_hp() - damage)
 	if get_current_hp() <= 0:
 		is_dead = true
@@ -343,11 +366,13 @@ func take_damage(damage: int):
 	else:
 		play_anim("hurt")
 
+
 func play_anim(action_name: String):
 	if is_dead and action_name != "death":
 		return
 	if animated_sprite.sprite_frames.has_animation(action_name):
 		animated_sprite.play(action_name)
+
 
 func get_battle_crit() -> int:
 	return GameData.crit

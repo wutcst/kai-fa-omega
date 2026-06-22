@@ -15,9 +15,11 @@ var player_ref: Node = null
 
 signal inventory_closed
 
+
 func _ready():
 	setup_ui()
 	hide_panel()
+
 
 # 允许玩家按 Q 键或再次按 ui_inventory 动作关闭
 # 注意：主要关闭逻辑由 player.gd 中的 toggle_inventory 驱动，
@@ -34,13 +36,17 @@ func _unhandled_input(event: InputEvent):
 		hide_panel()
 		get_viewport().set_input_as_handled()
 
+
 # ============================================================
 # 创建一个带边框的图标容器（所有图标都用这一套，保证对齐）
 # 使用 PanelContainer 让内部 TextureRect 自动居中，避免错位
 # ============================================================
-func _make_icon_box(icon_path: String, size: int = ICON_SIZE,
-					border_color: Color = Color(0.4, 0.35, 0.25, 0.9),
-					bg_color: Color = Color(0.15, 0.12, 0.2, 0.9)) -> PanelContainer:
+func _make_icon_box(
+	icon_path: String,
+	size: int = ICON_SIZE,
+	border_color: Color = Color(0.4, 0.35, 0.25, 0.9),
+	bg_color: Color = Color(0.15, 0.12, 0.2, 0.9)
+) -> PanelContainer:
 	var box = PanelContainer.new()
 	box.custom_minimum_size = Vector2(size + SLOT_PADDING * 2, size + SLOT_PADDING * 2)
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -78,17 +84,23 @@ func _make_icon_box(icon_path: String, size: int = ICON_SIZE,
 
 	return box
 
+
 # ============================================================
 # 可点击图标（用于背包栏里的装备）
 # ============================================================
-func _make_clickable_icon(icon_path: String, click_callback: Callable,
-						  can_equip: bool, size: int = ICON_SIZE) -> PanelContainer:
-	var box = _make_icon_box(icon_path, size,
-								Color(0.9, 0.75, 0.3, 0.9) if can_equip else Color(0.4, 0.4, 0.4, 0.7),
-								Color(0.15, 0.12, 0.2, 0.9))
+func _make_clickable_icon(
+	icon_path: String, click_callback: Callable, can_equip: bool, size: int = ICON_SIZE
+) -> PanelContainer:
+	var box = _make_icon_box(
+		icon_path,
+		size,
+		Color(0.9, 0.75, 0.3, 0.9) if can_equip else Color(0.4, 0.4, 0.4, 0.7),
+		Color(0.15, 0.12, 0.2, 0.9)
+	)
 	box.mouse_filter = Control.MOUSE_FILTER_STOP  # 允许接收鼠标事件
 	box.gui_input.connect(click_callback)
 	return box
+
 
 # ============================================================
 # 主 UI 构建
@@ -214,6 +226,7 @@ func setup_ui():
 	if not get_tree().root.size_changed.is_connected(_on_window_resized):
 		get_tree().root.size_changed.connect(_on_window_resized)
 
+
 # ============================================================
 # 构建：人物属性区
 # ============================================================
@@ -226,17 +239,33 @@ func _build_attributes_section(parent: VBoxContainer):
 
 	# 血量
 	var total_max_hp = GameData.get_total_max_hp()
-	_add_bar_row(grid, "血量", GameData.current_hp, total_max_hp,
-				 Color(0.95, 0.25, 0.25), Color(0.2, 0.08, 0.08))
+	_add_bar_row(
+		grid,
+		"血量",
+		GameData.current_hp,
+		total_max_hp,
+		Color(0.95, 0.25, 0.25),
+		Color(0.2, 0.08, 0.08)
+	)
 
 	# 蓝量
-	_add_bar_row(grid, "蓝量", GameData.current_mp, GameData.max_mp,
-				 Color(0.3, 0.65, 0.95), Color(0.08, 0.12, 0.2))
+	_add_bar_row(
+		grid,
+		"蓝量",
+		GameData.current_mp,
+		GameData.max_mp,
+		Color(0.3, 0.65, 0.95),
+		Color(0.08, 0.12, 0.2)
+	)
 
 	# 其他属性
 	var attrs = [
 		{"label": "攻击", "value": str(GameData.get_total_attack()), "color": Color(1.0, 0.55, 0.2)},
-		{"label": "防御", "value": str(GameData.get_total_defense()), "color": Color(0.3, 0.85, 0.45)},
+		{
+			"label": "防御",
+			"value": str(GameData.get_total_defense()),
+			"color": Color(0.3, 0.85, 0.45)
+		},
 		{"label": "暴击", "value": str(GameData.crit) + "%", "color": Color(1.0, 0.9, 0.3)},
 		{"label": "角色", "value": "冒险者", "color": Color(0.9, 0.85, 0.4)},
 	]
@@ -248,6 +277,7 @@ func _build_attributes_section(parent: VBoxContainer):
 		var val = _make_label(attr.value, -1, 16, attr.color)
 		row.add_child(val)
 		grid.add_child(row)
+
 
 # ============================================================
 # 构建：装备槽（武器 / 护甲 / 饰品）
@@ -276,10 +306,14 @@ func _build_equipment_section(parent: VBoxContainer):
 		# 数据
 		var equip: Dictionary
 		match slot_def.key:
-			"weapon":    equip = GameData.weapon
-			"armor":     equip = GameData.armor
-			"accessory": equip = GameData.accessory
-			_:           equip = {}
+			"weapon":
+				equip = GameData.weapon
+			"armor":
+				equip = GameData.armor
+			"accessory":
+				equip = GameData.accessory
+			_:
+				equip = {}
 		var name_str: String = equip.get("name", "无")
 		var is_empty: bool = (name_str == "无") or name_str == ""
 		var icon_path: String = equip.get("icon", "") if not is_empty else ""
@@ -308,8 +342,9 @@ func _build_equipment_section(parent: VBoxContainer):
 		name_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		name_lbl.set_anchors_preset(Control.PRESET_FULL_RECT)
 		name_lbl.add_theme_font_size_override("font_size", 14)
-		name_lbl.add_theme_color_override("font_color",
-										  Color(0.95, 0.85, 0.4) if not is_empty else Color(0.4, 0.4, 0.4))
+		name_lbl.add_theme_color_override(
+			"font_color", Color(0.95, 0.85, 0.4) if not is_empty else Color(0.4, 0.4, 0.4)
+		)
 		name_panel.add_child(name_lbl)
 
 		# 加成文字
@@ -339,6 +374,7 @@ func _build_equipment_section(parent: VBoxContainer):
 		row.add_child(unequip_btn)
 
 		grid.add_child(row)
+
 
 # ============================================================
 # 构建：道具栏（血瓶 / 蓝瓶）
@@ -378,6 +414,7 @@ func _build_items_section(parent: VBoxContainer):
 
 		section.add_child(row)
 
+
 # ============================================================
 # 构建：专属背包栏（未装备的装备）
 # ============================================================
@@ -385,8 +422,7 @@ func _build_backpack_section(parent: VBoxContainer):
 	var section = _make_section_panel(parent, "━━━━━ 专属背包栏（装备）━━━━━", true)
 	section.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	var hint = _make_label("（点击图标直接装备或使用，会替换当前装备）",
-							-1, 11, Color(0.55, 0.55, 0.6))
+	var hint = _make_label("（点击图标直接装备或使用，会替换当前装备）", -1, 11, Color(0.55, 0.55, 0.6))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	section.add_child(hint)
 
@@ -411,13 +447,16 @@ func _build_backpack_section(parent: VBoxContainer):
 		# 可点击图标
 		var icon_path: String = item.get("icon", "")
 		var click_cb = func(event: InputEvent, idx: int, itype: String):
-			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			if (
+				event is InputEventMouseButton
+				and event.pressed
+				and event.button_index == MOUSE_BUTTON_LEFT
+			):
 				if itype == "food":
 					_on_backpack_icon_clicked(event, idx)
 				else:
 					equip_from_backpack(idx)
-		var icon_box = _make_clickable_icon(icon_path, click_cb.bind(i, item_type),
-											 true, 28)
+		var icon_box = _make_clickable_icon(icon_path, click_cb.bind(i, item_type), true, 28)
 		row.add_child(icon_box)
 
 		# 名字
@@ -437,6 +476,7 @@ func _build_backpack_section(parent: VBoxContainer):
 
 		section.add_child(row)
 
+
 # ============================================================
 # 辅助：标签
 # ============================================================
@@ -448,6 +488,7 @@ func _make_label(text: String, min_width: int, font_size: int, color: Color) -> 
 	lab.add_theme_font_size_override("font_size", font_size)
 	lab.add_theme_color_override("font_color", color)
 	return lab
+
 
 func _make_section_panel(parent: Control, title: String, expand: bool = false) -> VBoxContainer:
 	var outer = PanelContainer.new()
@@ -482,9 +523,9 @@ func _make_section_panel(parent: Control, title: String, expand: bool = false) -
 
 	return vb
 
+
 # 添加一行：标签 + 数值 + 进度条
-func _add_bar_row(parent: VBoxContainer, label: String, cur: int, maxv: int,
-					fg: Color, bg: Color):
+func _add_bar_row(parent: VBoxContainer, label: String, cur: int, maxv: int, fg: Color, bg: Color):
 	var row = HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 
@@ -513,16 +554,24 @@ func _add_bar_row(parent: VBoxContainer, label: String, cur: int, maxv: int,
 
 	parent.add_child(row)
 
+
 func _type_display(t: String) -> String:
 	match t:
-		"weapon": return "武器"
-		"armor": return "护甲"
-		"accessory": return "饰品"
-		"food": return "食物"
-		_: return t
+		"weapon":
+			return "武器"
+		"armor":
+			return "护甲"
+		"accessory":
+			return "饰品"
+		"food":
+			return "食物"
+		_:
+			return t
+
 
 func can_equip_type(t: String) -> bool:
 	return t in ["weapon", "armor", "accessory"]
+
 
 func _get_item_bonus_text(item: Dictionary) -> String:
 	var t = item.get("type", "")
@@ -538,6 +587,7 @@ func _get_item_bonus_text(item: Dictionary) -> String:
 	if hp > 0:
 		return "+" + str(hp) + " 生命"
 	return ""
+
 
 # ============================================================
 # 操作：卸下装备 / 从背包装备
@@ -566,6 +616,7 @@ func _on_unequip_clicked(slot_type: String):
 	_sync_game_data_to_players()
 	refresh_ui()
 
+
 # == 点击专属背包栏图标使用食物/装备 ==
 func _on_backpack_icon_clicked(event: InputEvent, item_index: int):
 	if not (event is InputEventMouseButton):
@@ -588,6 +639,7 @@ func _on_backpack_icon_clicked(event: InputEvent, item_index: int):
 
 	# 装备：使用原有的穿戴逻辑
 	equip_from_backpack(item_index)
+
 
 # == 食物使用确认弹窗 ==
 func _show_food_confirm_popup(food_item: Dictionary, item_index: int):
@@ -630,9 +682,9 @@ func _show_food_confirm_popup(food_item: Dictionary, item_index: int):
 	var title_row = HBoxContainer.new()
 	title_row.add_theme_constant_override("separation", 10)
 
-	var icon_box = _make_icon_box(food_item.get("icon", ""), 36,
-								   Color(0.9, 0.7, 0.3, 0.9),
-								   Color(0.12, 0.08, 0.16, 0.9))
+	var icon_box = _make_icon_box(
+		food_item.get("icon", ""), 36, Color(0.9, 0.7, 0.3, 0.9), Color(0.12, 0.08, 0.16, 0.9)
+	)
 	title_row.add_child(icon_box)
 
 	var name_lbl = Label.new()
@@ -671,9 +723,10 @@ func _show_food_confirm_popup(food_item: Dictionary, item_index: int):
 	confirm_btn.text = "确认使用"
 	confirm_btn.custom_minimum_size = Vector2(120, 36)
 	confirm_btn.add_theme_font_size_override("font_size", 14)
-	confirm_btn.pressed.connect(func():
-		overlay.queue_free()
-		_do_use_food(food_item, item_index)
+	confirm_btn.pressed.connect(
+		func():
+			overlay.queue_free()
+			_do_use_food(food_item, item_index)
 	)
 	btn_row.add_child(confirm_btn)
 
@@ -682,17 +735,17 @@ func _show_food_confirm_popup(food_item: Dictionary, item_index: int):
 	cancel_btn.text = "取消"
 	cancel_btn.custom_minimum_size = Vector2(120, 36)
 	cancel_btn.add_theme_font_size_override("font_size", 14)
-	cancel_btn.pressed.connect(func():
-		overlay.queue_free()
-	)
+	cancel_btn.pressed.connect(func(): overlay.queue_free())
 	btn_row.add_child(cancel_btn)
 
 	# 按 Z 或 ESC 取消
-	overlay.gui_input.connect(func(event: InputEvent):
-		if event is InputEventKey and event.pressed and not event.echo:
-			if event.keycode == KEY_Z or event.keycode == KEY_ESCAPE:
-				overlay.queue_free()
+	overlay.gui_input.connect(
+		func(event: InputEvent):
+			if event is InputEventKey and event.pressed and not event.echo:
+				if event.keycode == KEY_Z or event.keycode == KEY_ESCAPE:
+					overlay.queue_free()
 	)
+
 
 # == 实际执行食物使用 ==
 func _do_use_food(food_item: Dictionary, item_index: int):
@@ -703,6 +756,7 @@ func _do_use_food(food_item: Dictionary, item_index: int):
 		GameData.exclusive_backpack.remove_at(item_index)
 		_sync_game_data_to_players()
 	refresh_ui()
+
 
 func equip_from_backpack(idx: int):
 	if idx < 0 or idx >= GameData.exclusive_backpack.size():
@@ -715,9 +769,12 @@ func equip_from_backpack(idx: int):
 	# 获取当前装备并收回背包
 	var cur: Dictionary = {}
 	match itype:
-		"weapon": cur = GameData.weapon
-		"armor": cur = GameData.armor
-		"accessory": cur = GameData.accessory
+		"weapon":
+			cur = GameData.weapon
+		"armor":
+			cur = GameData.armor
+		"accessory":
+			cur = GameData.accessory
 	if cur.get("name", "") not in ["", "无"]:
 		GameData.exclusive_backpack.append(cur.duplicate(true))
 
@@ -727,12 +784,15 @@ func equip_from_backpack(idx: int):
 		GameData.equip_accessory(item.duplicate(true))
 	else:
 		match itype:
-			"weapon": GameData.weapon = item.duplicate(true)
-			"armor": GameData.armor = item.duplicate(true)
+			"weapon":
+				GameData.weapon = item.duplicate(true)
+			"armor":
+				GameData.armor = item.duplicate(true)
 
 	GameData.exclusive_backpack.remove_at(idx)
 	_sync_game_data_to_players()
 	refresh_ui()
+
 
 # ============================================================
 # 刷新 / 显示 / 关闭
@@ -742,18 +802,22 @@ func refresh_ui():
 		child.queue_free()
 	setup_ui()
 
+
 func show_panel():
 	is_visible = true
 	refresh_ui()
 	show()
 
+
 func hide_panel():
 	is_visible = false
 	hide()
 
+
 func _on_window_resized():
 	if is_visible:
 		refresh_ui()
+
 
 func _sync_game_data_to_players():
 	if not is_instance_valid(player_ref):

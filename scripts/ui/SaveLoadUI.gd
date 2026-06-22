@@ -12,10 +12,12 @@ var _close_requested: bool = false
 
 signal save_completed(slot: int)
 signal load_selected(slot: int)
-signal back_pressed()
+signal back_pressed
+
 
 func _ready():
 	_create_ui()
+
 
 func _create_ui():
 	layer = 100
@@ -82,6 +84,7 @@ func _create_ui():
 	btn_back.pressed.connect(_on_back_pressed)
 	panel.add_child(btn_back)
 
+
 func _create_slot_panel(parent: Panel, slot: int, y_pos: float):
 	var panel_w = 500.0
 	var info = GameData.get_save_slot_info(slot)
@@ -108,7 +111,10 @@ func _create_slot_panel(parent: Panel, slot: int, y_pos: float):
 
 	if info.get("exists", false):
 		# 存档信息
-		var info_text = "Lv.%d  |  %s  |  💰%d" % [info.get("level", 1), info.get("scene", "?"), info.get("gold", 0)]
+		var info_text = (
+			"Lv.%d  |  %s  |  💰%d"
+			% [info.get("level", 1), info.get("scene", "?"), info.get("gold", 0)]
+		)
 		var info_label = Label.new()
 		info_label.text = info_text
 		info_label.position = Vector2(80, 8)
@@ -190,6 +196,7 @@ func _create_slot_panel(parent: Panel, slot: int, y_pos: float):
 			btn_save.pressed.connect(_on_save_slot.bind(slot))
 			slot_bg.add_child(btn_save)
 
+
 func _on_save_slot(slot: int):
 	if GameData.save_game(slot):
 		emit_signal("save_completed", slot)
@@ -203,6 +210,7 @@ func _on_save_slot(slot: int):
 				if mp is AudioStreamPlayer:
 					mp.stop()
 			tree.call_deferred("change_scene_to_file", "res://scenes/maps/start.tscn")
+
 
 func _on_load_slot(slot: int):
 	var info = GameData.get_save_slot_info(slot)
@@ -221,6 +229,7 @@ func _on_load_slot(slot: int):
 			var scene_path = info.get("last_scene", "res://scenes/maps/village.tscn")
 			tree.call_deferred("change_scene_to_file", scene_path)
 
+
 func _on_delete_slot(slot: int, parent: Panel):
 	GameData.delete_save(slot)
 	# 刷新界面
@@ -228,10 +237,12 @@ func _on_delete_slot(slot: int, parent: Panel):
 		child.queue_free()
 	call_deferred("_create_ui")
 
+
 func _on_back_pressed():
 	emit_signal("back_pressed")
 	_close_requested = true
 	queue_free()
+
 
 func _apply_button_style(btn: Button, bg_color: Color):
 	var style_normal = StyleBoxFlat.new()
@@ -249,6 +260,9 @@ func _apply_button_style(btn: Button, bg_color: Color):
 
 	btn.add_theme_color_override("font_color", Color(1, 1, 1))
 
+
 func _format_timestamp(ts: int) -> String:
 	var dt = Time.get_datetime_dict_from_unix_time(ts)
-	return "%d-%02d-%02d %02d:%02d:%02d" % [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+	return (
+		"%d-%02d-%02d %02d:%02d:%02d" % [dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second]
+	)

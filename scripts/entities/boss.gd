@@ -5,10 +5,12 @@ class_name Boss
 # 翻转时需要对其取反，否则动画像传送
 var _original_sprite_pos_x: float = 0.0
 
+
 func _ready():
 	# 在父类 _apply_foot_alignment 运行前保存原始 position.x
 	_original_sprite_pos_x = animated_sprite.position.x
 	super._ready()
+
 
 # 重写：翻转时对 position.x 取反，补偿精灵帧不居中
 func _set_flip_h(new_flip: bool):
@@ -19,6 +21,7 @@ func _set_flip_h(new_flip: bool):
 		animated_sprite.position.x = -_original_sprite_pos_x
 	else:
 		animated_sprite.position.x = _original_sprite_pos_x
+
 
 # BattleManager 重设精灵帧后调用，保留 position.x 偏移
 func reapply_foot_alignment(source_scale: Vector2 = Vector2.ZERO):

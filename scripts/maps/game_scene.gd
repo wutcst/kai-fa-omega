@@ -4,13 +4,11 @@ extends Node2D
 # 通用场景脚本：gamescene / ground1 / ground2 / ground3 共用
 # ============================================================
 
-@export var scene_title: String = ""              # 场景标题（可选）
-@export var bgm_path: String = ""                 # 背景音乐文件路径
-@export var is_village_scene: bool = false            # 是否是村庄场景（在场景文件中勾选）
-@export var min_zoom: float = 1.0                 # 相机最小缩放值，防止视角过大（越大视野越小）
+@export var scene_title: String = ""  # 场景标题（可选）
+@export var bgm_path: String = ""  # 背景音乐文件路径
+@export var is_village_scene: bool = false  # 是否是村庄场景（在场景文件中勾选）
+@export var min_zoom: float = 1.0  # 相机最小缩放值，防止视角过大（越大视野越小）
 
-var _btn_level_up: Button = null
-var _level_up_hint_label: Label = null
 var _level_up_info_label: Label = null
 var _bgm_player: AudioStreamPlayer = null
 var _welcome_canvas: CanvasLayer = null
@@ -19,6 +17,17 @@ var _save_load_ui: CanvasLayer = null
 # 当前场景缓存标志，避免重复解析路径
 var _is_village: bool = false
 
+
+func _enter_tree():
+	# 必须在 _enter_tree 中清除，因为子节点（如 Necromancer）的 _ready() 比父节点 _ready() 先执行
+	var current = get_tree().current_scene
+	if current and "finalbattle" in current.scene_file_path.to_lower():
+		if GameData.defeated_boss_positions.size() > 0 or GameData.defeated_boss_names.size() > 0:
+			print("→ 进入最终决战，清除 Boss 击败记录（_enter_tree）")
+			GameData.defeated_boss_positions.clear()
+			GameData.defeated_boss_names.clear()
+
+
 func _ready():
 	# 通过 scene_file_path 或显式标志判断当前场景
 	_is_village = _check_is_village_scene()
@@ -26,22 +35,23 @@ func _ready():
 	if _is_village:
 		if scene_title == "":
 			scene_title = "🏘️ 村庄"
-	
+
 	# 进入战斗地图时，刷新所有普通怪物（Boss 除外）
 	_refresh_regular_monsters()
-	
+
 	_setup_scene_nodes()
-	
+
 	# 延迟调用确保 viewport 尺寸已正确，并监听窗口大小变化
 	call_deferred("_fit_camera_to_limits")
 	get_tree().root.size_changed.connect(_fit_camera_to_limits)
-	
+
 	_create_level_up_button()
 	_update_level_up_info()
 	_play_bgm()
 
 	if _is_village and GameData.show_village_welcome:
 		_show_village_welcome()
+
 
 # 判断是否是村庄场景：优先使用显式导出变量，否则通过 scene_file_path 兜底
 func _check_is_village_scene() -> bool:
@@ -58,6 +68,7 @@ func _check_is_village_scene() -> bool:
 	# 大小写不敏感比较，避免不同平台路径分隔符问题
 	return "village" in path.to_lower()
 
+
 # 判断是否是战斗地图（forest / undead / finalbattle）
 func _is_battle_map_scene() -> bool:
 	if get_tree() == null:
@@ -71,11 +82,22 @@ func _is_battle_map_scene() -> bool:
 	var lower = path.to_lower()
 	return "forest" in lower or "undead" in lower or "finalbattle" in lower
 
-# 进入战斗地图时，清除普通怪物击败记录（Boss 保留）
+
+# 进入战斗地图时，清除普通怪物击败记录，finalbattle 场景同时清除 Boss 记录（确保最终 Boss 登场）
 func _refresh_regular_monsters():
-	if _is_battle_map_scene() and GameData.defeated_monster_positions.size() > 0:
+	if not _is_battle_map_scene():
+		return
+	if GameData.defeated_monster_positions.size() > 0:
 		print("→ 进入战斗地图，刷新所有普通怪物（清除 ", GameData.defeated_monster_positions.size(), " 条击败记录）")
 		GameData.defeated_monster_positions.clear()
+	# 进入 finalbattle 时，清除 Boss 击败记录，确保 Necromancer 每次都登场
+	var current = get_tree().current_scene
+	if current and "finalbattle" in current.scene_file_path.to_lower():
+		if GameData.defeated_boss_positions.size() > 0:
+			print("→ 进入最终决战，清除 ", GameData.defeated_boss_positions.size(), " 条 Boss 击败记录")
+			GameData.defeated_boss_positions.clear()
+			GameData.defeated_boss_names.clear()
+
 
 func _setup_scene_nodes():
 	var is_village = _is_village
@@ -107,7 +129,6 @@ func _setup_scene_nodes():
 	# 根据相机 limit 生成空气墙，防止玩家走出地图
 	_create_boundary_walls()
 
-
 	# 仅在村庄场景中自动创建 NPC
 	if not is_village:
 		return
@@ -132,6 +153,7 @@ func _setup_scene_nodes():
 			hotel_instance.position = Vector2(378, 209)
 			add_child(hotel_instance)
 
+
 # ─── 根据视口大小和相机 limits 自动调整 zoom，确保地图填满屏幕不留空白 ───
 func _fit_camera_to_limits():
 	var camera = _find_camera()
@@ -154,6 +176,7 @@ func _fit_camera_to_limits():
 	var zoom = max(zoom_x, zoom_y, min_zoom)
 	camera.zoom = Vector2(zoom, zoom)
 
+
 # 查找相机节点（可能在根节点或玩家节点下）
 func _find_camera() -> Camera2D:
 	var camera = get_node_or_null("Camera2D")
@@ -165,6 +188,7 @@ func _find_camera() -> Camera2D:
 		if camera and camera is Camera2D:
 			return camera
 	return null
+
 
 # ─── 空气墙：根据相机 limit 生成四边不可见碰撞墙 ───
 func _create_boundary_walls():
@@ -190,25 +214,38 @@ func _create_boundary_walls():
 		return
 
 	var wall_thickness := 10.0  # 墙的厚度（像素）
-	var inward := 15.0           # 向内收缩量（像素），越大越靠里
+	var inward := 15.0  # 向内收缩量（像素），越大越靠里
 
 	# 左墙：从 limit_left 向内缩 inward
-	_create_wall("BoundaryWall_Left", Vector2(l + inward, (t + b) / 2.0),
-		Vector2(wall_thickness, b - t + wall_thickness * 2))
+	_create_wall(
+		"BoundaryWall_Left",
+		Vector2(l + inward, (t + b) / 2.0),
+		Vector2(wall_thickness, b - t + wall_thickness * 2)
+	)
 
 	# 右墙：从 limit_right 向内缩 inward
-	_create_wall("BoundaryWall_Right", Vector2(r - inward, (t + b) / 2.0),
-		Vector2(wall_thickness, b - t + wall_thickness * 2))
+	_create_wall(
+		"BoundaryWall_Right",
+		Vector2(r - inward, (t + b) / 2.0),
+		Vector2(wall_thickness, b - t + wall_thickness * 2)
+	)
 
 	# 上墙：贴紧 limit_top，不缩
-	_create_wall("BoundaryWall_Top", Vector2((l + r) / 2.0, t - wall_thickness / 2),
-		Vector2(r - l + wall_thickness * 2, wall_thickness))
+	_create_wall(
+		"BoundaryWall_Top",
+		Vector2((l + r) / 2.0, t - wall_thickness / 2),
+		Vector2(r - l + wall_thickness * 2, wall_thickness)
+	)
 
 	# 下墙：从 limit_bottom 向内缩 inward
-	_create_wall("BoundaryWall_Bottom", Vector2((l + r) / 2.0, b - inward),
-		Vector2(r - l + wall_thickness * 2, wall_thickness))
+	_create_wall(
+		"BoundaryWall_Bottom",
+		Vector2((l + r) / 2.0, b - inward),
+		Vector2(r - l + wall_thickness * 2, wall_thickness)
+	)
 
 	print("✅ 空气墙已生成: (", l, ",", t, ") 到 (", r, ",", b, ")")
+
 
 # 创建单面空气墙
 func _create_wall(wall_name: String, pos: Vector2, size: Vector2):
@@ -227,6 +264,7 @@ func _create_wall(wall_name: String, pos: Vector2, size: Vector2):
 	wall.add_child(shape)
 
 	wall.position = pos
+
 
 func _create_level_up_button():
 	# 用 CanvasLayer 让 UI 不跟随玩家移动
@@ -254,45 +292,6 @@ func _create_level_up_button():
 	_level_up_info_label.add_theme_font_size_override("font_size", 14)
 	_level_up_info_label.add_theme_color_override("font_color", Color(0.98, 0.85, 0.4))
 	container.add_child(_level_up_info_label)
-
-	# 升级按钮
-	_btn_level_up = Button.new()
-	_btn_level_up.name = "BtnLevelUp"
-	_btn_level_up.text = "⬆ 自动升级"
-	_btn_level_up.custom_minimum_size = Vector2(btn_width, 44)
-	_btn_level_up.add_theme_font_size_override("font_size", 16)
-
-	var style_normal = StyleBoxFlat.new()
-	style_normal.bg_color = Color(0.78, 0.5, 0.15)
-	style_normal.set_corner_radius_all(8)
-	style_normal.border_width_left = 2
-	style_normal.border_width_right = 2
-	style_normal.border_width_top = 2
-	style_normal.border_width_bottom = 2
-	style_normal.border_color = Color(1.0, 0.85, 0.3)
-
-	var style_hover = style_normal.duplicate()
-	style_hover.bg_color = Color(0.95, 0.65, 0.2)
-
-	var style_pressed = style_normal.duplicate()
-	style_pressed.bg_color = Color(0.6, 0.35, 0.1)
-
-	_btn_level_up.add_theme_stylebox_override("normal", style_normal)
-	_btn_level_up.add_theme_stylebox_override("hover", style_hover)
-	_btn_level_up.add_theme_stylebox_override("pressed", style_pressed)
-	_btn_level_up.add_theme_color_override("font_color", Color(1, 1, 1))
-
-	container.add_child(_btn_level_up)
-
-	# 提示标签
-	_level_up_hint_label = Label.new()
-	_level_up_hint_label.name = "LevelHintLabel"
-	_level_up_hint_label.text = "按一次直接升一级"
-	_level_up_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_level_up_hint_label.custom_minimum_size = Vector2(btn_width, 0)
-	_level_up_hint_label.add_theme_font_size_override("font_size", 10)
-	_level_up_hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	container.add_child(_level_up_hint_label)
 
 	# 分隔间距
 	var spacer = Control.new()
@@ -328,31 +327,40 @@ func _create_level_up_button():
 	btn_save.pressed.connect(_on_save_pressed)
 	container.add_child(btn_save)
 
-	_btn_level_up.pressed.connect(_on_level_up_pressed)
+	# 升级测试按钮
+	var btn_levelup = Button.new()
+	btn_levelup.name = "BtnLevelUp"
+	btn_levelup.text = "⬆ 升级测试"
+	btn_levelup.custom_minimum_size = Vector2(btn_width, 38)
+	btn_levelup.add_theme_font_size_override("font_size", 14)
 
-func _on_level_up_pressed():
-	GameData.level_up()
-	# 同步玩家节点本地属性，防止进入战斗时 save_data_to_global 覆盖升级后的数据
-	var players = get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		var player_node = players[0]
-		if player_node.has_method("load_data_from_global"):
-			player_node.load_data_from_global()
-	_update_level_up_info()
-	_show_level_up_flash()
+	var lvl_style_normal = StyleBoxFlat.new()
+	lvl_style_normal.bg_color = Color(0.6, 0.45, 0.1)
+	lvl_style_normal.set_corner_radius_all(8)
+	lvl_style_normal.border_width_left = 2
+	lvl_style_normal.border_width_right = 2
+	lvl_style_normal.border_width_top = 2
+	lvl_style_normal.border_width_bottom = 2
+	lvl_style_normal.border_color = Color(0.9, 0.7, 0.2)
+
+	var lvl_style_hover = lvl_style_normal.duplicate()
+	lvl_style_hover.bg_color = Color(0.75, 0.55, 0.15)
+
+	var lvl_style_pressed = lvl_style_normal.duplicate()
+	lvl_style_pressed.bg_color = Color(0.4, 0.3, 0.05)
+
+	btn_levelup.add_theme_stylebox_override("normal", lvl_style_normal)
+	btn_levelup.add_theme_stylebox_override("hover", lvl_style_hover)
+	btn_levelup.add_theme_stylebox_override("pressed", lvl_style_pressed)
+	btn_levelup.add_theme_color_override("font_color", Color(1, 0.95, 0.5))
+	btn_levelup.pressed.connect(_on_levelup_test_pressed)
+	container.add_child(btn_levelup)
+
 
 func _update_level_up_info():
 	if is_instance_valid(_level_up_info_label):
 		_level_up_info_label.text = "Lv." + str(GameData.level) + "  升级自动回满血蓝"
 
-# 升级时的缩放反馈动画
-func _show_level_up_flash():
-	if not is_instance_valid(_btn_level_up):
-		return
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(_btn_level_up, "scale", Vector2(1.15, 1.15), 0.1)
-	tween.chain().tween_property(_btn_level_up, "scale", Vector2(1.0, 1.0), 0.15)
 
 func _play_bgm():
 	if bgm_path == "":
@@ -368,6 +376,7 @@ func _play_bgm():
 		# AudioStream 基类没有 loop 属性，需要用 audio_stream 自身的循环接口
 		# 如 AudioStreamMP3.loop_mode 等，这里直接播放，由引擎默认循环处理
 		_bgm_player.play()
+
 
 func _show_village_welcome():
 	GameData.show_village_welcome = false
@@ -401,10 +410,12 @@ func _show_village_welcome():
 	hint.size = Vector2(vs.x, 40)
 	canvas.add_child(hint)
 
+
 func _dismiss_welcome():
 	if is_instance_valid(_welcome_canvas):
 		_welcome_canvas.queue_free()
 		_welcome_canvas = null
+
 
 func _input(event):
 	if _welcome_canvas and is_instance_valid(_welcome_canvas):
@@ -418,6 +429,7 @@ func _input(event):
 				get_viewport().set_input_as_handled()
 				_save_load_ui.queue_free()
 				_save_load_ui = null
+
 
 # 存档按钮回调
 func _on_save_pressed():
@@ -439,8 +451,31 @@ func _on_save_pressed():
 	save_ui.back_pressed.connect(_on_save_ui_back)
 	save_ui.save_completed.connect(_on_save_ui_save_completed)
 
+
 func _on_save_ui_back():
 	_save_load_ui = null
 
+
 func _on_save_ui_save_completed(slot: int):
 	_save_load_ui = null
+
+
+func _on_levelup_test_pressed():
+	if GameData.level >= 16:
+		print("→ 已达最高等级 Lv.16")
+		return
+	# 先同步玩家数据到全局，调用升级，再同步回玩家节点
+	var players = get_tree().get_nodes_in_group("player")
+	if players.size() > 0:
+		var player_node = players[0]
+		if player_node.has_method("save_data_to_global"):
+			player_node.save_data_to_global()
+	GameData.level_up()
+	_update_level_up_info()
+	# 升级后刷新数据回玩家节点
+	var players2 = get_tree().get_nodes_in_group("player")
+	if players2.size() > 0:
+		var player_node2 = players2[0]
+		if player_node2.has_method("load_data_from_global"):
+			player_node2.load_data_from_global()
+	print("→ 升级完成，当前等级 Lv.", GameData.level)

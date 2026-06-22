@@ -28,6 +28,10 @@ BattleManager="*res://scripts/core/BattleManager.gd"
 
 api_key=""
 
+[display]
+
+window/size/mode=3
+
 [dotnet]
 
 project/assembly_name="RPG-603game"

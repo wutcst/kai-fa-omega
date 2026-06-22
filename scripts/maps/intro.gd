@@ -16,6 +16,7 @@ var _hint_label: Label = null
 var _bg: ColorRect = null
 var _bgm_player: AudioStreamPlayer = null
 
+
 func _ready():
 	var viewport_size = get_viewport().get_visible_rect().size
 
@@ -45,6 +46,7 @@ func _ready():
 
 	_play_bgm()
 
+
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_E:
@@ -60,6 +62,7 @@ func _input(event):
 					_bgm_player.stop()
 				GameData.show_village_welcome = true
 				get_tree().change_scene_to_file("res://scenes/maps/village.tscn")
+
 
 func _play_bgm():
 	_bgm_player = AudioStreamPlayer.new()

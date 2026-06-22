@@ -13,10 +13,12 @@ var player_nearby: bool = false
 var hint_label: Label = null
 var _e_was_pressed: bool = false
 
+
 func _ready():
 	add_to_group("npc")
 	play_anim()
 	_setup_hint_label()
+
 
 func _setup_hint_label():
 	hint_label = Label.new()
@@ -28,6 +30,7 @@ func _setup_hint_label():
 	hint_label.custom_minimum_size = Vector2(60, 20)
 	hint_label.visible = false
 	add_child(hint_label)
+
 
 func _physics_process(_delta):
 	var player = get_tree().get_first_node_in_group("player")
@@ -52,6 +55,7 @@ func _physics_process(_delta):
 			close_dialog_panel()
 		elif player_nearby:
 			open_dialog_panel()
+
 
 func open_dialog_panel():
 	if dialog_panel != null:
@@ -115,6 +119,7 @@ func open_dialog_panel():
 	if hint_label:
 		hint_label.visible = false
 
+
 func _create_panel_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.12, 0.12, 0.22)
@@ -126,6 +131,7 @@ func _create_panel_style() -> StyleBoxFlat:
 	style.border_color = Color(0.5, 0.4, 0.6)
 	return style
 
+
 func close_dialog_panel():
 	if is_instance_valid(dialog_panel):
 		dialog_panel.queue_free()
@@ -133,6 +139,7 @@ func close_dialog_panel():
 	panel_open = false
 	if player_nearby and hint_label:
 		hint_label.visible = true
+
 
 func play_anim():
 	if not is_instance_valid(animated_sprite):

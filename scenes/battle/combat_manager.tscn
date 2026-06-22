@@ -23,7 +23,7 @@ position = Vector2(278, 349)
 [node name="EnemyTeam" type="Node2D" parent="."]
 
 [node name="Monster-Battler" parent="EnemyTeam" instance=ExtResource("3_monster")]
-position = Vector2(820, 341)
+position = Vector2(820, 0)
 
 [node name="CombatUI" type="CanvasLayer" parent="."]
 script = ExtResource("4_dttib")
@@ -98,4 +98,4 @@ stream = ExtResource("6_o4kia")
 position = Vector2(281, 365)
 
 [node name="SpawnPoint2" type="Marker2D" parent="."]
-position = Vector2(870, 367)
+position = Vector2(875, 380)

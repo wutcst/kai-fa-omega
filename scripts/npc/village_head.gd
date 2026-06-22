@@ -10,11 +10,13 @@ var hint_label: Label = null
 
 @export var destination_scene: String = "res://scenes/maps/forest.tscn"
 
+
 func _ready():
 	add_to_group("village_head")
 	play_anim("idle")
 	_setup_interaction_area()
 	_setup_hint_label()
+
 
 func _setup_interaction_area():
 	var area = Area2D.new()
@@ -27,6 +29,7 @@ func _setup_interaction_area():
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)
 
+
 func _setup_hint_label():
 	hint_label = Label.new()
 	hint_label.text = "按 E 对话"
@@ -38,11 +41,13 @@ func _setup_hint_label():
 	hint_label.visible = false
 	add_child(hint_label)
 
+
 func _on_body_entered(body):
 	if body.is_in_group("player"):
 		player_nearby = true
 		if hint_label:
 			hint_label.visible = true
+
 
 func _on_body_exited(body):
 	if body.is_in_group("player"):
@@ -50,11 +55,13 @@ func _on_body_exited(body):
 		if hint_label:
 			hint_label.visible = false
 
+
 func _process(_delta):
 	if panel_open:
 		return
 	if player_nearby and Input.is_key_pressed(KEY_E):
 		open_dialog_panel()
+
 
 func open_dialog_panel():
 	if dialog_panel != null:
@@ -133,6 +140,7 @@ func open_dialog_panel():
 	if hint_label:
 		hint_label.visible = false
 
+
 func _create_panel_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.15, 0.15, 0.25)
@@ -143,6 +151,7 @@ func _create_panel_style() -> StyleBoxFlat:
 	style.border_width_bottom = 3
 	style.border_color = Color(0.6, 0.5, 0.7)
 	return style
+
 
 func _create_button_style(color: Color) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
@@ -155,13 +164,16 @@ func _create_button_style(color: Color) -> StyleBoxFlat:
 	style.border_color = color.lightened(0.2)
 	return style
 
+
 func _on_accept_quest():
 	if destination_scene != "":
 		close_dialog_panel()
 		get_tree().call_deferred("change_scene_to_file", destination_scene)
 
+
 func _on_refuse_quest():
 	close_dialog_panel()
+
 
 func close_dialog_panel():
 	if is_instance_valid(dialog_panel):
@@ -170,6 +182,7 @@ func close_dialog_panel():
 	panel_open = false
 	if player_nearby and hint_label:
 		hint_label.visible = true
+
 
 func play_anim(anim: String):
 	if not is_instance_valid(animated_sprite):

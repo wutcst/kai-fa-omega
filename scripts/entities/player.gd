@@ -25,25 +25,29 @@ var in_battle: bool = false
 var inventory_panel: CanvasLayer = null
 var inventory_open: bool = false
 
+
 func _ready():
 	add_to_group("player")
 	z_index = 100
 	load_data_from_global()
 	play_anim("idle")
 	connect_signals()
-	
+
 	if GameData.returning_from_battle:
 		global_position = GameData.player_return_position
 		GameData.returning_from_battle = false
 		print("→ 返回战斗前位置：", global_position)
 
+
 func safe_move_and_slide():
 	if is_inside_tree() and is_instance_valid(collision_shape) and not collision_shape.disabled:
 		move_and_slide()
 
+
 func connect_signals():
 	if not animated_sprite.animation_finished.is_connected(_on_animated_sprite_animation_finished):
 		animated_sprite.animation_finished.connect(_on_animated_sprite_animation_finished)
+
 
 func save_data_to_global():
 	# max_hp 由 GameData.get_total_max_hp() 计算（基础 + 饰品加成），不应由玩家侧覆盖
@@ -58,6 +62,7 @@ func save_data_to_global():
 	GameData.level = level
 	GameData.current_exp = current_exp
 	GameData.exp_to_next_level = exp_to_next_level
+
 
 func load_data_from_global():
 	max_hp = GameData.get_total_max_hp()
@@ -77,18 +82,23 @@ func load_data_from_global():
 		GameData.current_hp = GameData.get_total_max_hp()
 		print("→ 战斗失败，重生并恢复满血")
 
+
 # 获取装备加成后的战斗用属性
 func get_battle_attack() -> int:
 	return GameData.get_total_attack()
 
+
 func get_battle_defense() -> int:
 	return GameData.get_total_defense()
+
 
 func get_battle_max_hp() -> int:
 	return GameData.get_total_max_hp()
 
+
 func get_battle_crit() -> int:
 	return crit
+
 
 func _physics_process(_delta: float) -> void:
 	if not is_inside_tree():
@@ -117,22 +127,32 @@ func _physics_process(_delta: float) -> void:
 	else:
 		play_anim("idle")
 
+
 func play_anim(action_name: String) -> void:
 	if animated_sprite.sprite_frames.has_animation(action_name):
 		animated_sprite.play(action_name)
+
 
 func _on_animated_sprite_animation_finished():
 	if is_dead:
 		return
 	var current = animated_sprite.animation
-	if current == "hit" or current == "heavyhit" or current == "Armor Break Slash" or current == "Sky Cleave" or current == "hurt":
+	if (
+		current == "hit"
+		or current == "heavyhit"
+		or current == "Armor Break Slash"
+		or current == "Sky Cleave"
+		or current == "hurt"
+	):
 		play_anim("idle")
+
 
 func toggle_inventory():
 	if inventory_open:
 		close_inventory()
 	else:
 		open_inventory()
+
 
 func open_inventory():
 	if inventory_panel == null:
@@ -147,6 +167,7 @@ func open_inventory():
 	inventory_open = true
 	if is_instance_valid(inventory_panel):
 		inventory_panel.show_panel()
+
 
 func close_inventory():
 	inventory_open = false

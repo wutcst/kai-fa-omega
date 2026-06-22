@@ -17,18 +17,20 @@ var current_hp: int
 var is_dead: bool = false
 var is_attacking: bool = false
 var in_battle: bool = false
-var _original_sprite_offset: Vector2 = Vector2.ZERO   # 脚对齐后的原始 offset
+var _original_sprite_offset: Vector2 = Vector2.ZERO  # 脚对齐后的原始 offset
 
 @warning_ignore("unused_signal")
 signal enter_battle(monster)
 @warning_ignore("unused_signal")
 signal monster_died(monster)
 
+
 func _ready():
 	current_hp = max_hp
 	_apply_foot_alignment()
 	create_bars()
 	play_anim("idle")
+
 
 # ============================================================
 # 公开接口：重新应用脚对齐（用于精灵帧动态更换后）
@@ -39,6 +41,7 @@ func reapply_foot_alignment(source_scale: Vector2 = Vector2.ZERO):
 	if source_scale != Vector2.ZERO:
 		animated_sprite.scale = source_scale
 	_apply_foot_alignment()
+
 
 # ============================================================
 # 脚对齐：根据动画帧大小自动计算 offset，让角色脚底对齐节点原点
@@ -57,6 +60,7 @@ func _get_first_frame_size() -> Vector2:
 		return Vector2.ZERO
 	return tex.get_size()
 
+
 func _apply_foot_alignment():
 	var frame_size = _get_first_frame_size()
 	if frame_size == Vector2.ZERO:
@@ -66,11 +70,16 @@ func _apply_foot_alignment():
 	# 目的：让精灵底部（y = position.y + offset.y + frame_size.y/2 * scale.y）对齐节点原点 y=0
 	# 推导：offset.y = -position.y - frame_size.y/2 * scale.y
 	var current_scale = animated_sprite.scale.y if animated_sprite else 1.0
-	animated_sprite.offset = Vector2(0, -animated_sprite.position.y - frame_size.y / 2.0 * current_scale)
+	animated_sprite.offset = Vector2(
+		0, -animated_sprite.position.y - frame_size.y / 2.0 * current_scale
+	)
 	_original_sprite_offset = animated_sprite.offset
 
+
 func setup_from_monster(monster_node):
-	monster_name = monster_node.get("monster_name") if monster_node.get("monster_name") else monster_name
+	monster_name = (
+		monster_node.get("monster_name") if monster_node.get("monster_name") else monster_name
+	)
 	max_hp = monster_node.get("max_hp") if monster_node.get("max_hp") else max_hp
 	attack = monster_node.get("attack") if monster_node.get("attack") else attack
 	defense = monster_node.get("defense") if monster_node.get("defense") else defense
@@ -87,6 +96,7 @@ func setup_from_monster(monster_node):
 			animated_sprite.sprite_frames = source_sprite.sprite_frames.duplicate()
 
 	play_anim("idle")
+
 
 func create_bars():
 	hud = Control.new()
@@ -120,11 +130,14 @@ func create_bars():
 
 	set_current_hp(current_hp)
 
+
 func get_max_hp() -> int:
 	return max_hp
 
+
 func get_current_hp() -> int:
 	return current_hp
+
 
 func set_current_hp(value: int):
 	current_hp = max(0, min(value, max_hp))
@@ -134,14 +147,18 @@ func set_current_hp(value: int):
 	if hp_label:
 		hp_label.text = str(current_hp) + "/" + str(max_hp)
 
+
 func get_attack() -> int:
 	return attack
+
 
 func get_defense() -> int:
 	return defense
 
+
 func take_damage(dmg: int):
-	if is_dead: return
+	if is_dead:
+		return
 	current_hp -= dmg
 	set_current_hp(current_hp)
 
@@ -152,6 +169,7 @@ func take_damage(dmg: int):
 	else:
 		play_anim("hurt")
 
+
 func die():
 	play_anim("death")
 	if is_instance_valid(collision_shape):
@@ -160,37 +178,41 @@ func die():
 	# 不做异步淡出 — 避免与场景切换并发导致 get_tree() 为 null
 	queue_free()
 
+
 func _fade_out():
 	pass
 
+
 func exit_battle():
 	in_battle = false
+
 
 func play_anim(anim: String):
 	if is_dead and anim != "death":
 		return
 	if not animated_sprite or not animated_sprite.sprite_frames:
 		return
-	
+
 	# 1. 精确匹配：monster_name + "_" + anim
 	var exact_name = monster_name + "_" + anim
 	if animated_sprite.sprite_frames.has_animation(exact_name):
 		animated_sprite.play(exact_name)
 		return
-	
+
 	# 2. 模糊匹配：以 "_" + anim 结尾的动画
 	var target_suffix = "_" + anim
 	for a in animated_sprite.sprite_frames.get_animation_names():
 		if a.ends_with(target_suffix):
 			animated_sprite.play(a)
 			return
-	
+
 	# 3. idle 备用：如果是 idle 但没找到，尝试 walk
 	if anim == "idle":
 		for a in animated_sprite.sprite_frames.get_animation_names():
 			if a.ends_with("_walk"):
 				animated_sprite.play(a)
 				return
+
 
 func _on_animation_finished(_anim_name: String = ""):
 	if is_dead:
@@ -200,6 +222,7 @@ func _on_animation_finished(_anim_name: String = ""):
 		play_anim("idle")
 	elif animated_sprite.animation.find("_hurt") != -1:
 		play_anim("idle")
+
 
 func _on_animated_sprite_2d_animation_finished(_anim_name: String = ""):
 	_on_animation_finished(_anim_name)

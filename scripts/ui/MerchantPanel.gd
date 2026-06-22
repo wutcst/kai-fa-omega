@@ -12,20 +12,36 @@ var close_btn: Button = null
 var _close_callback: Callable = Callable()
 
 # 道具配置
-const RED_POTION = {"name": "血瓶", "icon": "res://Asset Bundle/sprites/PotionPack/red_potion.png", "price": 30, "description": "恢复50点生命值", "type": "hp_potion"}
-const BLUE_POTION = {"name": "蓝瓶", "icon": "res://Asset Bundle/sprites/PotionPack/blue_potion.png", "price": 10, "description": "恢复30点魔法值", "type": "mp_potion"}
+const RED_POTION = {
+	"name": "血瓶",
+	"icon": "res://Asset Bundle/sprites/PotionPack/red_potion.png",
+	"price": 30,
+	"description": "恢复50点生命值",
+	"type": "hp_potion"
+}
+const BLUE_POTION = {
+	"name": "蓝瓶",
+	"icon": "res://Asset Bundle/sprites/PotionPack/blue_potion.png",
+	"price": 10,
+	"description": "恢复30点魔法值",
+	"type": "mp_potion"
+}
 const EQUIP_SELL_PRICE = 20
+
 
 func _ready():
 	_setup_ui()
+
 
 func _unhandled_input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode == KEY_Z or event.keycode == KEY_ESCAPE:
 			_on_close_pressed()
 
+
 func set_close_callback(cb: Callable):
 	_close_callback = cb
+
 
 func _setup_ui():
 	# 背景半透明遮罩
@@ -56,7 +72,7 @@ func _setup_ui():
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 22)
 	title.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
-	title.position = Vector2(1050/2 - 100, 6)
+	title.position = Vector2(1050 / 2 - 100, 6)
 	title.custom_minimum_size = Vector2(200, 0)
 	panel_bg.add_child(title)
 
@@ -188,6 +204,7 @@ func _setup_ui():
 	close_btn.pressed.connect(_on_close_pressed)
 	panel_bg.add_child(close_btn)
 
+
 func _make_section_label(text: String) -> Label:
 	var lab = Label.new()
 	lab.text = "  " + text
@@ -196,6 +213,7 @@ func _make_section_label(text: String) -> Label:
 	lab.add_theme_color_override("font_color", Color(0.7, 0.75, 0.8))
 	lab.custom_minimum_size = Vector2(480, 22)
 	return lab
+
 
 # —— 刷新出售列表（只显示装备，不显示食物）——
 func _refresh_sell_list():
@@ -223,6 +241,7 @@ func _refresh_sell_list():
 	for entry in equip_items:
 		var row = _create_equip_sell_row(entry.item, entry.idx)
 		sell_vbox.add_child(row)
+
 
 # 装备出售条目
 func _create_equip_sell_row(item: Dictionary, idx: int) -> PanelContainer:
@@ -276,6 +295,7 @@ func _create_equip_sell_row(item: Dictionary, idx: int) -> PanelContainer:
 
 	return panel
 
+
 # 购买条目（红瓶/蓝瓶）
 func _create_buy_row(potion: Dictionary) -> PanelContainer:
 	var panel = PanelContainer.new()
@@ -325,6 +345,7 @@ func _create_buy_row(potion: Dictionary) -> PanelContainer:
 	row.add_child(buy_btn)
 
 	return panel
+
 
 # 购买条目（食物）
 func _create_food_buy_row(food: Dictionary) -> PanelContainer:
@@ -378,6 +399,7 @@ func _create_food_buy_row(food: Dictionary) -> PanelContainer:
 
 	return panel
 
+
 # —— 出售装备 ——
 func _on_sell_equip(idx: int):
 	if idx < 0 or idx >= GameData.exclusive_backpack.size():
@@ -392,6 +414,7 @@ func _on_sell_equip(idx: int):
 	_refresh_gold_label()
 	_refresh_sell_list()
 
+
 # —— 购买红瓶/蓝瓶（加入 inventory_items 道具栏）——
 func _on_buy_potion(potion: Dictionary):
 	if GameData.gold < potion.price:
@@ -402,11 +425,19 @@ func _on_buy_potion(potion: Dictionary):
 	var found = false
 	for i in range(GameData.inventory_items.size()):
 		if GameData.inventory_items[i].get("name", "") == potion.name:
-			GameData.inventory_items[i]["quantity"] = GameData.inventory_items[i].get("quantity", 0) + 1
+			GameData.inventory_items[i]["quantity"] = (
+				GameData.inventory_items[i].get("quantity", 0) + 1
+			)
 			found = true
 			break
 	if not found:
-		var new_potion = {"name": potion.name, "quantity": 1, "icon": potion.icon, "description": potion.description, "type": "potion"}
+		var new_potion = {
+			"name": potion.name,
+			"quantity": 1,
+			"icon": potion.icon,
+			"description": potion.description,
+			"type": "potion"
+		}
 		if potion.name == "血瓶":
 			new_potion["heal"] = 50
 		elif potion.name == "蓝瓶":
@@ -414,6 +445,7 @@ func _on_buy_potion(potion: Dictionary):
 		GameData.inventory_items.append(new_potion)
 	_show_hint("购买了 " + potion.name)
 	_refresh_gold_label()
+
 
 # —— 购买食物（加入 exclusive_backpack 专属背包栏）——
 func _on_buy_food(food: Dictionary):
@@ -428,13 +460,16 @@ func _on_buy_food(food: Dictionary):
 	_show_hint("购买了 " + food.get("name", "食物") + "，已放入专属背包栏")
 	_refresh_gold_label()
 
+
 func _refresh_gold_label():
 	if is_instance_valid(gold_label):
 		gold_label.text = "金币: " + str(GameData.gold)
 
+
 func _show_hint(msg: String):
 	if is_instance_valid(hint_label):
 		hint_label.text = msg
+
 
 func _on_close_pressed():
 	if _close_callback.is_valid():

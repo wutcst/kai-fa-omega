@@ -3,18 +3,20 @@ extends Area2D
 @export var target_scene: String = "res://scenes/maps/undead.tscn"
 @export var hint_text: String = "按 E 与树灵对话"
 @export var dialog_title: String = "🌳 树灵"
-@export var dialog_text_content: String = "年轻的冒险者啊，我是这片森林的守护之灵。\n\n前方是不死族的领地，充满了亡灵的怨念。\n那里的邪恶力量正在不断扩张…\n\n你是否已经准备好，前往那片诅咒之地？"
+@export
+var dialog_text_content: String = "年轻的冒险者啊，我是这片森林的守护之灵。\n\n前方是不死族的领地，充满了亡灵的怨念。\n那里的邪恶力量正在不断扩张…\n\n你是否已经准备好，前往那片诅咒之地？"
 @export var accept_text: String = "✅ 我已准备好，前往不死族领地"
 @export var title_color: Color = Color(0.4, 0.9, 0.5)
 @export var panel_bg_color: Color = Color(0.1, 0.2, 0.15)
 @export var panel_border_color: Color = Color(0.4, 0.7, 0.5)
 @export var required_boss: String = ""  # 需要击败的首领名称，留空则无限制
-@export var locked_hint: String = ""    # 未击败首领时的提示文字
+@export var locked_hint: String = ""  # 未击败首领时的提示文字
 
 var hint_label: Label = null
 var player_nearby: bool = false
 var dialog_panel: CanvasLayer = null
 var panel_open: bool = false
+
 
 func _ready():
 	add_to_group("enter_portal")
@@ -22,6 +24,7 @@ func _ready():
 	_setup_hint_label()
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+
 
 func _setup_hint_label():
 	hint_label = Label.new()
@@ -37,6 +40,7 @@ func _setup_hint_label():
 	add_child(hint_label)
 	_update_hint_position()
 
+
 func _update_hint_position():
 	if hint_label == null:
 		return
@@ -49,11 +53,13 @@ func _update_hint_position():
 	else:
 		hint_label.position = Vector2(-60, -40)
 
+
 func _on_body_entered(body):
 	if body.is_in_group("player"):
 		player_nearby = true
 		if hint_label:
 			hint_label.visible = true
+
 
 func _on_body_exited(body):
 	if body.is_in_group("player"):
@@ -61,11 +67,13 @@ func _on_body_exited(body):
 		if hint_label:
 			hint_label.visible = false
 
+
 func _process(_delta):
 	if panel_open:
 		return
 	if player_nearby and Input.is_key_pressed(KEY_E):
 		open_dialog_panel()
+
 
 func open_dialog_panel():
 	if dialog_panel != null:
@@ -122,13 +130,19 @@ func open_dialog_panel():
 		btn_accept.disabled = true
 		btn_accept.add_theme_stylebox_override("normal", _create_button_style(Color(0.3, 0.3, 0.3)))
 		btn_accept.add_theme_stylebox_override("hover", _create_button_style(Color(0.3, 0.3, 0.3)))
-		btn_accept.add_theme_stylebox_override("pressed", _create_button_style(Color(0.25, 0.25, 0.25)))
+		btn_accept.add_theme_stylebox_override(
+			"pressed", _create_button_style(Color(0.25, 0.25, 0.25))
+		)
 		btn_accept.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
 	else:
 		btn_accept.text = accept_text
 		btn_accept.add_theme_stylebox_override("normal", _create_button_style(Color(0.2, 0.6, 0.3)))
-		btn_accept.add_theme_stylebox_override("hover", _create_button_style(Color(0.25, 0.7, 0.35)))
-		btn_accept.add_theme_stylebox_override("pressed", _create_button_style(Color(0.15, 0.45, 0.25)))
+		btn_accept.add_theme_stylebox_override(
+			"hover", _create_button_style(Color(0.25, 0.7, 0.35))
+		)
+		btn_accept.add_theme_stylebox_override(
+			"pressed", _create_button_style(Color(0.15, 0.45, 0.25))
+		)
 		btn_accept.add_theme_color_override("font_color", Color(1, 1, 1))
 	btn_accept.pressed.connect(_on_accept_quest)
 	hbox.add_child(btn_accept)
@@ -155,6 +169,7 @@ func open_dialog_panel():
 	if hint_label:
 		hint_label.visible = false
 
+
 func _create_panel_style() -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
 	style.bg_color = panel_bg_color
@@ -165,6 +180,7 @@ func _create_panel_style() -> StyleBoxFlat:
 	style.border_width_bottom = 3
 	style.border_color = panel_border_color
 	return style
+
 
 func _create_button_style(color: Color) -> StyleBoxFlat:
 	var style = StyleBoxFlat.new()
@@ -177,6 +193,7 @@ func _create_button_style(color: Color) -> StyleBoxFlat:
 	style.border_color = color.lightened(0.2)
 	return style
 
+
 func _on_accept_quest():
 	if required_boss != "" and not _is_required_boss_defeated():
 		return
@@ -184,8 +201,10 @@ func _on_accept_quest():
 	if target_scene != "":
 		get_tree().call_deferred("change_scene_to_file", target_scene)
 
+
 func _on_refuse_quest():
 	close_dialog_panel()
+
 
 func close_dialog_panel():
 	if is_instance_valid(dialog_panel):
@@ -194,6 +213,7 @@ func close_dialog_panel():
 	panel_open = false
 	if player_nearby and hint_label:
 		hint_label.visible = true
+
 
 func _is_required_boss_defeated() -> bool:
 	if required_boss == "":
