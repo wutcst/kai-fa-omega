@@ -1,0 +1,115 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'           # 推送 v1.0 等标签时触发
+  workflow_dispatch:    # 允许手动触发
+
+jobs:
+  # ========== Windows 构建 ==========
+  build-windows:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3   # Godot 4.3 官方 CI 镜像
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 下载 Godot 导出模板
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
+          wget -q "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q Godot_v4.3-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.3.stable
+          rm Godot_v4.3-stable_export_templates.tpz
+
+      - name: Build Windows
+        run: |
+          mkdir -p build/windows
+          godot --headless --export-release "Windows Desktop" build/windows/RPG-Game.exe
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: build/windows/
+
+  # ========== Linux 构建 ==========
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 下载 Godot 导出模板
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
+          wget -q "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q Godot_v4.3-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.3.stable
+          rm Godot_v4.3-stable_export_templates.tpz
+
+      - name: Build Linux
+        run: |
+          mkdir -p build/linux
+          godot --headless --export-release "Linux" build/linux/RPG-Game.x86_64
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: build/linux/
+
+  # ========== HTML5 (Web) 构建 ==========
+  build-web:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 下载 Godot 导出模板
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/4.3.stable
+          wget -q "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          unzip -q Godot_v4.3-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.3.stable
+          rm Godot_v4.3-stable_export_templates.tpz
+
+      - name: Build HTML5
+        run: |
+          mkdir -p build/web
+          godot --headless --export-release "Web" build/web/index.html
+
+      - name: Upload Web Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web/
+
+  # ========== 创建 Release 发布 ==========
+  release:
+    needs: [build-windows, build-linux, build-web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Package Windows
+        run: zip -r RPG-Game-Windows.zip windows-build/
+
+      - name: Package Linux
+        run: zip -r RPG-Game-Linux.zip linux-build/
+
+      - name: Package Web
+        run: zip -r RPG-Game-Web.zip web-build/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            RPG-Game-Windows.zip
+            RPG-Game-Linux.zip
+            RPG-Game-Web.zip
+          generate_release_notes: true
