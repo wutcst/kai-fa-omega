@@ -363,12 +363,12 @@ animations = [{
 [node name="Rock Giant" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_b3b2h")
 monster_name = "rock_giant"
-max_hp = 203
-attack = 27
-defense = 17
-speed = 60.0
+max_hp = 70
+attack = 14
+defense = 7
+speed = 45.0
 attack_cd = 1.2
-exp_reward = 110
+exp_reward = 45
 enemy_scene_path = "res://scenes/entities/rock_giant.tscn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

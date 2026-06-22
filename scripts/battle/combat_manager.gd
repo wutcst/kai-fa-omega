@@ -8,34 +8,34 @@ const DESIGN_WIDTH = 1152.0
 const DESIGN_HEIGHT = 648.0
 
 # 战斗场景中玩家的目标像素高度（设计分辨率内）
-const PLAYER_TARGET_HEIGHT = 130.0
+const PLAYER_TARGET_HEIGHT = 180.0
 # 怪物比玩家大的基础比例（小怪如 bear 帧很小，需要更高比例才显大）
-const MONSTER_SIZE_RATIO = 1.3
+const MONSTER_SIZE_RATIO = 1.4
 # 怪物视觉高度上限（玩家高度的倍数，防止 Boss 过大）
 const MONSTER_MAX_VISUAL_RATIO = 1.5
 
 # ============================================================
 # ★ 战斗场景角色位置（设计分辨率下的坐标，修改这里即可调整位置）
 # ============================================================
-const PLAYER_BATTLE_X = 278.0       # 玩家 X 坐标
-const PLAYER_BATTLE_Y = 349.0       # 玩家 Y 坐标（越大越靠下）
-const MONSTER_BATTLE_X = 820.0      # 怪物 X 坐标
-const MONSTER_BATTLE_Y = 349.0   # 怪物 Y 坐标（越大越靠下）
+const PLAYER_BATTLE_X = 378.0       # 玩家 X 坐标
+const PLAYER_BATTLE_Y = 649.0       # 玩家 Y 坐标（越大越靠上）
+const MONSTER_BATTLE_X = 800.0      # 怪物 X 坐标
+const MONSTER_BATTLE_Y = 649.0   # 怪物 Y 坐标（越大越靠上）
 
 # ============================================================
 # ★ 每个怪物的 Y 轴微调偏移（正值=下移，负值=上移，单位：像素）
 # ============================================================
 const MONSTER_Y_OFFSETS = {
-	"slime": 0.0,
-	"bat": -30.0,
-	"rat": -40.0,
-	"bear": 0.0,
-	"mushroom": -70.0,
-	"rock_giant": -60.0,
-	"slime_king": -50.0,
-	"Bringer": -50.0,
-	"bone_knight": -40.0,
-	"necromancer": 0.0,
+	"slime": 85.0,
+	"bat": 230,
+	"rat": 210,
+	"mushroom": -30.0,
+	"rock_giant": 55,
+	"slime_king": -30,
+	"Bringer": 225,
+	"bone_knight": 150,
+	"necromancer": 250.0,
+	"summoned_minion": -300.0
 }
 
 func _get_sprite_info(sprite: AnimatedSprite2D) -> Dictionary:
@@ -152,6 +152,8 @@ func _ready():
 	# 玩家位置：直接应用常量
 	if is_instance_valid(player_battler):
 		player_battler.position = Vector2(PLAYER_BATTLE_X, PLAYER_BATTLE_Y)
+		# 同步更新攻击回归位置（player_battler._ready 先执行，_original_position 记录的是旧位置）
+		player_battler._original_position = player_battler.global_position
 	# 怪物位置：直接应用常量
 	if is_instance_valid(monster_battler):
 		monster_battler.position = Vector2(MONSTER_BATTLE_X, MONSTER_BATTLE_Y)
@@ -170,6 +172,7 @@ func _ready():
 	# 保存初始位置，便于震动后复位
 	if is_instance_valid(player_battler):
 		_player_origin = player_battler.position
+		player_battler._original_position = player_battler.global_position
 	if is_instance_valid(_current_monster):
 		_monster_origin = _current_monster.position
 	_camera_origin = Vector2.ZERO
@@ -193,6 +196,7 @@ func _on_window_resized():
 	# 同时更新震动复位的基准位置
 	if is_instance_valid(player_battler):
 		_player_origin = player_battler.position
+		player_battler._original_position = player_battler.global_position
 	if is_instance_valid(_current_monster):
 		_monster_origin = _current_monster.position
 
@@ -205,6 +209,7 @@ func refit():
 	_fit_background()
 	if is_instance_valid(player_battler):
 		_player_origin = player_battler.position
+		player_battler._original_position = player_battler.global_position
 	if is_instance_valid(_current_monster):
 		_monster_origin = _current_monster.position
 
@@ -278,7 +283,7 @@ func _fit_background():
 			# a) 默认怪物：直接使用常量位置
 			m_sprite.scale = monster_scale
 			if m_info["has_anim"] and m_info["size"].y > 0:
-				m_sprite.offset = Vector2(0, -m_sprite.position.y / m_sprite.scale.y - m_info["size"].y / 2.0)
+				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
 			actual_monster.position = Vector2(MONSTER_BATTLE_X * scale_factor, (MONSTER_BATTLE_Y + monster_y_offset) * scale_factor)
 			_position_hud(actual_monster)
 		else:
@@ -288,7 +293,7 @@ func _fit_background():
 
 			m_sprite.scale = monster_scale
 			if m_info["has_anim"] and m_info["size"].y > 0:
-				m_sprite.offset = Vector2(0, -m_sprite.position.y / m_sprite.scale.y - m_info["size"].y / 2.0)
+				m_sprite.offset = Vector2(0, -m_sprite.position.y - m_info["size"].y / 2.0 * monster_scale.y)
 
 			var orig_pos: Vector2 = _dynamic_monster_original_pos[mid]
 			var parent_node = actual_monster.get_parent()

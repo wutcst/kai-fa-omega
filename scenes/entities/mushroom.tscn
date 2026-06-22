@@ -356,14 +356,14 @@ animations = [{
 [node name="mushroom" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("1_0vs2k")
 monster_name = "mushroom"
-max_hp = 105
-attack = 17
-defense = 11
-speed = 75.0
+max_hp = 35
+attack = 8
+defense = 2
+speed = 60.0
 chase_range = 180.0
 attack_range = 35.0
 attack_cd = 0.9
-exp_reward = 40
+exp_reward = 10
 enemy_scene_path = "res://scenes/entities/mushroom.tscn"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

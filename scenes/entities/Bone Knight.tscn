@@ -352,12 +352,13 @@ size = Vector2(18, 32)
 [node name="Bone Knight" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("2_dragon_script")
 monster_name = "bone_knight"
-max_hp = 180
-attack = 30
-defense = 16
+max_hp = 90
+attack = 20
+defense = 9
+speed = 60.0
 chase_range = 250.0
 attack_range = 45.0
-exp_reward = 130
+exp_reward = 55
 enemy_scene_path = "res://scenes/entities/Bone Knight.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

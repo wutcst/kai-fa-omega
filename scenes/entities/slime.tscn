@@ -411,13 +411,14 @@ radius = 15.0
 
 [node name="slime" type="CharacterBody2D" groups=["enemy"]]
 script = ExtResource("6_l13kp")
-max_hp = 41
-attack = 10
-speed = 65.0
+max_hp = 35
+attack = 8
+defense = 2
+speed = 55.0
 chase_range = 180.0
 attack_range = 35.0
 attack_cd = 0.8
-exp_reward = 12
+exp_reward = 10
 enemy_scene_path = "res://scenes/entities/slime.tscn"
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]

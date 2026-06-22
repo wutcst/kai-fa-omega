@@ -10,127 +10,144 @@ position = Vector2(5, 15)
 
 [node name="mushroom" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(213, 105)
-max_hp = 60
-attack = 15
-defense = 4
+max_hp = 35
+attack = 8
+defense = 2
+exp_reward = 10
 
 [node name="mushroom2" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(534, 259)
-max_hp = 60
-attack = 15
-defense = 4
+max_hp = 35
+attack = 8
+defense = 2
+exp_reward = 10
 
 [node name="mushroom3" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(225, 466)
-max_hp = 60
-attack = 15
-defense = 4
+max_hp = 35
+attack = 8
+defense = 2
+exp_reward = 10
 
 [node name="mushroom4" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(962, 99)
-max_hp = 60
-attack = 15
-defense = 4
+max_hp = 35
+attack = 8
+defense = 2
+exp_reward = 10
 
 [node name="mushroom5" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(954, 483)
-max_hp = 60
-attack = 15
-defense = 4
+max_hp = 35
+attack = 8
+defense = 2
+exp_reward = 10
 
 [node name="slime" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1465, 880)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime8" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2299, 499)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime9" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1557, 165)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime10" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2302, 145)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime7" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1565, 514)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime2" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1942, 1240)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime3" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1482, 1313)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime4" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2319, 896)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime5" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(2340, 1320)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="slime6" parent="." instance=ExtResource("3_hnsxx")]
 position = Vector2(1862, 1001)
-max_hp = 63
-attack = 13
-defense = 4
-exp_reward = 30
+max_hp = 42
+attack = 10
+defense = 3
+speed = 65.0
+exp_reward = 15
 
 [node name="Rock Giant" parent="." instance=ExtResource("5_88ayl")]
 position = Vector2(367, 1103)
-max_hp = 135
-attack = 28
-defense = 11
-exp_reward = 100
+max_hp = 80
+attack = 16
+defense = 8
+exp_reward = 50
 
 [node name="Rock Giant2" parent="." instance=ExtResource("5_88ayl")]
 position = Vector2(885, 1080)
-max_hp = 135
-attack = 28
-defense = 11
-exp_reward = 100
+max_hp = 80
+attack = 16
+defense = 8
+exp_reward = 50
 
 [node name="mushroom6" parent="." instance=ExtResource("1_phoqn")]
 position = Vector2(642, 447)
-max_hp = 60
-attack = 15
-defense = 4
+max_hp = 35
+attack = 8
+defense = 2
+exp_reward = 10
 
 [node name="slime_king" parent="." instance=ExtResource("4_fm1kf")]
 position = Vector2(605, 1061)
-max_hp = 165
-attack = 26
-defense = 9
-exp_reward = 130
+max_hp = 120
+attack = 20
+defense = 8
+speed = 60.0
+exp_reward = 100

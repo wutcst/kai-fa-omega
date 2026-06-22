@@ -3,10 +3,10 @@ extends CharacterBody2D
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 @export var monster_name: String = "necromancer"
-@export var max_hp: int = 263
-@export var attack: int = 28
-@export var defense: int = 10
-@export var exp_reward: int = 300
+@export var max_hp: int = 300
+@export var attack: int = 38
+@export var defense: int = 16
+@export var exp_reward: int = 350
 @export var enemy_scene_path: String = "res://scenes/entities/necromancer.tscn"
 @export var is_boss: bool = true
 
@@ -250,6 +250,23 @@ func die():
 			minion.queue_free()
 	minions.clear()
 
+# 应用 combat_manager 的 MONSTER_Y_OFFSETS 表中 summon_minion 的 Y 偏移
+func _apply_minion_y_offset(minion: Node2D):
+	if not is_instance_valid(minion):
+		return
+	# 战斗场景的根节点就是 combat_manager
+	var cm = get_tree().current_scene
+	if not cm or not cm.has_method("_fit_background"):
+		return
+	var y_off: float = cm.MONSTER_Y_OFFSETS.get("summoned_minion", 0.0)
+	if y_off == 0.0:
+		return
+	# 计算缩放因子：用亡灵法师的当前位置除以原始位置
+	var necro_y_offset: float = cm.MONSTER_Y_OFFSETS.get("necromancer", 0.0)
+	var orig_y: float = cm.MONSTER_BATTLE_Y + necro_y_offset
+	var scale_factor: float = global_position.y / orig_y if orig_y != 0 else 1.0
+	minion.global_position.y += y_off * scale_factor
+
 # ============================================================
 # 3 回合 1 个周期的动作循环：
 #   回合 1：召唤随从 (Necromancer_summon)
@@ -294,12 +311,21 @@ func summon_minion():
 	# 限制随从数量不超过 max_minions
 	if minions.size() < max_minions:
 		var minion = minion_scene.instantiate()
-		minion.position = Vector2(-80, 0)
-		add_child(minion)
-		# 缩放随从的精灵，使其与战斗场景匹配
-		if minion.has_node("AnimatedSprite2D"):
+		# 添加到 EnemyTeam（与亡灵法师同级），避免受父节点缩放影响
+		var parent = get_parent()
+		if parent:
+			parent.add_child(minion)
+			minion.global_position = global_position + Vector2(-100, 0)
+		else:
+			minion.position = Vector2(-100, 0)
+			add_child(minion)
+		# 复制亡灵法师的精灵缩放，保持与战斗场景一致
+		if minion.has_node("AnimatedSprite2D") and has_node("AnimatedSprite2D"):
 			var m_sprite = minion.get_node("AnimatedSprite2D")
-			m_sprite.scale = Vector2(3.5, 3.5)
+			var boss_sprite = get_node("AnimatedSprite2D")
+			m_sprite.scale = boss_sprite.scale
+		# 应用 summon_minion 的 Y 偏移（来自 combat_manager 的 MONSTER_Y_OFFSETS 表）
+		_apply_minion_y_offset(minion)
 		minions.append(minion)
 		print("→ 亡灵法师召唤了一个随从！")
 	else:

@@ -8052,4 +8052,4 @@ polygon = PackedVector2Array(0, -2, 21, -20, 41, -41, 57, -47, 62, -60, 64, -68,
 
 [node name="undead_enemies" parent="." instance=ExtResource("17_dv3aj")]
 z_index = 4
-position = Vector2(319, 268)
+position = Vector2(310, 261)

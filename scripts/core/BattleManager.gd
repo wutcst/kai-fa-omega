@@ -28,6 +28,9 @@ var _escape_cooldown_end: int = 0
 # 退出战斗标志：战斗结束/逃跑时设为 true，防止异步代码继续执行
 var _battle_exiting: bool = false
 
+# 玩家是否击败了敌人（用于区分逃跑和胜利）
+var _player_won_battle: bool = false
+
 # 最近一次掉落（供 UI 显示）
 var last_drop: Dictionary = {"gold": 0, "items": []}
 
@@ -510,7 +513,8 @@ func _end_battle(player_won: bool):
 		# --- 怪物掉落 ---
 		var mname: String = enemy_data.get("monster_name", "slime")
 		var exp_r: int = enemy_data.get("exp_reward", 20)
-		last_drop = GameData.generate_drop(mname, exp_r)
+		var is_boss: bool = enemy_data.get("is_boss", false)
+		last_drop = GameData.generate_drop(mname, exp_r, is_boss)
 		GameData.apply_drop(last_drop)
 
 		# --- 显示掉落提示面板，等面板消失后再退出 ---
@@ -550,6 +554,7 @@ func _end_battle(player_won: bool):
 		# 等待面板上的按钮被点击（由 _on_angel_rescue_clicked 触发场景切换）
 		return
 
+	_player_won_battle = true
 	call_deferred("_exit_battle")
 
 func _reward_player():
@@ -593,6 +598,10 @@ func _exit_battle():
 	print("战斗结束，返回主界面")
 	var tree = get_tree()
 	if tree:
+		# 击败亡灵法师（最终 Boss）后跳转到结局场景
+		if enemy_data.get("monster_name", "") == "necromancer":
+			tree.change_scene_to_file("res://scenes/maps/ending.tscn")
+			return
 		var return_scene = previous_scene if previous_scene != "" else "res://scenes/maps/village.tscn"
 		tree.change_scene_to_file(return_scene)
 
@@ -718,6 +727,11 @@ func try_escape():
 	if _battle_exiting or battle_state != STATE_PLAYER:
 		return
 
+	# 最终 Boss 战（亡灵法师）：禁止逃跑，显示提示面板
+	if enemy_data.get("is_boss", false):
+		_show_no_escape_panel()
+		return
+
 	var ui = combat_scene.get_node_or_null("CombatUI") if is_instance_valid(combat_scene) else null
 	if ui:
 		ui.set_buttons_enabled(false)
@@ -735,6 +749,60 @@ func try_escape():
 		await get_tree().create_timer(0.5).timeout
 		if not _battle_exiting and battle_state == STATE_PLAYER:
 			_end_player_turn()
+
+# 最终 Boss 战逃跑提示面板
+func _show_no_escape_panel():
+	if not is_instance_valid(combat_scene):
+		return
+	var ui = combat_scene.get_node_or_null("CombatUI")
+	if ui:
+		ui.set_buttons_enabled(false)
+
+	var canvas = CanvasLayer.new()
+	canvas.name = "NoEscapePanel"
+	canvas.layer = 100
+	combat_scene.add_child(canvas)
+
+	var bg = ColorRect.new()
+	bg.color = Color(0, 0, 0, 0.7)
+	bg.size = get_viewport().get_visible_rect().size
+	canvas.add_child(bg)
+
+	var label = Label.new()
+	label.text = "勇者，此地凶险，无法逃离"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 28)
+	label.add_theme_color_override("font_color", Color(1, 0.85, 0.7))
+	label.size = bg.size
+	canvas.add_child(label)
+
+	var hint = Label.new()
+	hint.text = "按 E 退出"
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 16)
+	hint.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	hint.position = Vector2(0, bg.size.y - 80)
+	hint.size = Vector2(bg.size.x, 40)
+	canvas.add_child(hint)
+
+	# 等待玩家按 E 关闭面板，然后视为逃跑失败
+	await _wait_for_e_key()
+	canvas.queue_free()
+
+	if ui:
+		ui.set_buttons_enabled(true)
+	if not _battle_exiting and battle_state == STATE_PLAYER:
+		_end_player_turn()
+
+func _wait_for_e_key():
+	while true:
+		await get_tree().process_frame
+		if Input.is_key_pressed(KEY_E):
+			await get_tree().process_frame
+			while Input.is_key_pressed(KEY_E):
+				await get_tree().process_frame
+			return
 
 func _process(_delta):
 	if battle_state != STATE_STARTING:
