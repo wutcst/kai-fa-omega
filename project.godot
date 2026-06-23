@@ -24,6 +24,7 @@ config/name="RPG-603game"
 run/main_scene="res://scenes/maps/start.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+config/custom_font="res://fonts/NotoSansSC-Regular.otf"
 
 [autoload]
 
