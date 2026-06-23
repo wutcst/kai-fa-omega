@@ -12,6 +12,12 @@ config_version=5
 
 compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
+[internationalization]
+
+locale/use_cjk_font=true
+locale/language="zh_CN"
+
+
 [application]
 
 config/name="RPG-603game"
