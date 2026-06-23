@@ -9,44 +9,40 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     container:
-      image: barichello/godot-ci:4.3
+      image: barichello/godot-ci:4.6
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: 检查并安装导出模板
         run: |
-          echo "=== 检查是否已存在导出模板 ==="
-          ls -la ~/.local/share/godot/export_templates/ || echo "目录不存在，需要下载"
-          
           echo "=== 检查已安装的版本 ==="
           GODOT_VERSION=$(godot --version | head -1 | grep -o '[0-9]*\.[0-9]*' | head -1)
           echo "Godot 版本: $GODOT_VERSION"
           
-          echo "=== 安装 wget 和 unzip (如果需要) ==="
+          echo "=== 安装 wget 和 unzip ==="
           apt-get update -qq && apt-get install -y -qq wget unzip
           
-          echo "=== 下载 Godot 4.3 导出模板 ==="
+          echo "=== 下载 Godot 4.6 导出模板 ==="
           mkdir -p /tmp/godot_templates
-          wget -q https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz -O /tmp/Godot_v4.3-stable_export_templates.tpz
+          wget -q https://github.com/godotengine/godot/releases/download/4.6-stable/Godot_v4.6-stable_export_templates.tpz -O /tmp/Godot_v4.6-stable_export_templates.tpz
           
           echo "=== 解压模板 ==="
-          unzip -q /tmp/Godot_v4.3-stable_export_templates.tpz -d /tmp/godot_templates
+          unzip -q /tmp/Godot_v4.6-stable_export_templates.tpz -d /tmp/godot_templates
           
           echo "=== 创建目标目录 ==="
-          mkdir -p ~/.local/share/godot/export_templates/4.3.stable/
+          mkdir -p ~/.local/share/godot/export_templates/4.6.stable/
           
           echo "=== 复制所有模板文件 ==="
-          # tpz 解压后里面是 templates 目录，里面是各个 .zip 文件
-          cp /tmp/godot_templates/templates/*.zip ~/.local/share/godot/export_templates/4.3.stable/ || \
-          find /tmp/godot_templates -name "*.zip" -exec cp {} ~/.local/share/godot/export_templates/4.3.stable/ \;
+          cp /tmp/godot_templates/templates/*.zip ~/.local/share/godot/export_templates/4.6.stable/ || \
+          find /tmp/godot_templates -name "*.zip" -exec cp {} ~/.local/share/godot/export_templates/4.6.stable/ \;
           
           echo "=== 验证安装 ==="
-          ls -la ~/.local/share/godot/export_templates/4.3.stable/
-          echo "模板数量: $(ls ~/.local/share/godot/export_templates/4.3.stable/ | wc -l)"
+          ls -la ~/.local/share/godot/export_templates/4.6.stable/
+          echo "模板数量: $(ls ~/.local/share/godot/export_templates/4.6.stable/ | wc -l)"
           
           echo "=== 清理临时文件 ==="
-          rm -rf /tmp/godot_templates /tmp/Godot_v4.3-stable_export_templates.tpz
+          rm -rf /tmp/godot_templates /tmp/Godot_v4.6-stable_export_templates.tpz
 
       - name: Build HTML5
         run: |
