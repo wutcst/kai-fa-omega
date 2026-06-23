@@ -241,7 +241,7 @@ RPG-603game/
 	│   ├── player_battler.gd  # 玩家战斗实体（攻击、移动、动画、HP/MP）
 	│   ├── monster_battler.gd # 怪物战斗实体（属性、动画、脚对齐）
 	│   ├── summoned_minion.gd # 召唤随从（抵挡一次攻击即死亡）
-	│   └── necromancer_boss.gd # 亡灵法师 BOSS 专属逻辑（召唤、3 回合循环、技能攻击）
+	│   └── necromancer_boss.gd # 亡灵法师 BOSS 专属逻辑（召唤随从、3 回合循环、技能攻击）
 	├── npc/
 	│   ├── npc_dialogue.gd    # NPC 对话基础
 	│   ├── village_head.gd    # 村长
